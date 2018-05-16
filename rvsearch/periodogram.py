@@ -27,6 +27,7 @@ class Periodogram(object):
         else:
             self.per_array = 1/np.linspace(1/self.maxsearchP, 1/self.minsearchP, self.num_freqs)
 
+        self.freq_array = 1/self.per_array
 
     def setup_posterior(self, post, num_known_planets):
         """Setup radvel.posterior.Posterior object
@@ -64,8 +65,10 @@ class Periodogram(object):
         pass
 
     def gls(self):
-        pass
+        print("Calculating GLS periodogram")
+        gls = pyTiming.pyPeriod.Gls(self.post, freq=self.freq_array)
 
+        self.power = gls.power
 
 def freq_spacing(times, minp, maxp, oversampling=1, verbose=True):
     """Get the number of sampled frequencies

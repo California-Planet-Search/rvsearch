@@ -48,6 +48,11 @@ def periodograms(args):
 
         peri = Periodogram(post, args.minP, args.maxP, num_known_planets=args.num_known)
 
+        if args.type == 'bic':
+            peri.bic()
+        if args.type == 'gls':
+            peri.gls()
+
 
     postfile = os.path.join(args.outputdir,
                             '{}_post_obj.pkl'.format(conf_base))

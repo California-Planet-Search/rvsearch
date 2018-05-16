@@ -39,7 +39,7 @@ def main():
     psr_peri = subpsr.add_parser('peri', parents=[psr_parent], )
     psr_peri.add_argument('-t', '--type',
                           type=str, nargs='+',
-                          choices=['bic'],
+                          choices=['bic', 'gls'],
                           help="type of periodogram(s) to calculate"
                           )
     psr_peri.add_argument('--minP',
