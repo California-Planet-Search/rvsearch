@@ -1,0 +1,4 @@
+numpy
+scipy
+matplotlib
+radvel>=1.1
