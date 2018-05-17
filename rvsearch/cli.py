@@ -5,7 +5,9 @@ import os
 from argparse import ArgumentParser
 import warnings
 
+import rvsearch
 import rvsearch.driver
+import rvsearch.periodogram
 
 warnings.simplefilter("ignore")
 warnings.simplefilter('once', DeprecationWarning)
@@ -39,7 +41,7 @@ def main():
     psr_peri = subpsr.add_parser('peri', parents=[psr_parent], )
     psr_peri.add_argument('-t', '--type',
                           type=str, nargs='+',
-                          choices=['bic', 'gls'],
+                          choices=rvsearch.periodogram.VALID_TYPES,
                           help="type of periodogram(s) to calculate"
                           )
     psr_peri.add_argument('--minP',
@@ -54,6 +56,11 @@ def main():
                           type=int, action='store', default=0,
                           help="Number of previously known planets [default=0]"
                           )
+    psr_peri.add_argument('--num_freqs',
+                          action='store', default=None,
+                          help="Number of test frequencies"
+                          )
+
 
 
     psr_peri.set_defaults(func=rvsearch.driver.periodograms)

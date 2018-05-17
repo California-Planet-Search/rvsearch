@@ -1,5 +1,7 @@
 numpy
 scipy
 matplotlib
+pandas
+astropy
 PyAstronomy
 radvel>=1.1

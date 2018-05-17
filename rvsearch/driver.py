@@ -8,10 +8,6 @@ import os
 import sys
 import copy
 import collections
-if sys.version_info[0] < 3:
-    import ConfigParser as configparser
-else:
-    import configparser
 import pandas as pd
 import numpy as np
 from astropy import constants as c
@@ -19,6 +15,11 @@ from astropy import constants as c
 import radvel
 
 from rvsearch.periodogram import Periodogram
+
+if sys.version_info[0] < 3:
+    import ConfigParser as configparser
+else:
+    import configparser
 
 
 def plots(args):
@@ -41,19 +42,19 @@ def periodograms(args):
     config_file = args.setupfn
     conf_base = os.path.basename(config_file).split('.')[0]
 
-    P, post = radvel.utils.initialize_posterior(config_file)
+    P, post = radvel.config.initialize_posterior(config_file)
 
     for ptype in args.type:
         print("Calculating {} periodogram for {}".format(ptype, conf_base))
 
-        peri = Periodogram(post, args.minP, args.maxP, num_known_planets=args.num_known)
+        peri = Periodogram(post, args.minP, args.maxP, num_known_planets=args.num_known, num_freqs=args.num_freqs)
 
-        if args.type == 'bic':
+        if ptype == 'bic':
             peri.bic()
-        if args.type == 'gls':
-            peri.gls()
+        if ptype == 'ls':
+            peri.ls()
 
-
+    print(peri.power)
     postfile = os.path.join(args.outputdir,
                             '{}_post_obj.pkl'.format(conf_base))
     post.writeto(postfile)

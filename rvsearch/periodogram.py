@@ -1,5 +1,9 @@
 import numpy as np
+import astropy.stats
 
+import radvel.fitting
+
+VALID_TYPES = ['bic', 'ls']
 
 class Periodogram(object):
     """
@@ -7,68 +11,64 @@ class Periodogram(object):
 
     Args:
         posterior (radvel.Posterior): radvel.Posterior object
-        minsearchP (float): minimum search period
-        maxsearchP (float): maximum search period
+        minsearchp (float): minimum search period
+        maxsearchp (float): maximum search period
         num_known_planets (int): Assume this many known planets in the system and search for one more
-        num_freqs (int): (optional) number of frequencies to test [default = calculated via rvsearch.periodograms.freq_spacing]
+        num_freqs (int): (optional) number of frequencies to test
+            [default = calculated via rvsearch.periodograms.freq_spacing]
     """
 
-    def __init__(self, posterior, minsearchP, maxsearchP, num_known_planets=0, num_freqs=None):
-        self.minsearchP = minsearchP
-        self.maxsearchP = maxsearchP
+    def __init__(self, posterior, minsearchp, maxsearchp, num_known_planets=0, num_freqs=None):
+        self.minsearchP = minsearchp
+        self.maxsearchP = maxsearchp
         self.num_freqs = num_freqs
 
         self.num_known_planets = num_known_planets
 
-        self.post = self.setup_posterior(posterior, num_known_planets)
+        self.post = posterior
+
+        self.times = self.post.likelihood.x
+        self.vel = self.post.likelihood.y
+        self.errvel = self.post.likelihood.yerr
 
         if num_freqs is None:
-            self.per_array = freq_spacing(self.post.time, self.minsearchP, self.maxsearchP)
+            self.per_array = freq_spacing(self.times, self.minsearchP, self.maxsearchP)
         else:
             self.per_array = 1/np.linspace(1/self.maxsearchP, 1/self.minsearchP, self.num_freqs)
 
         self.freq_array = 1/self.per_array
 
-    def setup_posterior(self, post, num_known_planets):
-        """Setup radvel.posterior.Posterior object
-
-        Prepare posterior object for periodogram caclulations. Fix values for previously-known planets.
-
-        Args:
-            post (radvel.posterior.Posterior): RadVel posterior object. Can be initialized from setup file or loaded
-                from a RadVel fit.
-            num_known_planets (int): Number of previously known planets. Parameters for these planets will be fixed.
-
-        Returns:
-            radvel.posterior.Posterior: augmented posterior object
-
-        """
-
-        basis_name = post.params.basis.name
-        basis_pars = basis_name.split()
-        for i in range(1, num_known_planets+1):
-            for par in basis_pars:
-                parname = "{}{}".format(par, i)
-                post.params[parname].vary = False
-
-        # Needed for pyTiming periodograms
-        post.time = post.likelihood.x
-        post.flux = post.likelihood.y
-        post.error = post.likelihood.yerr
-
-        print(post)
-
-        return post
+        self.power = {key: None for key in VALID_TYPES}
 
     def bic(self):
         """Compute delta-BIC periodogram"""
-        pass
 
-    def gls(self):
-        print("Calculating GLS periodogram")
-        gls = pyTiming.pyPeriod.Gls(self.post, freq=self.freq_array)
+        baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=True)
+        post = setup_posterior(self.post, self.num_known_planets)
+        baseline_bic = baseline_fit.bic()
 
-        self.power = gls.power
+        power = np.zeros_like(self.per_array)
+        for i, per in enumerate(self.per_array):
+            perkey = 'per{}'.format(self.num_known_planets + 1)
+            post.params[perkey].value = per
+            post.params[perkey].vary = False
+
+            fit = radvel.fitting.maxlike_fitting(post, verbose=False)
+
+            power[i] = (fit.bic() - baseline_bic)
+
+            print(i, per, power[i], fit.bic(), baseline_bic)
+        self.power['bic'] = power
+
+    def ls(self):
+        """Astropy Lomb-Scargle periodogram"""
+
+        print("Calculating Lomb-Scargle periodogram")
+
+        power = astropy.stats.LombScargle(self.times, self.vel, self.errvel).power(self.freq_array)
+
+        self.power['ls'] = power
+
 
 def freq_spacing(times, minp, maxp, oversampling=1, verbose=True):
     """Get the number of sampled frequencies
@@ -78,8 +78,8 @@ def freq_spacing(times, minp, maxp, oversampling=1, verbose=True):
 
     Args:
         times (array): array of timestamps
-        minP (float): minimum period
-        maxP (float): maximum period
+        minp (float): minimum period
+        maxp (float): maximum period
         oversampling (float): (optional) oversampling factor
         verbose (bool): (optional) print extra messages
 
@@ -105,4 +105,30 @@ def freq_spacing(times, minp, maxp, oversampling=1, verbose=True):
     return Parr
 
 
+def setup_posteriors(post, num_known_planets):
+    """Setup radvel.posterior.Posterior object
 
+    Prepare posterior object for periodogram calculations. Fix values for previously-known planets.
+
+    Args:
+        post (radvel.posterior.Posterior): RadVel posterior object. Can be initialized from setup file or loaded
+            from a RadVel fit.
+        num_known_planets (int): Number of previously known planets. Parameters for these planets will be fixed.
+
+    Returns:
+        tuple: (radvel.posterior object used as baseline fit, radvel.posterior used in search)
+
+    """
+    basis_pars = basis_name.split()
+
+    for i in range(1, post.params.num_planets + 1):
+        for par in basis_pars:
+            parname = "{}{}".format(par, i)
+            post.params[parname].vary = False
+
+            if par == 'k':
+                post.params[parname].value = 0.0
+            elif par == 'logk':
+                post.params[parname].value = -9
+
+    return (base_post, search_post)
