@@ -105,7 +105,7 @@ def freq_spacing(times, minp, maxp, oversampling=1, verbose=True):
     return Parr
 
 
-def setup_posteriors(post, num_known_planets):
+def setup_posterior(post, num_known_planets):
     """Setup radvel.posterior.Posterior object
 
     Prepare posterior object for periodogram calculations. Fix values for previously-known planets.
@@ -119,7 +119,7 @@ def setup_posteriors(post, num_known_planets):
         tuple: (radvel.posterior object used as baseline fit, radvel.posterior used in search)
 
     """
-    basis_pars = basis_name.split()
+    basis_pars = post.likelihood.params.basis.name.split()
 
     for i in range(1, post.params.num_planets + 1):
         for par in basis_pars:

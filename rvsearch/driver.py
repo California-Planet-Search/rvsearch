@@ -12,7 +12,7 @@ import pandas as pd
 import numpy as np
 from astropy import constants as c
 
-import radvel
+import radvel.utils
 
 from rvsearch.periodogram import Periodogram
 
@@ -42,7 +42,7 @@ def periodograms(args):
     config_file = args.setupfn
     conf_base = os.path.basename(config_file).split('.')[0]
 
-    P, post = radvel.config.initialize_posterior(config_file)
+    P, post = radvel.utils.initialize_posterior(config_file)
 
     for ptype in args.type:
         print("Calculating {} periodogram for {}".format(ptype, conf_base))
