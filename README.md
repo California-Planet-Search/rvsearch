@@ -6,8 +6,8 @@ Use radvel setup files to load:
     - data and instruments
     - fix/vary within search
     - fitting (search) basis
-    
-    
+
+
 `rvsearch periodogram -t [bic, aic, ls] -n 1 -s path-to-setup`
 
 `rvsearch find -s path-to-setup`
@@ -17,10 +17,9 @@ Use radvel setup files to load:
 `rvsearch plot -t peri -s path-to-setup`
 
 
-Do we require users to set up their config files with 
+Do we require users to set up their config files with
 enough planet parameters for the searches? Or any planet parameters at all?
-Turns out building a posterior 
+Turns out building a posterior
 
-How do we pass the results of `rvsearach find` back into setup file to
+How do we pass the results of `rvsearch find` back into setup file to
 calculate next periodogram, and iterate?
-
