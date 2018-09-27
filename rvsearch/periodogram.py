@@ -69,6 +69,14 @@ class Periodogram(object):
 
         self.power['ls'] = power
 
+    def save_per(self):
+        pass
+
+    def plot_per(self):
+        pass
+
+    def eFAP_thresh(self):
+        pass
 
 def freq_spacing(times, minp, maxp, oversampling=1, verbose=True):
     """Get the number of sampled frequencies
