@@ -89,7 +89,7 @@ class Periodogram(object):
     def eFAP_thresh(self, fap=0.01):
     	"""
         Calculate the threshold for significance based on BJ's eFAP algorithm
-        From Lea's code. TO-DO: DEFINE BICARR, ETC.
+        From Lea's code. TO-DO: DEFINE BICARR, ETC. BICARR IS A BIC PERIODOGRAM. LOMB-S OPTION?
     	"""
     	#select out intermediate values of BIC
     	sBIC = np.sort(BICarr)
