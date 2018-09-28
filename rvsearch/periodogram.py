@@ -17,15 +17,15 @@ class Periodogram(object):
         num_freqs (int): (optional) number of frequencies to test
             [default = calculated via rvsearch.periodograms.freq_spacing]
     """
-
-    def __init__(self, posterior, minsearchp, maxsearchp, num_known_planets=0, num_freqs=None):
+    #TO-DO: IN __INIT__, CHANGE POSTERIOR INPUT TO SEARCH CLASS INPUT.
+    def __init__(self, search, minsearchp, maxsearchp, num_known_planets=0, num_freqs=None):
         self.minsearchP = minsearchp
         self.maxsearchP = maxsearchp
         self.num_freqs = num_freqs
 
         self.num_known_planets = num_known_planets
 
-        self.post = posterior
+        self.post = search.post
 
         self.times = self.post.likelihood.x
         self.vel = self.post.likelihood.y
@@ -40,12 +40,59 @@ class Periodogram(object):
 
         self.power = {key: None for key in VALID_TYPES}
 
-    def bic(self):
-        """Compute delta-BIC periodogram"""
+def ics(self, post, base_bic, base_chi2, base_logp, Parr, planet_num, default_pdict):
+    """Loop over Parr, calculate delta-BIC values
+
+    Args:
+        post (radvel Posteriors object): should have 'per{}'.format(planet_num) fixed.
+        base_bic (float): The comparison BIC value
+        Parr (array): List of periods to check
+        planet_num (int): num_planets+1
+        default_pdict (dict): default params to start each maxlike fit
+
+    Returns:
+        BICarr (array): List of delta bic values (or delta aic values)
+    """
+    BICarr = []
+    chi2arr = []
+    logparr = []
+    bestfit = []
+
+    for per in Parr:
+    	#Reset post to default params:
+    	post = ut.reset_to_default(post, default_pdict)
+
+        #Set the period in the post object and perform maxlike fitting
+        post.params['per{}'.format(planet_num)].value = per
+        post = radvel.fitting.maxlike_fitting(post)
+
+        bic = post.bic()
+        delta_bic = base_bic - bic  #Should be positive since bic < base_bic
+        BICarr += [delta_bic]
+
+        chi2 = np.sum((post.likelihood.residuals()**2.)/(post.likelihood.errorbars()**2.))
+        delta_chi2 = (base_chi2 - chi2) / base_chi2
+        chi2arr += [delta_chi2]
+
+        logp = post.logprob()
+        delta_logp = logp - base_logp
+        logparr += [delta_logp]
+
+        #Save best fit params too
+        best_params = {}
+        for k in post.params.keys():
+        	best_params[k] = post.params[k].value
+        bestfit += [best_params]
+
+    return BICarr, chi2arr, logparr, bestfit
+
+    def per_ic(self, crit):
+        #BJ's method, replacing with Lea's method
+        """Compute delta-BIC periodogram. crit is BIC or AIC."""
 
         baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=True)
         post = setup_posterior(self.post, self.num_known_planets)
-        baseline_bic = baseline_fit.bic()
+        baseline_ic = baseline_fit.crit()
 
         power = np.zeros_like(self.per_array)
         for i, per in enumerate(self.per_array):
@@ -55,9 +102,9 @@ class Periodogram(object):
 
             fit = radvel.fitting.maxlike_fitting(post, verbose=False)
 
-            power[i] = (fit.bic() - baseline_bic)
+            power[i] = (fit.crit() - baseline_ic)
 
-            print(i, per, power[i], fit.bic(), baseline_bic)
+            print(i, per, power[i], fit.crit(), baseline_ic)
         self.power['bic'] = power
 
     def ls(self):
@@ -111,7 +158,7 @@ class Periodogram(object):
     	return thresh[0], fap_min
 
 
-#TO-DO: MOVE THIS INTO CLASS STRUCTURE
+#TO-DO: MOVE THESE INTO CLASS STRUCTURE
 def setup_posterior(post, num_known_planets):
     """Setup radvel.posterior.Posterior object
 
@@ -139,3 +186,38 @@ def setup_posterior(post, num_known_planets):
                 post.params[parname].value = -9
 
     return (base_post, search_post)
+
+#TO-DO: MOVE INTO UTILS FILE?
+def freq_spacing(times, minp, maxp, oversampling=1, verbose=True):
+    """Get the number of sampled frequencies
+
+    Condition for spacing: delta nu such that during the
+    entire duration of observations, phase slip is no more than P/4
+
+    Args:
+        times (array): array of timestamps
+        minp (float): minimum period
+        maxp (float): maximum period
+        oversampling (float): (optional) oversampling factor
+        verbose (bool): (optional) print extra messages
+
+    Returns:
+        array: Array of test periods
+    """
+
+    fmin = 1 / maxp
+    fmax = 1 / minp
+
+    timlen = max(times) - min(times)
+    dnu = 1. / (4. * timlen)
+    numf = int((fmax - fmin) / dnu + 1)
+    res = numf
+    res *= oversampling
+
+    if verbose:
+        print("Number of test periods:", res)
+
+    Farr = np.linspace(1 / maxp, 1 / minp, res)
+    Parr = 1 / Farr
+
+    return Parr
