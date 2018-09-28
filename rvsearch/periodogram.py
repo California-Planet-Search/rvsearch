@@ -1,6 +1,6 @@
 import numpy as np
 import astropy.stats
-
+import radvel
 import radvel.fitting
 
 VALID_TYPES = ['bic', 'ls']
@@ -69,50 +69,49 @@ class Periodogram(object):
 
         self.power['ls'] = power
 
-    def save_per(self):
-        pass
+    def save_per(self, ls=False):
+        if ls==False:
+            try:
+                #FIX THIS; SPECIFY DIRECTORY/NAME, NUMBER OF PLANETS IN FILENAME, AND ARRAY ORDERING
+                np.savetxt((self.per_array, self.power['bic']), filename='BIC_periodogram.csv')
+            except:
+                print('Have not generated a delta-BIC periodogram.')
+        else:
+            try:
+                #FIX THIS, SPECIFY DIRECTORY/NAME, NUMBER OF PLANETS IN FILENAME, AND ARRAY ORDERING
+                np.savetxt((self.per_array, self.power['LS']), filename='LS_periodogram.csv')
+            except:
+                print('Have not generated a Lomb-Scargle periodogram.')
 
     def plot_per(self):
         pass
 
-    def eFAP_thresh(self):
-        pass
+    def eFAP_thresh(self, fap=0.01):
+    	"""
+        Calculate the threshold for significance based on BJ's eFAP algorithm
+        From Lea's code. TO-DO: DEFINE BICARR, ETC.
+    	"""
+    	#select out intermediate values of BIC
+    	sBIC = np.sort(BICarr)
+    	crop_BIC = sBIC[int(0.5*len(sBIC)):int(0.95*len(sBIC))] #select only median - 95% vals
 
-def freq_spacing(times, minp, maxp, oversampling=1, verbose=True):
-    """Get the number of sampled frequencies
+    	#histogram
+    	hist, edge = np.histogram(crop_BIC, bins=10)
+    	cent = (edge[1:]+edge[:-1])/2.
+    	norm = float(np.sum(hist))
 
-    Condition for spacing: delta nu such that during the
-    entire duration of observations, phase slip is no more than P/4
+    	nhist = hist/norm
 
-    Args:
-        times (array): array of timestamps
-        minp (float): minimum period
-        maxp (float): maximum period
-        oversampling (float): (optional) oversampling factor
-        verbose (bool): (optional) print extra messages
+    	func = np.poly1d(np.polyfit(cent, np.log10(nhist), 1))
+    	xmod = np.linspace(np.min(BICarr[BICarr==BICarr]), 10.*np.max(BICarr), 10000)
+    	lfit = 10.**(func(xmod))
+    	fap_min = 10.**func(max(BICarr)) * len(BICarr)
 
-    Returns:
-        array: Array of test periods
-    """
-
-    fmin = 1 / maxp
-    fmax = 1 / minp
-
-    timlen = max(times) - min(times)
-    dnu = 1. / (4. * timlen)
-    numf = int((fmax - fmin) / dnu + 1)
-    res = numf
-    res *= oversampling
-
-    if verbose:
-        print("Number of test periods:", res)
-
-    Farr = np.linspace(1 / maxp, 1 / minp, res)
-    Parr = 1 / Farr
-
-    return Parr
+    	thresh = xmod[np.where(np.abs(lfit-fap/len(BICarr)) == np.min(np.abs(lfit-fap/len(BICarr))))]
+    	return thresh[0], fap_min
 
 
+#TO-DO: MOVE THIS INTO CLASS STRUCTURE
 def setup_posterior(post, num_known_planets):
     """Setup radvel.posterior.Posterior object
 
