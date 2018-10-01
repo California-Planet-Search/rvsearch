@@ -3,8 +3,6 @@ import astropy.stats
 import radvel
 import radvel.fitting
 
-VALID_TYPES = ['bic', 'ls']
-
 class Periodogram(object):
     """
     Class to calculate and store periodograms.
@@ -18,7 +16,8 @@ class Periodogram(object):
             [default = calculated via rvsearch.periodograms.freq_spacing]
     """
     #TO-DO: IN __INIT__, CHANGE POSTERIOR INPUT TO SEARCH CLASS INPUT.
-    def __init__(self, search, minsearchp, maxsearchp, num_known_planets=0, num_freqs=None):
+    def __init__(self, search, minsearchp, maxsearchp, num_known_planets=0, num_freqs=None, valid_types = ['bic', 'ls']):
+        self.search = search #This is a Search class instantiation, includes posterior.
         self.minsearchP = minsearchp
         self.maxsearchP = maxsearchp
         self.num_freqs = num_freqs
@@ -31,63 +30,101 @@ class Periodogram(object):
         self.vel = self.post.likelihood.y
         self.errvel = self.post.likelihood.yerr
 
+        self.valid_types = valid_types
+        self.power = {key: None for key in self.valid_types}
+
+    def freq_spacing(self, oversampling=1, verbose=True):
+        """Get the number of sampled frequencies
+
+        Condition for spacing: delta nu such that during the
+        entire duration of observations, phase slip is no more than P/4
+
+        Args:
+            times (array): array of timestamps
+            minp (float): minimum period
+            maxp (float): maximum period
+            oversampling (float): (optional) oversampling factor
+            verbose (bool): (optional) print extra messages
+
+        Returns:
+            array: Array of test periods
+        """
+
+        fmin = 1. / self.maxsearchP
+        fmax = 1. / self.maxsearchP
+
+        timlen = np.amax(self.times) - np.amin(self.times)
+        dnu = 1. / (4. * timlen)
+        numf = int((fmax - fmin) / dnu + 1)
+        res = numf
+        res *= oversampling
+
+        if verbose:
+            print("Number of test periods:", res)
+
+        Farr = np.linspace(1 / maxp, 1 / minp, res)
+        Parr = 1 / Farr
+
+        return Parr
+
+    def make_per_grid(self):
         if num_freqs is None:
-            self.per_array = freq_spacing(self.times, self.minsearchP, self.maxsearchP)
+            self.pers = self.freq_spacing(self.times, self.minsearchP, self.maxsearchP)
         else:
-            self.per_array = 1/np.linspace(1/self.maxsearchP, 1/self.minsearchP, self.num_freqs)
+            self.pers = 1/np.linspace(1/self.maxsearchP, 1/self.minsearchP, self.num_freqs)
 
-        self.freq_array = 1/self.per_array
+        self.freqs = 1/self.pers
 
-        self.power = {key: None for key in VALID_TYPES}
+    def bics(self, post, base_bic, base_chi2, base_logp, planet_num, default_pdict):
+        #Lea's method, rewrite this with desired inputs and outputs.
+        """Loop over Parr, calculate delta-BIC values
 
-def ics(self, post, base_bic, base_chi2, base_logp, Parr, planet_num, default_pdict):
-    """Loop over Parr, calculate delta-BIC values
+        Args:
+            post (radvel Posteriors object): should have 'per{}'.format(planet_num) fixed.
+            base_bic (float): The comparison BIC value
+            planet_num (int): num_planets+1
+            default_pdict (dict): default params to start each maxlike fit
 
-    Args:
-        post (radvel Posteriors object): should have 'per{}'.format(planet_num) fixed.
-        base_bic (float): The comparison BIC value
-        Parr (array): List of periods to check
-        planet_num (int): num_planets+1
-        default_pdict (dict): default params to start each maxlike fit
+        Returns:
+            BICs (array): List of delta bic values (or delta aic values)
+        """
+        BICs = []
+        chi2arr = []
+        logparr = []
+        bestfit = []
 
-    Returns:
-        BICarr (array): List of delta bic values (or delta aic values)
-    """
-    BICarr = []
-    chi2arr = []
-    logparr = []
-    bestfit = []
+        for per in self.pers:
+        	#Reset post to default params:
+        	post = ut.reset_to_default(post, default_pdict)
 
-    for per in Parr:
-    	#Reset post to default params:
-    	post = ut.reset_to_default(post, default_pdict)
+            #Set the period in the post object and perform maxlike fitting
+            post.params['per{}'.format(planet_num)].value = per
+            post = radvel.fitting.maxlike_fitting(post)
 
-        #Set the period in the post object and perform maxlike fitting
-        post.params['per{}'.format(planet_num)].value = per
-        post = radvel.fitting.maxlike_fitting(post)
+            bic = post.bic()
+            delta_bic = base_bic - bic  #Should be positive since bic < base_bic
+            BICarr += [delta_bic]
 
-        bic = post.bic()
-        delta_bic = base_bic - bic  #Should be positive since bic < base_bic
-        BICarr += [delta_bic]
+            chi2 = np.sum((post.likelihood.residuals()**2.)/(post.likelihood.errorbars()**2.))
+            delta_chi2 = (base_chi2 - chi2) / base_chi2
+            chi2arr += [delta_chi2]
 
-        chi2 = np.sum((post.likelihood.residuals()**2.)/(post.likelihood.errorbars()**2.))
-        delta_chi2 = (base_chi2 - chi2) / base_chi2
-        chi2arr += [delta_chi2]
+            logp = post.logprob()
+            delta_logp = logp - base_logp
+            logparr += [delta_logp]
 
-        logp = post.logprob()
-        delta_logp = logp - base_logp
-        logparr += [delta_logp]
+            #Save best fit params too
+            best_params = {}
+            for k in post.params.keys():
+            	best_params[k] = post.params[k].value
+            bestfit += [best_params]
 
-        #Save best fit params too
-        best_params = {}
-        for k in post.params.keys():
-        	best_params[k] = post.params[k].value
-        bestfit += [best_params]
-
-    return BICarr, chi2arr, logparr, bestfit
+        self.power['bic'] = BICarr
+        self.bestfit = bestfit
+        #return BICarr, chi2arr, logparr, bestfit
 
     def per_ic(self, crit):
-        #BJ's method, replacing with Lea's method
+        #BJ's method.
         """Compute delta-BIC periodogram. crit is BIC or AIC."""
 
         baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=True)
@@ -102,7 +139,7 @@ def ics(self, post, base_bic, base_chi2, base_logp, Parr, planet_num, default_pd
 
             fit = radvel.fitting.maxlike_fitting(post, verbose=False)
 
-            power[i] = (fit.crit() - baseline_ic)
+            power[i] = (fit.crit() - baseline_ic[i])
 
             print(i, per, power[i], fit.crit(), baseline_ic)
         self.power['bic'] = power
@@ -186,38 +223,3 @@ def setup_posterior(post, num_known_planets):
                 post.params[parname].value = -9
 
     return (base_post, search_post)
-
-#TO-DO: MOVE INTO UTILS FILE?
-def freq_spacing(times, minp, maxp, oversampling=1, verbose=True):
-    """Get the number of sampled frequencies
-
-    Condition for spacing: delta nu such that during the
-    entire duration of observations, phase slip is no more than P/4
-
-    Args:
-        times (array): array of timestamps
-        minp (float): minimum period
-        maxp (float): maximum period
-        oversampling (float): (optional) oversampling factor
-        verbose (bool): (optional) print extra messages
-
-    Returns:
-        array: Array of test periods
-    """
-
-    fmin = 1 / maxp
-    fmax = 1 / minp
-
-    timlen = max(times) - min(times)
-    dnu = 1. / (4. * timlen)
-    numf = int((fmax - fmin) / dnu + 1)
-    res = numf
-    res *= oversampling
-
-    if verbose:
-        print("Number of test periods:", res)
-
-    Farr = np.linspace(1 / maxp, 1 / minp, res)
-    Parr = 1 / Farr
-
-    return Parr
