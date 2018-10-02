@@ -1,7 +1,6 @@
 #Search class.
 import numpy as np
 import pandas
-
 import radvel
 import radvel.fitting
 
