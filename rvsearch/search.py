@@ -1,12 +1,28 @@
-    #Search class.
+#Search class.
+import numpy as np
+import pandas
+
+import radvel
+import radvel.fitting
 
 class Search(object):
+    """
+    Class to initialize and modify posterior, send to periodogram class for planet search calculations.
+
+    Args:
+        data: pandas dataframe containing times, velocities, velocity errors, and telescope types.
+        params: List of radvel parameter objects.
+        priors: List of radvel prior objects.
+        aic: if True, use Akaike information criterion instead of BIC. STILL WORKING ON THIS
+    """
 
     def __init__(self, data, params, priors, aic=False):
         '''
         Initialize an instantiation of the search class
         Args:
             data (DataFrame): Must have column names 'time', 'mnvel', 'errvel', 'tel'
+            params (radvel Parameters object)
+            priors (list): radvel Priors objects
         '''
         #TO-DO: MAKE DATA INPUT MORE FLEXIBLE.
         '''
@@ -29,6 +45,7 @@ class Search(object):
         self.params = params
         self.priors = priors
 
+        #TRYING TO GENERALIZE INFORMATION CRITERION TO AIC OR BIC.
         '''
         if aic==False:
             self.crit = radvel.posterior.bic()
@@ -42,8 +59,6 @@ class Search(object):
         """Initialize a posterior object with data, params, and priors
 
         Args:
-            params (radvel Parameters object)
-            priors (list): radvel Priors objects
 
         Returns:
             post (radvel Posterior object)
