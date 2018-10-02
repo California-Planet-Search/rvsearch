@@ -16,10 +16,11 @@ class Periodogram(object):
             [default = calculated via rvsearch.periodograms.freq_spacing]
     """
     #TO-DO: IN __INIT__, CHANGE POSTERIOR INPUT TO SEARCH CLASS INPUT.
-    def __init__(self, search, minsearchp, maxsearchp, num_known_planets=0, num_freqs=None, valid_types = ['bic', 'ls']):
-        self.search = search #This is a Search class instantiation, includes posterior.
+    def __init__(self, search, minsearchp, maxsearchp, baseline=False, num_freqs=None, num_known_planets=0, valid_types = ['bic', 'ls']):
+        self.search = search #This is a Search class instantiation, includes posterior, which includes data.
         self.minsearchP = minsearchp
         self.maxsearchP = maxsearchp
+        self.baseline = baseline
         self.num_freqs = num_freqs
 
         self.num_known_planets = num_known_planets

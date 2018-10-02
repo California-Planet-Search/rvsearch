@@ -2,8 +2,33 @@
 
 class Search(object):
 
-    def __init__(self, t, v, verr, aic=False):
+    def __init__(self, data, params, priors, aic=False):
+        '''
+        Initialize an instantiation of the search class
+        Args:
+            data (DataFrame): Must have column names 'time', 'mnvel', 'errvel', 'tel'
+        '''
+        #TO-DO: MAKE DATA INPUT MORE FLEXIBLE.
+        '''
+        SOME INPUT TESTING OPTIONS:
+
         self.t, self.v, self.verr = t, v, verr
+
+        if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
+            self.data = data
+        else:
+            raise ValueError('Incorrect data input.')
+        '''
+
+        try:
+            'time', 'mnvel', 'errvel', 'tel' in data.columns
+            self.data = data
+        except:
+            raise ValueError('Incorrect data input.')
+
+        self.params = params
+        self.priors = priors
+
         '''
         if aic==False:
             self.crit = radvel.posterior.bic()
@@ -12,23 +37,23 @@ class Search(object):
         self.critname = self.crit.__string__
         '''
 
-    def initialize_post(self, params, data, priors):
+    def initialize_post(self):
+        #TO-DO: DEFINE 'DATA' INPUT, FIGURE OUT WHICH DATAFRAME FORMAT
         """Initialize a posterior object with data, params, and priors
 
         Args:
             params (radvel Parameters object)
-            data (DataFrame): Must have column names 'time', 'mnvel', 'errve', 'tel'
             priors (list): radvel Priors objects
 
         Returns:
             post (radvel Posterior object)
         """
 
-        iparams = radvel.basis._copy_params(params)
+        iparams = radvel.basis._copy_params(self.params)
 
         #initialize RVModel
-        time_base = np.mean([data['time'].max(), data['time'].min()])
-        mod = radvel.RVModel(params, time_base=time_base)
+        time_base = np.mean([self.data['time'].max(), self.data['time'].min()])
+        mod = radvel.RVModel(self.params, time_base=time_base)
 
         #initialize Likelihood objects for each instrument
         telgrps = data.groupby('tel').groups
@@ -36,8 +61,8 @@ class Search(object):
 
         for inst in telgrps.keys():
             likes[inst] = radvel.likelihood.RVLikelihood(
-                mod, data.iloc[telgrps[inst]].time, data.iloc[telgrps[inst]].mnvel,
-                data.iloc[telgrps[inst]].errvel, suffix='_'+inst)
+                mod, self.data.iloc[telgrps[inst]].time, self.data.iloc[telgrps[inst]].mnvel,
+                self.data.iloc[telgrps[inst]].errvel, suffix='_'+inst)
 
             likes[inst].params['gamma_'+inst] = iparams['gamma_'+inst]
             likes[inst].params['jit_'+inst] = iparams['jit_'+inst]
@@ -45,7 +70,7 @@ class Search(object):
         like = radvel.likelihood.CompositeLikelihood(list(likes.values()))
 
         post = radvel.posterior.Posterior(like)
-        post.priors = priors
+        post.priors = self.priors
 
         self.post = post
         #return post
