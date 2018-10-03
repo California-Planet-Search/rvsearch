@@ -2,6 +2,7 @@ import numpy as np
 import astropy.stats
 import radvel
 import radvel.fitting
+import matplotlib.pyplot as plt
 
 class Periodogram(object):
     """
@@ -125,7 +126,7 @@ class Periodogram(object):
         #return BICarr, chi2arr, logparr, bestfit
 
     def per_ic(self, crit):
-        #BJ's method.
+        #BJ's method. Remove once final BIC/AIC method is established.
         """Compute delta-BIC periodogram. crit is BIC or AIC."""
 
         baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=True)
@@ -168,8 +169,32 @@ class Periodogram(object):
             except:
                 print('Have not generated a Lomb-Scargle periodogram.')
 
-    def plot_per(self):
-        pass
+    def plot_per(self, ls=False, save=True):
+        #TO-DO: WORK IN AIC/BIC OPTION, INCLUDE IN PLOT TITLE
+        peak = np.argmax(self.power['bic'])
+        f_real = 1./p[peak]
+
+        fig, ax = plt.subplots()
+        ax.set_title('Planet ' + str(self.search.planet_num)) #TO-DO: FIGURE OUT WHERE PLANET_NUM IS
+        ax.plot(self.pers, self.power['bic'])
+        ax.scatter(self.pers[peak], self.power['bic'][peak], label='{} days'.format(
+                   np.round(self.pers[peak], decimals=1)))
+        ax.legend(loc=3)
+
+        #Plot day, month, and year aliases.
+        for alias in [1, 30, 365]:
+            #Is this right? ASK BJ
+            f_ap = 1/cad + f_real
+            f_am = 1/cad - f_real
+            ax.axvline(1/f_am, linestyle='--', label='Minus {} day alias'.format(cad))
+            ax.axvline(1/f_ap, linestyle='--', label='Plus {} day alias'.format(cad))
+        ax.set_xscale('log')
+        ax.set_xlabel('Period (days)')
+        ax.set_ylabel(r'$\Delta$BIC') #TO-DO: WORK IN AIC/BIC OPTION
+        ax.set_title('Planet ' + str(self.search.planet_num)) #TO-DO: FIGURE OUT WHERE PLANET_NUM IS
+
+        #Store figure as object attribute, make separate saving functionality?
+        self.fig = fig
 
     def eFAP_thresh(self, fap=0.01):
     	"""

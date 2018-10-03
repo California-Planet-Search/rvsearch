@@ -6,7 +6,8 @@ import radvel.fitting
 
 class Search(object):
     """
-    Class to initialize and modify posterior, send to periodogram class for planet search calculations.
+    Class to initialize and modify posteriors as planet search runs,
+    send to Periodogram class for periodogram and IC-threshold calculations.
 
     Args:
         data: pandas dataframe containing times, velocities, velocity errors, and telescope types.
@@ -88,7 +89,8 @@ class Search(object):
 
         self.post = post
         #return post
-
+        
+    '''
     def add_planet(self, post, default_pdict, data):
         current_planets = post.params.num_planets
         fitting_basis = post.params.basis.name
@@ -103,7 +105,6 @@ class Search(object):
 
         for pl in range(1, new_planet_index+1):
         	for par in param_list:
-
             	parkey = par + str(pl)
 
             	if parkey in default_pdict.keys():
@@ -146,6 +147,7 @@ class Search(object):
 
     def sub_planet(self, post):
         pass
+    '''
 
     def save(self, post, filename=None):
         if filename != None:
