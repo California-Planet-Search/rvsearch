@@ -6,5 +6,8 @@ class Inject(object):
     the Search class, once the planet detection loop has been completed.
 
     Args:
-        search: instatiation of the Search class, once planet search has been completed.
+        post: Posterior, often taken from a completed instatiation of the Search class,
+        once planet search has been completed.
     """
+    def __init__(self, post):
+        self.basepost = post

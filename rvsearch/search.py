@@ -148,15 +148,15 @@ class Search(object):
         self.post = new_post
         #return new_post
 
-    def sub_planet(self, post):
-        pass
+    def sub_planet(self):
+        self.posts = self.posts[:-1]
     '''
 
     def save(self, post, filename=None):
         if filename != None:
             post.writeto(filename)
         else:
-            post.writeto('post.pkl')
+            post.writeto('post_final.pkl')
         #Write this so that it can be iteratively applied with each planet addition.
 
     def plot_model(self, post):
