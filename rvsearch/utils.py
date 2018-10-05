@@ -5,8 +5,18 @@ import radvel
 import cpsutils
 from cpsutils import io
 
+'''
+Functions for posterior modification (resetting parameters, intializing, etc.)
+'''
+def reset_params(post, default_pdict):
+	#Reset post.params values to default values
+    pass
+
+'''
+Series of functions for reading data from various sources into pandas dataframes.
+'''
 def read_from_csv(filename, verbose=True):
-    data = pd.DataFrame.read_csv(filename)
+    data = pd.DataFrame.from_csv(filename)
     if 'tel' not in data.columns:
         if verbose:
             print('Telescope type not given, defaulting to HIRES.')

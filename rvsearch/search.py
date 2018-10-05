@@ -16,14 +16,14 @@ class Search(object):
         aic: if True, use Akaike information criterion instead of BIC. STILL WORKING ON THIS
     """
 
-    def __init__(self, data, params, priors, aic=False):
-        '''
+    def __init__(self, data, priors, params=[], default_pdict=[], aic=False):
+        """
         Initialize an instantiation of the search class
         Args:
             data (DataFrame): Must have column names 'time', 'mnvel', 'errvel', 'tel'
             params (radvel Parameters object)
             priors (list): radvel Priors objects
-        '''
+        """
         #TO-DO: MAKE DATA INPUT MORE FLEXIBLE.
         '''
         SOME INPUT TESTING OPTIONS:
@@ -36,14 +36,16 @@ class Search(object):
             raise ValueError('Incorrect data input.')
         '''
 
-        try:
-            'time', 'mnvel', 'errvel', 'tel' in data.columns
+        if 'time', 'mnvel', 'errvel', 'tel' in data.columns
             self.data = data
-        except:
+        else:
             raise ValueError('Incorrect data input.')
 
-        self.params = params
+        #self.params = params
+        self.params = radvel.Parameters(0, basis='per tc secosw sesinw logk')
+        #Might not need priors?
         self.priors = priors
+        self.default_pdict = pdict
 
         #TRYING TO GENERALIZE INFORMATION CRITERION TO AIC OR BIC.
         '''
@@ -56,7 +58,8 @@ class Search(object):
 
     def initialize_post(self):
         #TO-DO: DEFINE 'DATA' INPUT, FIGURE OUT WHICH DATAFRAME FORMAT
-        """Initialize a posterior object with data, params, and priors
+        """
+        Initialize a posterior object with data, params, and priors
 
         Args:
 
@@ -89,7 +92,7 @@ class Search(object):
 
         self.post = post
         #return post
-        
+
     '''
     def add_planet(self, post, default_pdict, data):
         current_planets = post.params.num_planets

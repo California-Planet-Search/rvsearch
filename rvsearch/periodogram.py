@@ -4,6 +4,9 @@ import radvel
 import radvel.fitting
 import matplotlib.pyplot as plt
 
+import utils
+
+
 class Periodogram(object):
     """
     Class to calculate and store periodograms.
@@ -17,20 +20,26 @@ class Periodogram(object):
             [default = calculated via rvsearch.periodograms.freq_spacing]
     """
     #TO-DO: IN __INIT__, CHANGE POSTERIOR INPUT TO SEARCH CLASS INPUT.
-    def __init__(self, search, minsearchp, maxsearchp, baseline=False, num_freqs=None, num_known_planets=0, valid_types = ['bic', 'ls']):
+    def __init__(self, search, minsearchp, maxsearchp, baseline=False, num_freqs=None,
+                 num_known_planets=0, valid_types = ['bic', 'ls']):
         self.search = search #This is a Search class instantiation, includes posterior, which includes data.
+        self.post = self.search.post
+
+        self.num_known_planets = num_known_planets
+
+        self.times = self.post.likelihood.x
+        self.vel = self.post.likelihood.y
+        self.errvel = self.post.likelihood.yerr
+
+        self.timelen = np.amax(self.times) - np.amin(self.times)
+
         self.minsearchP = minsearchp
         self.maxsearchP = maxsearchp
         self.baseline = baseline
         self.num_freqs = num_freqs
 
-        self.num_known_planets = num_known_planets
-
-        self.post = search.post
-
-        self.times = self.post.likelihood.x
-        self.vel = self.post.likelihood.y
-        self.errvel = self.post.likelihood.yerr
+        if self.baseline == True:
+            self.maxsearchP = 4. * self.timelen #SHOULD '4' BE VARIABLE?
 
         self.valid_types = valid_types
         self.power = {key: None for key in self.valid_types}
@@ -53,10 +62,9 @@ class Periodogram(object):
         """
 
         fmin = 1. / self.maxsearchP
-        fmax = 1. / self.maxsearchP
+        fmax = 1. / self.minsearchP
 
-        timlen = np.amax(self.times) - np.amin(self.times)
-        dnu = 1. / (4. * timlen)
+        dnu = 1. / (4. * self.timlen)
         numf = int((fmax - fmin) / dnu + 1)
         res = numf
         res *= oversampling
@@ -77,8 +85,9 @@ class Periodogram(object):
 
         self.freqs = 1/self.pers
 
-    def bics(self, post, base_bic, base_chi2, base_logp, planet_num, default_pdict):
+    def bics(self, post, base_bic, base_chi2, base_logp, planet_num):
         #Lea's method, rewrite this with desired inputs and outputs.
+        #base_bic is the nth planet BIC array (we are calculating n+1th)
         """Loop over Parr, calculate delta-BIC values
 
         Args:
@@ -94,10 +103,11 @@ class Periodogram(object):
         chi2arr = []
         logparr = []
         bestfit = []
+        post = self.post
 
         for per in self.pers:
         	#Reset post to default params:
-        	post = ut.reset_to_default(post, default_pdict)
+            post = utils.reset_params(post, self.search.default_pdict)
 
             #Set the period in the post object and perform maxlike fitting
             post.params['per{}'.format(planet_num)].value = per
