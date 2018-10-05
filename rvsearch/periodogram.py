@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import utils
 
 
-class Periodogram(object):
+class Periodogram:
     """
     Class to calculate and store periodograms.
 
@@ -20,9 +20,10 @@ class Periodogram(object):
             [default = calculated via rvsearch.periodograms.freq_spacing]
     """
 
-    def __init__(self, post, minsearchp, maxsearchp, baseline=False, num_freqs=None,
-                 num_known_planets=0, valid_types = ['bic', 'ls']):
-        self.post = post
+    def __init__(self, post1, post2, minsearchp=3, maxsearchp=10000, baseline=False,
+                 num_freqs=None, num_known_planets=0, valid_types = ['bic', 'ls']):
+        self.post1 = post1
+        self.post2 = post2
 
         self.num_known_planets = num_known_planets
 
@@ -42,6 +43,13 @@ class Periodogram(object):
 
         self.valid_types = valid_types
         self.power = {key: None for key in self.valid_types}
+
+    def from_post(cls, post):
+        return cls()
+
+    def from_csv(cls, filename):
+        post = #Draw from raw data
+        return cls(post)
 
     def freq_spacing(self, oversampling=1, verbose=True):
         """Get the number of sampled frequencies
