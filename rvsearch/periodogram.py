@@ -20,10 +20,10 @@ class Periodogram:
             [default = calculated via rvsearch.periodograms.freq_spacing]
     """
 
-    def __init__(self, post1, post2, minsearchp=3, maxsearchp=10000, baseline=False,
+    def __init__(self, post, basebic=None, minsearchp=3, maxsearchp=10000, baseline=False,
                  num_freqs=None, num_known_planets=0, valid_types = ['bic', 'ls']):
-        self.post1 = post1
-        self.post2 = post2
+        self.post = post
+        self.basebic = basebic
 
         self.num_known_planets = num_known_planets
 
@@ -45,10 +45,12 @@ class Periodogram:
         self.power = {key: None for key in self.valid_types}
 
     def from_post(cls, post):
-        return cls()
+        #return cls()
+        pass
 
     def from_csv(cls, filename):
-        post = #Draw from raw data
+        data = utils.read_from_csv(filename)
+        post = utils.initialize_post(data)
         return cls(post)
 
     def freq_spacing(self, oversampling=1, verbose=True):
@@ -208,7 +210,7 @@ class Periodogram:
         ax.set_xscale('log')
         ax.set_xlabel('Period (days)')
         ax.set_ylabel(r'$\Delta$BIC') #TO-DO: WORK IN AIC/BIC OPTION
-        ax.set_title('Planet ' + str(self.search.planet_num)) #TO-DO: FIGURE OUT WHERE PLANET_NUM IS
+        ax.set_title('Planet {}'.format(self.planet_num)) #TO-DO: FIGURE OUT WHERE PLANET_NUM IS
 
         #Store figure as object attribute, make separate saving functionality?
         self.fig = fig
@@ -219,7 +221,7 @@ class Periodogram:
         From Lea's code. TO-DO: DEFINE BICARR, ETC. BICARR IS A BIC PERIODOGRAM. LOMB-S OPTION?
     	"""
     	#select out intermediate values of BIC
-    	sBIC = np.sort(BICarr)
+    	sBIC = np.sort(self.power['bic'])
     	crop_BIC = sBIC[int(0.5*len(sBIC)):int(0.95*len(sBIC))] #select only median - 95% vals
 
     	#histogram
@@ -232,7 +234,7 @@ class Periodogram:
     	func = np.poly1d(np.polyfit(cent, np.log10(nhist), 1))
     	xmod = np.linspace(np.min(BICarr[BICarr==BICarr]), 10.*np.max(BICarr), 10000)
     	lfit = 10.**(func(xmod))
-    	fap_min = 10.**func(max(BICarr)) * len(BICarr)
+    	fap_min = 10.**func(max(self.power['bic'])) * self.num_freqs
 
     	thresh = xmod[np.where(np.abs(lfit-fap/len(BICarr)) == np.min(np.abs(lfit-fap/len(BICarr))))]
     	return thresh[0], fap_min

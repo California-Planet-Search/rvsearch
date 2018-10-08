@@ -12,6 +12,43 @@ def reset_params(post, default_pdict):
 	#Reset post.params values to default values
     pass
 
+def initialize_post(data, params=None):
+    #TO-DO: DEFINE 'DATA' INPUT, FIGURE OUT WHICH DATAFRAME FORMAT
+    """
+    Initialize a posterior object with data, params, and priors
+
+    Args:
+
+    Returns:
+        post (radvel Posterior object)
+    """
+
+    if params == None:
+        params = radvel.Parameters(0, basis='per tc secosw sesinw logk')
+    iparams = radvel.basis._copy_params(self.params)
+
+    #initialize RVModel
+    time_base = np.mean([data['time'].max(), data['time'].min()])
+    mod = radvel.RVModel(self.params, time_base=time_base)
+
+    #initialize Likelihood objects for each instrument
+    telgrps = data.groupby('tel').groups
+    likes = {}
+
+    for inst in telgrps.keys():
+        likes[inst] = radvel.likelihood.RVLikelihood(
+            mod, data.iloc[telgrps[inst]].time, data.iloc[telgrps[inst]].mnvel,
+            data.iloc[telgrps[inst]].errvel, suffix='_'+inst)
+
+        likes[inst].params['gamma_'+inst] = iparams['gamma_'+inst]
+        likes[inst].params['jit_'+inst] = iparams['jit_'+inst]
+
+    like = radvel.likelihood.CompositeLikelihood(list(likes.values()))
+
+    post = radvel.posterior.Posterior(like)
+    #post.priors = self.priors
+    return post
+
 '''
 Series of functions for reading data from various sources into pandas dataframes.
 '''
