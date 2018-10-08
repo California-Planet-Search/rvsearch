@@ -44,19 +44,22 @@ class Periodogram:
         self.valid_types = valid_types
         self.power = {key: None for key in self.valid_types}
 
+    @classmethod
     def from_post(cls, post):
         return cls(post)
 
+    @classmethod
     def from_pandas(cls, data):
         params = utils.initialize_default_pars()
         post = utils.initialize_post(data, params=params)
         return cls(post)
 
-    def from_csv(filename):
+    @classmethod
+    def from_csv(cls, filename):
         data = utils.read_from_csv(filename)
         params = utils.initialize_default_pars()
         post = utils.initialize_post(data, params=params)
-        return Peridogram(post)
+        return cls(post)
 
     def freq_spacing(self, oversampling=1, verbose=True):
         """Get the number of sampled frequencies
@@ -78,7 +81,7 @@ class Periodogram:
         fmin = 1. / self.maxsearchP
         fmax = 1. / self.minsearchP
 
-        dnu = 1. / (4. * self.timlen)
+        dnu = 1. / (4. * self.timelen)
         numf = int((fmax - fmin) / dnu + 1)
         res = numf
         res *= oversampling
@@ -86,24 +89,59 @@ class Periodogram:
         if verbose:
             print("Number of test periods:", res)
 
-        Farr = np.linspace(1 / maxp, 1 / minp, res)
+        Farr = np.linspace(fmin, fmax, res)
         Parr = 1 / Farr
 
         return Parr
 
     def make_per_grid(self):
-        if num_freqs is None:
-            self.pers = self.freq_spacing(self.times, self.minsearchP, self.maxsearchP)
+        if self.num_freqs is None:
+            self.pers = self.freq_spacing()#(self.times, self.minsearchP, self.maxsearchP)
         else:
             self.pers = 1/np.linspace(1/self.maxsearchP, 1/self.minsearchP, self.num_freqs)
 
         self.freqs = 1/self.pers
 
-    def base_bics(self, post):
+    def trend_post(self):
         #Perform 0-planet baseline fit.
-        pass
+        post1 = copy.deepcopy(self.post)
 
-    def bics(self, post, base_bic, planet_num):
+        trend_curve_bic = post.bic()
+        dvdt_val = self.post.params['dvdt'].value
+        curv_val = self.post.params['curv'].value
+
+        #Test without curvature
+        post1.params['curv'].value = 0.0
+        post1.params['curv'].vary = False
+        post1 = radvel.fitting.maxlike_fitting(post)
+
+        trend_bic = post.bic()
+
+        #Test without trend or curvature
+        post2 = copy.deepcopy(post1)
+
+        post2.params['dvdt'].value = 0.0
+        post2.params['dvdt'].vary = False
+    	post2 = radvel.fitting.maxlike_fitting(post2)
+
+    	flat_bic = post2.bic()
+    	print 'Flat:{}; Trend:{}; Curv:{}'.format(flat_bic, trend_bic, tc_bic)
+
+    	if trend_bic < flat_bic - 5.:
+    		#Flat model is excluded, check on curvature
+    		if tc_bic < trend_bic - 5.:
+    			#curvature model is preferred
+    			return self.post #t+c
+
+    		return post1 #trend only
+
+    	return post2 #flat
+
+    def base_bic(self):
+        base_post = self.trend_post()
+        self.base_bic = base_post.bic()
+
+    def bics(self, base_bic=None, planet_num=0):
         #Lea's method, rewrite this with desired inputs and outputs.
         #base_bic is the nth planet BIC array (we are calculating n+1th)
         """Loop over Parr, calculate delta-BIC values
@@ -119,7 +157,9 @@ class Periodogram:
         """
         BICs = []
         bestfit = []
-        post = self.post
+        post = copy.deepcopy(self.post)
+        if base_bic == None:
+            base_bic = self.base_bic()
 
         for per in self.pers:
         	#Reset post to default params:
@@ -149,20 +189,21 @@ class Periodogram:
         """
 
         baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=True)
-        post = setup_posterior(self.post, self.num_known_planets)
+        #post = setup_posterior(self.post, self.num_known_planets)
         baseline_bic = baseline_fit.bic()
 
-        power = np.zeros_like(self.per_array)
-        for i, per in enumerate(self.per_array):
+        power = np.zeros_like(self.pers)
+        for i, per in enumerate(self.pers):
             perkey = 'per{}'.format(self.num_known_planets + 1)
-            post.params[perkey].value = per
-            post.params[perkey].vary = False
+            self.post.params[perkey].value = per
+            self.post.params[perkey].vary = False
 
-            fit = radvel.fitting.maxlike_fitting(post, verbose=False)
+            fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
 
-            power[i] = (fit.bic() - baseline_bic[i])
+            power[i] = (fit.bic() - baseline_bic)#[i])
 
-            print(i, per, power[i], fit.crit(), baseline_bic)
+            #print(i, per, power[i], fit.bic(), baseline_bic)
+        print(np.std(power))
         self.power['bic'] = power
 
     def ls(self):
@@ -174,50 +215,6 @@ class Periodogram:
         power = astropy.stats.LombScargle(self.times, self.vel, self.errvel).power(self.freq_array)
 
         self.power['ls'] = power
-
-    def save_per(self, ls=False):
-        if ls==False:
-            try:
-                #FIX THIS; SPECIFY DIRECTORY/NAME, NUMBER OF PLANETS IN FILENAME, AND ARRAY ORDERING
-                np.savetxt((self.per_array, self.power['bic']), filename='BIC_periodogram.csv')
-            except:
-                print('Have not generated a delta-BIC periodogram.')
-        else:
-            try:
-                #FIX THIS, SPECIFY DIRECTORY/NAME, NUMBER OF PLANETS IN FILENAME, AND ARRAY ORDERING
-                np.savetxt((self.per_array, self.power['LS']), filename='LS_periodogram.csv')
-            except:
-                print('Have not generated a Lomb-Scargle periodogram.')
-
-    def plot_per(self, ls=False, save=True):
-        #TO-DO: WORK IN AIC/BIC OPTION, INCLUDE IN PLOT TITLE
-        peak = np.argmax(self.power['bic'])
-        f_real = 1./p[peak]
-
-        fig, ax = plt.subplots()
-        ax.set_title('Planet ' + str(self.search.planet_num)) #TO-DO: FIGURE OUT WHERE PLANET_NUM IS
-        ax.plot(self.pers, self.power['bic'])
-        ax.scatter(self.pers[peak], self.power['bic'][peak], label='{} days'.format(
-                   np.round(self.pers[peak], decimals=1)))
-        ax.legend(loc=3)
-
-        #Plot day, month, and year aliases.
-        for alias in [1, 30, 365]:
-            #Is this right? ASK BJ
-            f_ap = 1/cad + f_real
-            f_am = 1/cad - f_real
-            ax.axvline(1/f_am, linestyle='--', label='Minus {} day alias'.format(cad))
-            ax.axvline(1/f_ap, linestyle='--', label='Plus {} day alias'.format(cad))
-        ax.set_xscale('log')
-        ax.set_xlabel('Period (days)')
-        ax.set_ylabel(r'$\Delta$BIC') #TO-DO: WORK IN AIC/BIC OPTION
-        ax.set_title('Planet {}'.format(self.planet_num)) #TO-DO: FIGURE OUT WHERE PLANET_NUM IS
-
-        #Store figure as object attribute, make separate saving functionality?
-        self.fig = fig
-        if save == True:
-            #FINISH THIS
-            fig.savefig('dbic.pdf')
 
     def eFAP_thresh(self, fap=0.01):
     	"""Calculate the threshold for significance based on BJ's eFAP algorithm
@@ -241,6 +238,52 @@ class Periodogram:
 
     	thresh = xmod[np.where(np.abs(lfit-fap/len(BICarr)) == np.min(np.abs(lfit-fap/len(BICarr))))]
     	return thresh[0], fap_min
+
+    def save_per(self, ls=False):
+        if ls==False:
+            try:
+                #FIX THIS; SPECIFY DIRECTORY/NAME, NUMBER OF PLANETS IN FILENAME, AND ARRAY ORDERING
+                np.savetxt((self.per_array, self.power['bic']), filename='BIC_periodogram.csv')
+            except:
+                print('Have not generated a delta-BIC periodogram.')
+        else:
+            try:
+                #FIX THIS, SPECIFY DIRECTORY/NAME, NUMBER OF PLANETS IN FILENAME, AND ARRAY ORDERING
+                np.savetxt((self.pers, self.power['LS']), filename='LS_periodogram.csv')
+            except:
+                print('Have not generated a Lomb-Scargle periodogram.')
+
+    def plot_per(self, ls=False, save=True):
+        #TO-DO: WORK IN AIC/BIC OPTION, INCLUDE IN PLOT TITLE
+        peak = np.argmax(self.power['bic'])
+        f_real = self.freqs[peak]
+
+        fig, ax = plt.subplots()
+        ax.set_title('Planet ' + str(self.num_known_planets+1)) #TO-DO: GET PLANET NUMBER RIGHT
+        ax.plot(self.pers, self.power['bic'])
+        ax.scatter(self.pers[peak], self.power['bic'][peak], label='{} days'.format(
+                   np.round(self.pers[peak], decimals=1)))
+        ax.legend(loc=3)
+
+        #Plot day, month, and year aliases.
+        colors = ['r', 'b', 'g']
+        for alias in [1, 30, 365]:
+            #Is this right? ASK BJ
+            f_ap = 1./alias + f_real
+            f_am = 1./alias - f_real
+            ax.axvline(1./f_am, linestyle='--', label='Minus {} day alias'.format(alias))
+            ax.axvline(1./f_ap, linestyle='--', label='Plus {} day alias'.format(alias))
+        ax.legend(loc=3)
+        ax.set_xscale('log')
+        ax.set_xlabel('Period (days)')
+        ax.set_ylabel(r'$\Delta$BIC') #TO-DO: WORK IN AIC/BIC OPTION
+        ax.set_title('Planet {}'.format(self.num_known_planets+1)) #TO-DO: FIGURE OUT WHERE PLANET_NUM IS
+
+        #Store figure as object attribute, make separate saving functionality?
+        self.fig = fig
+        if save == True:
+            #FINISH THIS
+            fig.savefig('dbic.pdf')
 
 
 #TO-DO: MOVE THESE INTO CLASS STRUCTURE
@@ -269,4 +312,5 @@ def setup_posterior(post, num_known_planets):
             elif par == 'logk':
                 post.params[parname].value = -9
 
-    return (base_post, search_post)
+    #return (base_post, search_post)
+    return search_post
