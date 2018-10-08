@@ -15,13 +15,11 @@ class Search(object):
         aic: if True, use Akaike information criterion instead of BIC. STILL WORKING ON THIS
     """
 
-    def __init__(self, data, starname, params=[], priors=[], default_pdict=[], aic=False):
-        #TO-DO: MAKE DATA INPUT MORE FLEXIBLE.
+    def __init__(self, data, starname, max_planets=5,
+                 params=[], priors=[], default_pdict=[], aic=False):
         '''
         SOME INPUT TESTING OPTIONS:
-
         self.t, self.v, self.verr = t, v, verr
-
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
         else:

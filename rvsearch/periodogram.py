@@ -20,9 +20,10 @@ class Periodogram:
     """
 
     def __init__(self, post, basebic=None, num_known_planets=0, minsearchp=3, maxsearchp=10000,
-                 baseline=False, num_freqs=None, valid_types = ['bic', 'ls']):
+                 baseline=True, num_freqs=None, valid_types = ['bic', 'ls']):
         self.post = post
         self.basebic = basebic
+        #self.default_pdict = default_pdict
 
         self.num_known_planets = num_known_planets
 
@@ -47,13 +48,15 @@ class Periodogram:
         return cls(post)
 
     def from_pandas(cls, data):
-        post = utils.initialize_post(data)
+        params = utils.initialize_default_pars()
+        post = utils.initialize_post(data, params=params)
         return cls(post)
 
     def from_csv(filename):
         data = utils.read_from_csv(filename)
-        post = utils.initialize_post(data)
-        return Periodogram(post)
+        params = utils.initialize_default_pars()
+        post = utils.initialize_post(data, params=params)
+        return Peridogram(post)
 
     def freq_spacing(self, oversampling=1, verbose=True):
         """Get the number of sampled frequencies
@@ -96,7 +99,11 @@ class Periodogram:
 
         self.freqs = 1/self.pers
 
-    def bics(self, post, base_bic, base_chi2, base_logp, planet_num):
+    def base_bics(self, post):
+        #Perform 0-planet baseline fit.
+        pass
+
+    def bics(self, post, base_bic, planet_num):
         #Lea's method, rewrite this with desired inputs and outputs.
         #base_bic is the nth planet BIC array (we are calculating n+1th)
         """Loop over Parr, calculate delta-BIC values
@@ -111,14 +118,12 @@ class Periodogram:
             BICs (array): List of delta bic values (or delta aic values)
         """
         BICs = []
-        chi2arr = []
-        logparr = []
         bestfit = []
         post = self.post
 
         for per in self.pers:
         	#Reset post to default params:
-            post = utils.reset_params(post, self.search.default_pdict)
+            post = utils.reset_params(post, self.default_pdict)
 
             #Set the period in the post object and perform maxlike fitting
             post.params['per{}'.format(planet_num)].value = per
@@ -128,14 +133,6 @@ class Periodogram:
             delta_bic = base_bic - bic  #Should be positive since bic < base_bic
             BICarr += [delta_bic]
 
-            chi2 = np.sum((post.likelihood.residuals()**2.)/(post.likelihood.errorbars()**2.))
-            delta_chi2 = (base_chi2 - chi2) / base_chi2
-            chi2arr += [delta_chi2]
-
-            logp = post.logprob()
-            delta_logp = logp - base_logp
-            logparr += [delta_logp]
-
             #Save best fit params too
             best_params = {}
             for k in post.params.keys():
@@ -144,7 +141,7 @@ class Periodogram:
 
         self.power['bic'] = BICarr
         self.bestfit = bestfit
-        #return BICarr, chi2arr, logparr, bestfit
+        #return BICarr, bestfit
 
     def per_bic(self):
         #BJ's method. Remove once final BIC/AIC method is established.
