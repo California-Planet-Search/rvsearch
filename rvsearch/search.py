@@ -5,8 +5,7 @@ import radvel
 import radvel.fitting
 
 class Search(object):
-    """
-    Class to initialize and modify posteriors as planet search runs,
+    """Class to initialize and modify posteriors as planet search runs,
     send to Periodogram class for periodogram and IC-threshold calculations.
 
     Args:
@@ -17,8 +16,7 @@ class Search(object):
     """
 
     def __init__(self, data, priors, params=[], default_pdict=[], aic=False):
-        """
-        Initialize an instantiation of the search class
+        """Initialize an instantiation of the search class
         Args:
             data (DataFrame): Must have column names 'time', 'mnvel', 'errvel', 'tel'
             params (radvel Parameters object)
@@ -46,6 +44,7 @@ class Search(object):
         #Might not need priors?
         self.priors = priors
         self.default_pdict = pdict
+        self.all_posts = []
 
         #TRYING TO GENERALIZE INFORMATION CRITERION TO AIC OR BIC.
         '''
@@ -58,8 +57,7 @@ class Search(object):
 
     def initialize_post(self):
         #TO-DO: DEFINE 'DATA' INPUT, FIGURE OUT WHICH DATAFRAME FORMAT
-        """
-        Initialize a posterior object with data, params, and priors
+        """Initialize a posterior object with data, params, and priors
 
         Args:
 
@@ -162,6 +160,7 @@ class Search(object):
     def plot_model(self, post):
         pass
 
-    def all_posts(self):
+    def save_all_posts(self):
         #Return list of posteriors for each nth planet model
+        #self.all_posts
         pass

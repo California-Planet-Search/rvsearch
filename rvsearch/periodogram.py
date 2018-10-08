@@ -8,8 +8,7 @@ import utils
 
 
 class Periodogram:
-    """
-    Class to calculate and store periodograms.
+    """Class to calculate and store periodograms.
 
     Args:
         posterior (radvel.Posterior): radvel.Posterior object
@@ -20,8 +19,8 @@ class Periodogram:
             [default = calculated via rvsearch.periodograms.freq_spacing]
     """
 
-    def __init__(self, post, basebic=None, minsearchp=3, maxsearchp=10000, baseline=False,
-                 num_freqs=None, num_known_planets=0, valid_types = ['bic', 'ls']):
+    def __init__(self, post, basebic=None, num_known_planets=0, minsearchp=3, maxsearchp=10000,
+                 baseline=False, num_freqs=None, valid_types = ['bic', 'ls']):
         self.post = post
         self.basebic = basebic
 
@@ -45,13 +44,16 @@ class Periodogram:
         self.power = {key: None for key in self.valid_types}
 
     def from_post(cls, post):
-        #return cls()
-        pass
+        return cls(post)
 
-    def from_csv(cls, filename):
-        data = utils.read_from_csv(filename)
+    def from_pandas(cls, data):
         post = utils.initialize_post(data)
         return cls(post)
+
+    def from_csv(filename):
+        data = utils.read_from_csv(filename)
+        post = utils.initialize_post(data)
+        return Periodogram(post)
 
     def freq_spacing(self, oversampling=1, verbose=True):
         """Get the number of sampled frequencies
@@ -144,13 +146,14 @@ class Periodogram:
         self.bestfit = bestfit
         #return BICarr, chi2arr, logparr, bestfit
 
-    def per_ic(self, crit):
+    def per_bic(self):
         #BJ's method. Remove once final BIC/AIC method is established.
-        """Compute delta-BIC periodogram. crit is BIC or AIC."""
+        """Compute delta-BIC periodogram. ADD: crit is BIC or AIC.
+        """
 
         baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=True)
         post = setup_posterior(self.post, self.num_known_planets)
-        baseline_ic = baseline_fit.crit()
+        baseline_bic = baseline_fit.bic()
 
         power = np.zeros_like(self.per_array)
         for i, per in enumerate(self.per_array):
@@ -160,13 +163,14 @@ class Periodogram:
 
             fit = radvel.fitting.maxlike_fitting(post, verbose=False)
 
-            power[i] = (fit.crit() - baseline_ic[i])
+            power[i] = (fit.bic() - baseline_bic[i])
 
-            print(i, per, power[i], fit.crit(), baseline_ic)
+            print(i, per, power[i], fit.crit(), baseline_bic)
         self.power['bic'] = power
 
     def ls(self):
-        """Astropy Lomb-Scargle periodogram"""
+        """Astropy Lomb-Scargle periodogram
+        """
 
         print("Calculating Lomb-Scargle periodogram")
 
@@ -214,10 +218,12 @@ class Periodogram:
 
         #Store figure as object attribute, make separate saving functionality?
         self.fig = fig
+        if save == True:
+            #FINISH THIS
+            fig.savefig('dbic.pdf')
 
     def eFAP_thresh(self, fap=0.01):
-    	"""
-        Calculate the threshold for significance based on BJ's eFAP algorithm
+    	"""Calculate the threshold for significance based on BJ's eFAP algorithm
         From Lea's code. TO-DO: DEFINE BICARR, ETC. BICARR IS A BIC PERIODOGRAM. LOMB-S OPTION?
     	"""
     	#select out intermediate values of BIC
@@ -253,7 +259,6 @@ def setup_posterior(post, num_known_planets):
 
     Returns:
         tuple: (radvel.posterior object used as baseline fit, radvel.posterior used in search)
-
     """
     basis_pars = post.likelihood.params.basis.name.split()
 
