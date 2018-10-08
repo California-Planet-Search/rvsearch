@@ -15,13 +15,7 @@ class Search(object):
         aic: if True, use Akaike information criterion instead of BIC. STILL WORKING ON THIS
     """
 
-    def __init__(self, data, priors, params=[], default_pdict=[], aic=False):
-        """Initialize an instantiation of the search class
-        Args:
-            data (DataFrame): Must have column names 'time', 'mnvel', 'errvel', 'tel'
-            params (radvel Parameters object)
-            priors (list): radvel Priors objects
-        """
+    def __init__(self, data, starname, params=[], priors=[], default_pdict=[], aic=False):
         #TO-DO: MAKE DATA INPUT MORE FLEXIBLE.
         '''
         SOME INPUT TESTING OPTIONS:
@@ -34,11 +28,12 @@ class Search(object):
             raise ValueError('Incorrect data input.')
         '''
 
-        if 'time', 'mnvel', 'errvel', 'tel' in data.columns
+        if 'time', 'mnvel', 'errvel', 'tel' in data.columns:
             self.data = data
         else:
             raise ValueError('Incorrect data input.')
 
+        self.starname = starname
         #self.params = params
         self.params = radvel.Parameters(0, basis='per tc secosw sesinw logk')
         #Might not need priors?
@@ -148,6 +143,68 @@ class Search(object):
 
     def sub_planet(self):
         self.posts = self.posts[:-1]
+    '''
+
+    '''
+    def nominal_model(self, data, starname, fitting_basis='per tc secosw sesinw k'):
+    	"""Define the default nominal model. If binary orbit, read from table. Otherwise,
+    		define from default pars.
+    	"""
+    	binary_table = pd.read_csv('binary_orbits.csv',
+    								dtype={'star':str,'per':np.float64,'tc':np.float64,
+    										'e':np.float64,'w':np.float64,'k':np.float64})
+    	binlist = binary_table['star'].values
+
+    	instnames = np.unique(data['tel'].values)
+    	priors = [radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0) for inst in instnames]
+    	priors.append(radvel.prior.PositiveKPrior( 1 ))
+
+    	#pdb.set_trace()
+    	bin_orb = binary_table[binary_table['star']==starname]
+
+    	#pdb.set_trace()
+
+    	if len(bin_orb) > 0:
+    		anybasis_params = radvel.Parameters(num_planets=1, basis='per tc e w k')
+    		anybasis_params['tc1'] = radvel.Parameter(value=bin_orb['tc'].values[0])
+    		anybasis_params['w1'] = radvel.Parameter(value=bin_orb['w'].values[0])
+    		anybasis_params['k1'] = radvel.Parameter(value=bin_orb['k'].values[0])
+    		anybasis_params['e1'] = radvel.Parameter(value=bin_orb['e'].values[0])
+    		anybasis_params['per1'] = radvel.Parameter(value=bin_orb['per'].values[0])
+
+    		anybasis_params['dvdt'] = radvel.Parameter(value=0.0)
+    		anybasis_params['curv'] = radvel.Parameter(value=0.0)
+
+    		for inst in instnames:
+    			anybasis_params['gamma_'+inst] = radvel.Parameter(value=0.0)
+    			anybasis_params['jit_'+inst] = radvel.Parameter(value=2.0)
+    		#pdb.set_trace()
+    		params = anybasis_params.basis.to_any_basis(anybasis_params, fitting_basis)
+    		params['dvdt'].vary = False
+    		params['curv'].vary = False
+    		planet_num = 2
+
+    		priors.append(radvel.prior.EccentricityPrior( 1 ))
+    		post = ut.initialize_post(params, data, priors)
+    		#pdb.set_trace()
+    		post = radvel.fitting.maxlike_fitting(post) #Fit the best params for binary
+
+    		default_pdict = {} #Save the binary orbital params
+    		for k in post.params.keys():
+    			default_pdict[k] = post.params[k].value
+
+    		#Now add the planet onto the binary, with K==0 and no new free params
+    		post = ut.add_planet(post, default_pdict, data)
+
+    	else:
+    		planet_num = 1
+    		params = ut.initialize_default_pars(instnames)
+
+    		priors.append(radvel.prior.EccentricityPrior( 1 ))
+    		post = ut.initialize_post(params, data, priors)
+    		post = radvel.fitting.maxlike_fitting(post, verbose=False)
+
+    	return post, priors, planet_num
     '''
 
     def save(self, post, filename=None):
