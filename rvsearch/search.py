@@ -85,7 +85,7 @@ class Search(object):
         #return post
 
     '''
-    def add_planet(self, post, default_pdict, data):
+    def add_planet(self, post):
         current_planets = post.params.num_planets
         fitting_basis = post.params.basis.name
         param_list = fitting_basis.split()
@@ -141,6 +141,17 @@ class Search(object):
 
     def sub_planet(self):
         self.posts = self.posts[:-1]
+    '''
+
+    '''
+    def add_gp(self):
+        pass
+
+    def sub_gp(self):
+        try:
+            sub_gp
+        except:
+            raise RuntimeError('Model does not contain a Gaussian process.')
     '''
 
     '''

@@ -24,8 +24,8 @@ class Periodogram:
                  baseline=True, num_freqs=None, valid_types = ['bic', 'ls']):
         self.post = post
         self.default_pdict = {}
-		for k in post.params.keys():
-			self.default_pdict[k] = post.params[k].value
+        for k in post.params.keys():
+            self.default_pdict[k] = post.params[k].value
 
         self.basebic = basebic
 
@@ -167,8 +167,8 @@ class Periodogram:
         	#Reset post to default params:
             post = utils.reset_params(post, self.default_pdict)
 
-            #Set the period in the post object and perform maxlike fitting
-            post.params['per{}'.format(planet_num)].value = per
+            #Set the period in the posterior object and perform maxlike fitting:
+            post.params['per{}'.format(planet_num+1)].value = per
             post = radvel.fitting.maxlike_fitting(post)
 
             bic = post.bic()
@@ -193,17 +193,21 @@ class Periodogram:
         baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=True)
         #post = setup_posterior(self.post, self.num_known_planets)
         baseline_bic = baseline_fit.bic()
+        #Run trend-post-test here
+
+        #ALLOW PARAMETERS TO VARY, EXCEPT FOR ECCENTRICITY
+        self.post.params['k{}'.format(self.num_known_planets+1)].vary = True
+        self.post.params['tc{}'.format(self.num_known_planets+1)].vary = True
 
         power = np.zeros_like(self.pers)
         for i, per in enumerate(self.pers):
-            perkey = 'per{}'.format(self.num_known_planets + 1)
+            perkey = 'per{}'.format(self.num_known_planets+1)
             self.post.params[perkey].value = per
             self.post.params[perkey].vary = False
 
             fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
-            power[i] = (fit.bic() - baseline_bic)#[i])
+            power[i] = baseline_bic - fit.bic()
             #print(i, per, power[i], fit.bic(), baseline_bic)
-        print(np.std(power))
         self.power['bic'] = power
 
     def ls(self):
@@ -263,16 +267,17 @@ class Periodogram:
         ax.plot(self.pers, self.power['bic'])
         ax.scatter(self.pers[peak], self.power['bic'][peak], label='{} days'.format(
                    np.round(self.pers[peak], decimals=1)))
-        ax.legend(loc=3)
+        ax.legend(loc=1)
 
         #Plot day, month, and year aliases.
         colors = ['r', 'b', 'g']
-        for alias in [1, 30, 365]:
+        alias = [1, 30, 365]
+        for i in np.arange(3):
             #Is this right? ASK BJ
-            f_ap = 1./alias + f_real
-            f_am = 1./alias - f_real
-            ax.axvline(1./f_am, linestyle='--', label='Minus {} day alias'.format(alias))
-            ax.axvline(1./f_ap, linestyle='--', label='Plus {} day alias'.format(alias))
+            f_ap = 1./alias[i] + f_real
+            f_am = 1./alias[i] - f_real
+            ax.axvline(1./f_am, linestyle='--', c=colors[i], label='Minus {} day alias'.format(alias[i]))
+            #ax.axvline(1./f_ap, linestyle='--', c=colors[i], label='Plus {} day alias'.format(alias[i]))
         ax.legend(loc=3)
         ax.set_xscale('log')
         ax.set_xlabel('Period (days)')

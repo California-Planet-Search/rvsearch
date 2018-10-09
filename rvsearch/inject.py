@@ -9,4 +9,4 @@ class Inject(object):
         once planet search has been completed.
     """
     def __init__(self, post):
-        self.basepost = post
+        self.base_post = post
