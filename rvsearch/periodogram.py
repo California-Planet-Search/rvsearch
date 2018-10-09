@@ -3,6 +3,7 @@ import astropy.stats
 import radvel
 import radvel.fitting
 import matplotlib.pyplot as plt
+import copy
 
 import utils
 
@@ -22,8 +23,11 @@ class Periodogram:
     def __init__(self, post, basebic=None, num_known_planets=0, minsearchp=3, maxsearchp=10000,
                  baseline=True, num_freqs=None, valid_types = ['bic', 'ls']):
         self.post = post
+        self.default_pdict = {}
+		for k in post.params.keys():
+			self.default_pdict[k] = post.params[k].value
+
         self.basebic = basebic
-        #self.default_pdict = default_pdict
 
         self.num_known_planets = num_known_planets
 
@@ -106,36 +110,34 @@ class Periodogram:
         #Perform 0-planet baseline fit.
         post1 = copy.deepcopy(self.post)
 
-        trend_curve_bic = post.bic()
+        trend_curve_bic = self.post.bic()
         dvdt_val = self.post.params['dvdt'].value
         curv_val = self.post.params['curv'].value
 
         #Test without curvature
         post1.params['curv'].value = 0.0
         post1.params['curv'].vary = False
-        post1 = radvel.fitting.maxlike_fitting(post)
+        post1 = radvel.fitting.maxlike_fitting(post1)
 
-        trend_bic = post.bic()
+        trend_bic = post1.bic()
 
         #Test without trend or curvature
         post2 = copy.deepcopy(post1)
 
         post2.params['dvdt'].value = 0.0
         post2.params['dvdt'].vary = False
-    	post2 = radvel.fitting.maxlike_fitting(post2)
+        post2 = radvel.fitting.maxlike_fitting(post2)
 
-    	flat_bic = post2.bic()
-    	print 'Flat:{}; Trend:{}; Curv:{}'.format(flat_bic, trend_bic, tc_bic)
+        flat_bic = post2.bic()
+        print('Flat:{}; Trend:{}; Curv:{}'.format(flat_bic, trend_bic, trend_curve_bic))
 
-    	if trend_bic < flat_bic - 5.:
+        if trend_bic < flat_bic - 5.:
     		#Flat model is excluded, check on curvature
-    		if tc_bic < trend_bic - 5.:
+    	    if trend_curve_bic < trend_bic - 5.:
     			#curvature model is preferred
-    			return self.post #t+c
-
-    		return post1 #trend only
-
-    	return post2 #flat
+    		    return self.post #t+c
+    	    return post1 #trend only
+        return post2 #flat
 
     def base_bic(self):
         base_post = self.trend_post()
@@ -159,7 +161,7 @@ class Periodogram:
         bestfit = []
         post = copy.deepcopy(self.post)
         if base_bic == None:
-            base_bic = self.base_bic()
+            base_bic = self.base_bic
 
         for per in self.pers:
         	#Reset post to default params:
@@ -199,9 +201,7 @@ class Periodogram:
             self.post.params[perkey].vary = False
 
             fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
-
             power[i] = (fit.bic() - baseline_bic)#[i])
-
             #print(i, per, power[i], fit.bic(), baseline_bic)
         print(np.std(power))
         self.power['bic'] = power

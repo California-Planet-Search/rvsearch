@@ -10,7 +10,9 @@ from cpsutils import io
 
 def reset_params(post, default_pdict):
 	#Reset post.params values to default values
-    pass
+	for k in default_pdict.keys():
+		post.params[k].value = default_pdict[k]
+	return post
 
 def initialize_default_pars(instnames=['HIRES'], fitting_basis='per tc secosw sesinw k'):
     """Set up a default Parameters object. None of the basis values are free params,
