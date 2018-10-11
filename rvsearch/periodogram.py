@@ -81,18 +81,17 @@ class Periodogram:
         fmin = 1. / self.maxsearchP
         fmax = 1. / self.minsearchP
 
-        dnu = 1. / (4. * self.timelen)
-        numf = int((fmax - fmin) / dnu + 1)
-        res = numf
-        res *= oversampling
+        dnu       = 1. / (4. * self.timelen)
+        num_freq  = int((fmax - fmin) / dnu + 1)
+        num_freq *= oversampling
 
         if verbose:
-            print("Number of test periods:", res)
+            print("Number of test periods:", num_freq)
 
-        Farr = np.linspace(fmin, fmax, res)
-        Parr = 1 / Farr
+        freqs = np.linspace(fmin, fmax, num_freq)
+        pers = 1 / freqs
 
-        return Parr
+        return pers
 
     def make_per_grid(self):
         if self.num_freqs is None:
@@ -138,48 +137,6 @@ class Periodogram:
     def base_bic(self):
         base_post = self.trend_post()
         self.base_bic = base_post.Likelihood.bic()
-
-    def bics(self, base_bic=None):
-        #Lea's method, rewrite this with desired inputs and outputs.
-        #base_bic is the nth planet BIC array (we are calculating n+1th)
-        """Loop over Parr, calculate delta-BIC values
-
-        Args:
-            post (radvel Posteriors object): should have 'per{}'.format(planet_num) fixed.
-            base_bic (float): The comparison BIC value
-            planet_num (int): num_planets+1
-            default_pdict (dict): default params to start each maxlike fit
-
-        Returns:
-            BICs (array): List of delta bic values (or delta aic values)
-        """
-
-        BICs = []
-        bestfit = []
-        post = copy.deepcopy(self.post)
-        if base_bic == None:
-            base_bic = self.base_bic
-
-        for per in self.pers:
-        	#Reset post to default params:
-            post = utils.reset_params(post, self.default_pdict)
-
-            #Set the period in the posterior object and perform maxlike fitting:
-            post.params['per{}'.format(planet_num+1)].value = per
-            post = radvel.fitting.maxlike_fitting(post)
-
-            bic = post.Likelihood.bic()
-            delta_bic = base_bic - bic  #Should be positive since bic < base_bic
-            BICarr += [delta_bic]
-
-            #Save best fit params too
-            best_params = {}
-            for k in post.params.keys():
-            	best_params[k] = post.params[k].value
-            bestfit += [best_params]
-
-        self.power['bic'] = BICarr
-        #return BICarr, bestfit
 
     def per_bic(self):
         #BJ's method. Remove once final BIC/AIC method is established.

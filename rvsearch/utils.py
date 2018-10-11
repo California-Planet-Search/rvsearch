@@ -121,6 +121,3 @@ def read_from_vst(filename, verbose=True):
     data['errvel'] = b.errvel
     data['tel'] = 'HIRES'
     return data
-
-def read_from_cadence(starname, verbose=True):
-    pass

@@ -26,10 +26,8 @@ class Search(object):
             raise ValueError('Incorrect data input.')
 
         self.starname = starname
-        #self.params = params
-        #self.params = radvel.Parameters(1, basis='per tc secosw sesinw logk')
         self.params = utils.initialize_default_pars(instnames=self.tels)
-        #Might not need priors?
+        #Might not need priors? Do we want optional parameter input?
         self.priors = priors
         self.default_pdict = default_pdict
         self.all_posts = []
@@ -44,13 +42,7 @@ class Search(object):
         '''
 
     def initialize_post(self):
-        #TO-DO: DEFINE 'DATA' INPUT, FIGURE OUT WHICH DATAFRAME FORMAT
-        """Initialize a posterior object with data, params, and priors
-
-        Args:
-
-        Returns:
-            post (radvel Posterior object)
+        """Initialize a posterior object with data, params, and priors.
         """
 
         iparams = radvel.basis._copy_params(self.params)
@@ -80,57 +72,8 @@ class Search(object):
         #return post
 
     def add_planet(self):
-        current_planets = self.post.params.num_planets
-        fitting_basis = self.post.params.basis.name
-        param_list = fitting_basis.split()
-
-        new_planet_index = current_planets + 1
-
-        #Default values for new planet
-        def_pars = utils.initialize_default_pars([], fitting_basis=fitting_basis)
-        new_params = radvel.Parameters(new_planet_index, basis=fitting_basis)
-
-        for pl in range(1, new_planet_index+1):
-            for par in param_list:
-                parkey = par + str(pl)
-
-                if parkey in default_pdict.keys():
-                    val = radvel.Parameter(value=default_pdict[parkey])
-                else:
-           		    parkey1 = parkey[:-1] + '1'
-           		    val = radvel.Parameter(value=def_pars[parkey1].value)
-
-                new_params[parkey] = val
-
-        for par in post.likelihood.extra_params:
-            new_params[par] = radvel.Parameter(value=default_pdict[par])
-
-        new_params['dvdt'] = radvel.Parameter(value=default_pdict['dvdt'])
-        new_params['curv'] = radvel.Parameter(value=default_pdict['curv'])
-
-        if post.params['dvdt'].vary == False:
-        	new_params['dvdt'].vary = False
-        if post.params['curv'].vary == False:
-        	new_params['curv'].vary = False
-
-        new_params['k{}'.format(new_planet_index)].vary = False #to initialize 1 planet bic
-        new_params['tc{}'.format(new_planet_index)].vary = False
-        new_params['per{}'.format(new_planet_index)].vary = False
-        new_params['secosw{}'.format(new_planet_index)].vary = False
-        new_params['sesinw{}'.format(new_planet_index)].vary = False
-
-        new_params.num_planets = new_planet_index
-
-        instnames = np.unique(data['tel'].values)
-        priors = [radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0) for inst in instnames]
-        priors.append(radvel.prior.PositiveKPrior( new_planet_index ))
-        priors.append(radvel.prior.EccentricityPrior( new_planet_index ))
-
-        #FIX THIS, NO 'SETUP_POST IN OUR CODE YET'
-        new_post = self.setup_post(new_params, data, priors)
-
-        self.post = new_post
-        #return new_post
+        #Write this yourself. Write basic steps, what information you need.
+        pass
 
     def sub_planet(self):
         self.posts = self.posts[:-1]
