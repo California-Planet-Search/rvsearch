@@ -62,7 +62,7 @@ def initialize_post(data, params=None):
     """
 
     if params == None:
-        params = radvel.Parameters(0, basis='per tc secosw sesinw logk')
+        params = radvel.Parameters(1, basis='per tc secosw sesinw logk')
     iparams = radvel.basis._copy_params(params)
 
     #initialize RVModel

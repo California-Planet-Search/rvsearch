@@ -21,20 +21,18 @@ class Periodogram:
     """
 
     def __init__(self, post, basebic=None, num_known_planets=0, minsearchp=3, maxsearchp=10000,
-                 baseline=True, num_freqs=None, valid_types = ['bic', 'ls']):
+                 baseline=True, num_freqs=None, search_pars = ['per'], valid_types = ['bic', 'aic', 'ls']):
         self.post = post
         self.default_pdict = {}
         for k in post.params.keys():
             self.default_pdict[k] = post.params[k].value
 
         self.basebic = basebic
-
         self.num_known_planets = num_known_planets
 
         self.times = self.post.likelihood.x
         self.vel = self.post.likelihood.y
         self.errvel = self.post.likelihood.yerr
-
         self.timelen = np.amax(self.times) - np.amin(self.times)
 
         self.minsearchP = minsearchp
@@ -45,23 +43,21 @@ class Periodogram:
         if self.baseline == True:
             self.maxsearchP = 4. * self.timelen #SHOULD '4' BE VARIABLE?
 
+        self.search_pars = search_pars
         self.valid_types = valid_types
         self.power = {key: None for key in self.valid_types}
-
-    @classmethod
-    def from_post(cls, post):
-        return cls(post)
+        self.maxper = None
 
     @classmethod
     def from_pandas(cls, data):
-        params = utils.initialize_default_pars()
+        params = utils.initialize_default_pars(instnames=data.tel)
         post = utils.initialize_post(data, params=params)
         return cls(post)
 
     @classmethod
     def from_csv(cls, filename):
         data = utils.read_from_csv(filename)
-        params = utils.initialize_default_pars()
+        params = utils.initialize_default_pars(instnames=data.tel)
         post = utils.initialize_post(data, params=params)
         return cls(post)
 
@@ -110,7 +106,7 @@ class Periodogram:
         #Perform 0-planet baseline fit.
         post1 = copy.deepcopy(self.post)
 
-        trend_curve_bic = self.post.bic()
+        trend_curve_bic = self.post.Likelihood.bic()
         dvdt_val = self.post.params['dvdt'].value
         curv_val = self.post.params['curv'].value
 
@@ -119,7 +115,7 @@ class Periodogram:
         post1.params['curv'].vary = False
         post1 = radvel.fitting.maxlike_fitting(post1)
 
-        trend_bic = post1.bic()
+        trend_bic = post1.Likelihood.bic()
 
         #Test without trend or curvature
         post2 = copy.deepcopy(post1)
@@ -128,7 +124,7 @@ class Periodogram:
         post2.params['dvdt'].vary = False
         post2 = radvel.fitting.maxlike_fitting(post2)
 
-        flat_bic = post2.bic()
+        flat_bic = post2.Likelihood.bic()
         print('Flat:{}; Trend:{}; Curv:{}'.format(flat_bic, trend_bic, trend_curve_bic))
 
         if trend_bic < flat_bic - 5.:
@@ -141,9 +137,9 @@ class Periodogram:
 
     def base_bic(self):
         base_post = self.trend_post()
-        self.base_bic = base_post.bic()
+        self.base_bic = base_post.Likelihood.bic()
 
-    def bics(self, base_bic=None, planet_num=0):
+    def bics(self, base_bic=None):
         #Lea's method, rewrite this with desired inputs and outputs.
         #base_bic is the nth planet BIC array (we are calculating n+1th)
         """Loop over Parr, calculate delta-BIC values
@@ -157,6 +153,7 @@ class Periodogram:
         Returns:
             BICs (array): List of delta bic values (or delta aic values)
         """
+
         BICs = []
         bestfit = []
         post = copy.deepcopy(self.post)
@@ -171,7 +168,7 @@ class Periodogram:
             post.params['per{}'.format(planet_num+1)].value = per
             post = radvel.fitting.maxlike_fitting(post)
 
-            bic = post.bic()
+            bic = post.Likelihood.bic()
             delta_bic = base_bic - bic  #Should be positive since bic < base_bic
             BICarr += [delta_bic]
 
@@ -182,7 +179,6 @@ class Periodogram:
             bestfit += [best_params]
 
         self.power['bic'] = BICarr
-        self.bestfit = bestfit
         #return BICarr, bestfit
 
     def per_bic(self):
@@ -190,12 +186,16 @@ class Periodogram:
         """Compute delta-BIC periodogram. ADD: crit is BIC or AIC.
         """
 
-        baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=True)
+        """Can we track whether maxlike_fitting has been performed on a post?
+        If so, we should do this, so we don't have to fit a posterior that
+        has already been optimized.
+        """
         #post = setup_posterior(self.post, self.num_known_planets)
-        baseline_bic = baseline_fit.bic()
+        baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=True)
+        baseline_bic = baseline_fit.Likelihood.bic()
         #Run trend-post-test here
 
-        #ALLOW PARAMETERS TO VARY, EXCEPT FOR ECCENTRICITY
+        #Allow amplitude and time offset to vary, fix eccentricity and period.
         self.post.params['k{}'.format(self.num_known_planets+1)].vary = True
         self.post.params['tc{}'.format(self.num_known_planets+1)].vary = True
 
@@ -206,18 +206,17 @@ class Periodogram:
             self.post.params[perkey].vary = False
 
             fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
-            power[i] = baseline_bic - fit.bic()
+            power[i] = baseline_bic - fit.Likelihood.bic()
             #print(i, per, power[i], fit.bic(), baseline_bic)
         self.power['bic'] = power
+        self.maxper = np.amax(power)
 
     def ls(self):
-        """Astropy Lomb-Scargle periodogram
+        """Astropy Lomb-Scargle periodogram.
         """
 
         print("Calculating Lomb-Scargle periodogram")
-
         power = astropy.stats.LombScargle(self.times, self.vel, self.errvel).power(self.freq_array)
-
         self.power['ls'] = power
 
     def eFAP_thresh(self, fap=0.01):

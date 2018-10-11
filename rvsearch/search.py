@@ -4,6 +4,8 @@ import pandas
 import radvel
 import radvel.fitting
 
+import utils
+
 class Search(object):
     """Class to initialize and modify posteriors as planet search runs,
     send to Periodogram class for periodogram and IC-threshold calculations.
@@ -17,26 +19,19 @@ class Search(object):
 
     def __init__(self, data, starname, max_planets=5,
                  params=[], priors=[], default_pdict=[], aic=False):
-        '''
-        SOME INPUT TESTING OPTIONS:
-        self.t, self.v, self.verr = t, v, verr
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
-        else:
-            raise ValueError('Incorrect data input.')
-        '''
-
-        if 'time', 'mnvel', 'errvel', 'tel' in data.columns:
-            self.data = data
+            self.tels = set(self.data.tel) #Unique list of telescopes.
         else:
             raise ValueError('Incorrect data input.')
 
         self.starname = starname
         #self.params = params
-        self.params = radvel.Parameters(0, basis='per tc secosw sesinw logk')
+        #self.params = radvel.Parameters(1, basis='per tc secosw sesinw logk')
+        self.params = utils.initialize_default_pars(instnames=self.tels)
         #Might not need priors?
         self.priors = priors
-        self.default_pdict = pdict
+        self.default_pdict = default_pdict
         self.all_posts = []
 
         #TRYING TO GENERALIZE INFORMATION CRITERION TO AIC OR BIC.
@@ -65,7 +60,7 @@ class Search(object):
         mod = radvel.RVModel(self.params, time_base=time_base)
 
         #initialize Likelihood objects for each instrument
-        telgrps = data.groupby('tel').groups
+        telgrps = self.data.groupby('tel').groups
         likes = {}
 
         for inst in telgrps.keys():
@@ -84,30 +79,28 @@ class Search(object):
         self.post = post
         #return post
 
-    '''
-    def add_planet(self, post):
-        current_planets = post.params.num_planets
-        fitting_basis = post.params.basis.name
+    def add_planet(self):
+        current_planets = self.post.params.num_planets
+        fitting_basis = self.post.params.basis.name
         param_list = fitting_basis.split()
 
         new_planet_index = current_planets + 1
 
         #Default values for new planet
-        def_pars = initialize_default_pars([], fitting_basis=fitting_basis)
-
+        def_pars = utils.initialize_default_pars([], fitting_basis=fitting_basis)
         new_params = radvel.Parameters(new_planet_index, basis=fitting_basis)
 
         for pl in range(1, new_planet_index+1):
-        	for par in param_list:
-            	parkey = par + str(pl)
+            for par in param_list:
+                parkey = par + str(pl)
 
-            	if parkey in default_pdict.keys():
-            		val = radvel.Parameter(value=default_pdict[parkey])
-           		else:
-           			parkey1 = parkey[:-1] + '1'
-           			val = radvel.Parameter(value=def_pars[parkey1].value)
+                if parkey in default_pdict.keys():
+                    val = radvel.Parameter(value=default_pdict[parkey])
+                else:
+           		    parkey1 = parkey[:-1] + '1'
+           		    val = radvel.Parameter(value=def_pars[parkey1].value)
 
-            	new_params[parkey] = val
+                new_params[parkey] = val
 
         for par in post.likelihood.extra_params:
             new_params[par] = radvel.Parameter(value=default_pdict[par])
@@ -132,8 +125,8 @@ class Search(object):
         priors = [radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0) for inst in instnames]
         priors.append(radvel.prior.PositiveKPrior( new_planet_index ))
         priors.append(radvel.prior.EccentricityPrior( new_planet_index ))
-        #pdb.set_trace()
 
+        #FIX THIS, NO 'SETUP_POST IN OUR CODE YET'
         new_post = self.setup_post(new_params, data, priors)
 
         self.post = new_post
@@ -141,7 +134,26 @@ class Search(object):
 
     def sub_planet(self):
         self.posts = self.posts[:-1]
-    '''
+
+    def fit_orbit(self):
+        #Redundant with add_planet (current_planets, fitting_basis), make class properties?
+        current_planets = self.post.params.num_planets
+        fitting_basis = self.post.params.basis.name
+        param_list = fitting_basis.split()
+
+        self.post.params['k{}'.format(current_planets)].vary = True #to initialize 1 planet bic
+        self.post.params['tc{}'.format(current_planets)].vary = True
+        self.post.params['secosw{}'.format(current_planets)].vary = True
+        self.post.params['sesinw{}'.format(current_planets)].vary = True
+
+        fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
+
+        self.post.params['k{}'.format(current_planets)].vary = False #to initialize 1 planet bic
+        self.post.params['tc{}'.format(current_planets)].vary = False
+        self.post.params['secosw{}'.format(current_planets)].vary = False
+        self.post.params['sesinw{}'.format(current_planets)].vary = False
+
+        self.post = fit
 
     '''
     def add_gp(self):
@@ -229,4 +241,8 @@ class Search(object):
     def save_all_posts(self):
         #Return list of posteriors for each nth planet model
         #self.all_posts
+        pass
+
+    def run_search(self):
+        #Use all of the above routines to run a search.
         pass
