@@ -4,14 +4,16 @@ import pandas
 import radvel
 import radvel.fitting
 
-import utils
+from .periodogram import *
+from .utils import *
+#IS THIS GOOD PRACTICE?
 
 class Search(object):
     """Class to initialize and modify posteriors as planet search runs,
     send to Periodogram class for periodogram and IC-threshold calculations.
 
     Args:
-        data: pandas dataframe containing times, velocities, velocity errors, and telescope types.
+        data: pandas dataframe containing times, velocities,  errors, and instrument names.
         params: List of radvel parameter objects.
         priors: List of radvel prior objects.
         aic: if True, use Akaike information criterion instead of BIC. STILL WORKING ON THIS
@@ -27,10 +29,12 @@ class Search(object):
 
         self.starname = starname
         self.params = utils.initialize_default_pars(instnames=self.tels)
-        #Might not need priors? Do we want optional parameter input?
         self.priors = priors
         self.default_pdict = default_pdict
         self.all_posts = []
+
+        self.post = utils.initialize_post(self.data, self.params)
+        #SET DEFAULT_PDICT HERE
 
         #TRYING TO GENERALIZE INFORMATION CRITERION TO AIC OR BIC.
         '''
@@ -41,6 +45,7 @@ class Search(object):
         self.critname = self.crit.__string__
         '''
 
+    '''
     def initialize_post(self):
         """Initialize a posterior object with data, params, and priors.
         """
@@ -69,17 +74,49 @@ class Search(object):
         post.priors = self.priors
 
         self.post = post
-        #return post
+    '''
 
     def add_planet(self):
-        #Write this yourself. Write basic steps, what information you need.
+        current_num_planets = self.post.params.num_planets
+        fitting basis = self.post.params.basis
+        param_list = fittin_basis.split()
+
+        new_num_planets = current_num_planets + 1
+
+        default_pars = utils.initialize_default_pars(instnames=self.tels)
+        new_params = radvel.Parameters(new_num_planets, basis=fitting_basis)
+
+        for planet in np.arange(1, new_num_planets + 1):
+            for par in param_list:
+
+                parkey = par + str(planet)
+                if parkey in self.default_pdict.keys():
+                    val = radvel.Parameter(value=default_pdict[parkey])
+                else:
+                    parkey1 - parkey[:-1] + '1' #WHAT DOES THIS MEAN
+                    val = radvel.Parameter(value=def_pars[parkey1].value)
+
+                new_params[parkey] = val
+
+        for par in self.post.likelihood.extra_params: #WHAT DOES THIS MEAN
+            new_params[par] = radvel.Parameter(value=self.default_pdict[par])
+
+        '''
+        1. Get default values for new planet parameters 1
+        2. Initialize new radvel Parameter object, new_param, with n+1 planets !
+        3. Set values of 1st - nth planet in new_param !
+        4. Set curvature fit parameters, check locked or unlocked
+        5. Lock values of the n+1th planet
+        6. Set number of planets in new_param? Not already done?
+        7. Add positive amp. & ecc. priors, set self.post to new posterior
+        '''
         pass
 
     def sub_planet(self):
-        self.posts = self.posts[:-1]
+        #self.posts = self.posts[:-1] Not quite right
 
     def fit_orbit(self):
-        #Redundant with add_planet (current_planets, fitting_basis), make class properties?
+        #Redundant with add_planet (current_planets, fitting_basis)? Make class properties?
         current_planets = self.post.params.num_planets
         fitting_basis = self.post.params.basis.name
         param_list = fitting_basis.split()

@@ -100,8 +100,11 @@ class Periodogram:
             self.pers = 1/np.linspace(1/self.maxsearchP, 1/self.minsearchP, self.num_freqs)
 
         self.freqs = 1/self.pers
-
-    def trend_post(self):
+''' This is what we need trend_test for, at the start of the search. Move to Search()
+    if num_planets_known == 0:
+    	post = trend_test(post)
+'''
+    def trend_test(self):
         #Perform 0-planet baseline fit.
         post1 = copy.deepcopy(self.post)
 
@@ -149,6 +152,7 @@ class Periodogram:
         """
         #post = setup_posterior(self.post, self.num_known_planets)
         baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=True)
+        #This assumes nth planet parameters, and all periods, were locked in/
         baseline_bic = baseline_fit.Likelihood.bic()
         #Run trend-post-test here
 
@@ -178,7 +182,7 @@ class Periodogram:
 
     def eFAP_thresh(self, fap=0.01):
     	"""Calculate the threshold for significance based on BJ's eFAP algorithm
-        From Lea's code. TO-DO: DEFINE BICARR, ETC. BICARR IS A BIC PERIODOGRAM. LOMB-S OPTION?
+        From Lea's code. LOMB-S OPTION?
     	"""
     	#select out intermediate values of BIC
     	sBIC = np.sort(self.power['bic'])
@@ -192,12 +196,14 @@ class Periodogram:
     	nhist = hist/norm
 
     	func = np.poly1d(np.polyfit(cent, np.log10(nhist), 1))
-    	xmod = np.linspace(np.min(BICarr[BICarr==BICarr]), 10.*np.max(BICarr), 10000)
-    	lfit = 10.**(func(xmod))
-    	fap_min = 10.**func(max(self.power['bic'])) * self.num_freqs
+    	xmod = np.linspace(np.min(self.power['bic'][self.power['bic']==self.power['bic']]),
+                           10.*np.max(self.power['bic']), 10000)
+    	lfit    = 10.**func(xmod)
+    	fap_min = 10.**func(sBIC[-1])*self.num_freqs #[-1] or [0]?
 
-    	thresh = xmod[np.where(np.abs(lfit-fap/len(BICarr)) == np.min(np.abs(lfit-fap/len(BICarr))))]
-    	return thresh[0], fap_min
+    	#thresh = xmod[np.where(np.abs(lfit-fap/self.num_freqs) == np.min(np.abs(lfit-fap/self.num_freqs)))]
+        thresh = xmod[np.argmin(np.abs(lfit - fap/self.num_freqs))]
+        return thresh[0], fap_min
 
     def save_per(self, ls=False):
         if ls==False:
@@ -208,7 +214,6 @@ class Periodogram:
                 print('Have not generated a delta-BIC periodogram.')
         else:
             try:
-                #FIX THIS, SPECIFY DIRECTORY/NAME, NUMBER OF PLANETS IN FILENAME, AND ARRAY ORDERING
                 np.savetxt((self.pers, self.power['LS']), filename='LS_periodogram.csv')
             except:
                 print('Have not generated a Lomb-Scargle periodogram.')
@@ -247,7 +252,7 @@ class Periodogram:
             fig.savefig('dbic.pdf')
 
 
-#TO-DO: MOVE THESE INTO CLASS STRUCTURE
+#TO-DO: MOVE THESE INTO CLASS STRUCTURE, OR REMOVE IF UNNECESSARY
 def setup_posterior(post, num_known_planets):
     """Setup radvel.posterior.Posterior object
 
