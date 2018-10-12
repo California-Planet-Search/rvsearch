@@ -23,7 +23,8 @@ class Search(object):
                  params=[], priors=[], default_pdict=[], aic=False):
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
-            self.tels = set(self.data.tel) #Unique list of telescopes.
+            self.tels = np.unique(self.data['tel'].values)
+            #self.tels = set(self.data.tel) #Unique list of telescopes.
         else:
             raise ValueError('Incorrect data input.')
 
@@ -86,14 +87,14 @@ class Search(object):
         default_pars = utils.initialize_default_pars(instnames=self.tels)
         new_params = radvel.Parameters(new_num_planets, basis=fitting_basis)
 
+        #THIS IS WRONG, DOESN'T SET 1-NTH PLANET PARAMETERS PROPERLY
         for planet in np.arange(1, new_num_planets + 1):
             for par in param_list:
-
                 parkey = par + str(planet)
                 if parkey in self.default_pdict.keys():
                     val = radvel.Parameter(value=default_pdict[parkey])
                 else:
-                    parkey1 - parkey[:-1] + '1' #WHAT DOES THIS MEAN
+                    parkey1 - parkey[:-1] + '1' #WHAT DOES THIS MEAN?
                     val = radvel.Parameter(value=def_pars[parkey1].value)
 
                 new_params[parkey] = val
@@ -101,14 +102,38 @@ class Search(object):
         for par in self.post.likelihood.extra_params: #WHAT DOES THIS MEAN
             new_params[par] = radvel.Parameter(value=self.default_pdict[par])
 
+        new_params['dvdt'] = radvel.Parameter(value=default_pdict['dvdt'])
+        new_params['curv'] = radvel.Parameter(value=default_pdict['curv'])
+
+        if self.post.params['dvdt'].vary == False:
+        	new_params['dvdt'].vary = False
+        if self.post.params['curv'].vary == False:
+        	new_params['curv'].vary = False
+
+        new_params['k{}'.format(new_planet_index)].vary = False #to initialize 1 planet bic
+        new_params['tc{}'.format(new_planet_index)].vary = False
+        new_params['per{}'.format(new_planet_index)].vary = False
+        new_params['secosw{}'.format(new_planet_index)].vary = False
+        new_params['sesinw{}'.format(new_planet_index)].vary = False
+
+        new_params.num_planets = new_num_planets
+
+        priors = [radvel.prior.HardBounds('jit'+inst, 0.0, 20.0) for inst in self.tels]
+        priors.append(radvel.prior.PositiveKPrior(new_planet_index))
+        priors.append(radvel.prior.EccentricityPrior(new_planet_index))
+
+        new_post = utils.initialize_post(new_params, self.data, priors)
+        self.post = new_post
+
         '''
         1. Get default values for new planet parameters 1
         2. Initialize new radvel Parameter object, new_param, with n+1 planets !
-        3. Set values of 1st - nth planet in new_param !
-        4. Set curvature fit parameters, check locked or unlocked
-        5. Lock values of the n+1th planet
-        6. Set number of planets in new_param? Not already done?
-        7. Add positive amp. & ecc. priors, set self.post to new posterior
+        3. COMPLETE Set values of 1st - nth planet in new_param COMPLETE
+        4. Set curvature fit parameters, check locked or unlocked !
+        5. Lock values of the n+1th plane t !
+        6. Set number of planets in new_param? Not already done? !
+        7. Add positive amp. & ecc. priors, set self.post to new posterior !
+        8. Save old posterior to list containing history of posterior
         '''
         pass
 
