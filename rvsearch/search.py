@@ -19,8 +19,8 @@ class Search(object):
         aic: if True, use Akaike information criterion instead of BIC. STILL WORKING ON THIS
     """
 
-    def __init__(self, data, starname, max_planets=5,
-                 params=[], priors=[], default_pdict=[], aic=False):
+    def __init__(self, data, starname='', max_planets=5,
+                 priors=[], default_pdict=[], crit='bic'):
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
             self.tels = np.unique(self.data['tel'].values)
@@ -31,55 +31,26 @@ class Search(object):
         self.starname = starname
         self.params = utils.initialize_default_pars(instnames=self.tels)
         self.priors = priors
+        #Default pdict can contain known planet parameters, contains nplanets
+            #Change it to an rvparams object, includes functionality of param objects. *init_params*
         self.default_pdict = default_pdict
-        self.all_posts = []
+        #self.all_posts = []
 
         self.post = utils.initialize_post(self.data, self.params)
-        #SET DEFAULT_PDICT HERE
 
         #TRYING TO GENERALIZE INFORMATION CRITERION TO AIC OR BIC.
         '''
-        if aic==False:
+        if crit=='bic':
             self.crit = radvel.posterior.bic()
-        else:
+        eif crit=='aic':
             self.crit = radvel.posterior.aic()
         self.critname = self.crit.__string__
+        #Play with calling __name__ of method
         '''
-
-    '''
-    def initialize_post(self):
-        """Initialize a posterior object with data, params, and priors.
-        """
-
-        iparams = radvel.basis._copy_params(self.params)
-
-        #initialize RVModel
-        time_base = np.mean([self.data['time'].max(), self.data['time'].min()])
-        mod = radvel.RVModel(self.params, time_base=time_base)
-
-        #initialize Likelihood objects for each instrument
-        telgrps = self.data.groupby('tel').groups
-        likes = {}
-
-        for inst in telgrps.keys():
-            likes[inst] = radvel.likelihood.RVLikelihood(
-                mod, self.data.iloc[telgrps[inst]].time, self.data.iloc[telgrps[inst]].mnvel,
-                self.data.iloc[telgrps[inst]].errvel, suffix='_'+inst)
-
-            likes[inst].params['gamma_'+inst] = iparams['gamma_'+inst]
-            likes[inst].params['jit_'+inst] = iparams['jit_'+inst]
-
-        like = radvel.likelihood.CompositeLikelihood(list(likes.values()))
-
-        post = radvel.posterior.Posterior(like)
-        post.priors = self.priors
-
-        self.post = post
-    '''
 
     def add_planet(self):
         current_num_planets = self.post.params.num_planets
-        fitting basis = self.post.params.basis
+        fitting_basis = self.post.params.basis
         param_list = fittin_basis.split()
 
         new_num_planets = current_num_planets + 1
@@ -110,8 +81,6 @@ class Search(object):
         if self.post.params['curv'].vary == False:
         	new_params['curv'].vary = False
 
-        new_params['k{}'.format(new_planet_index)].vary = False #to initialize 1 planet bic
-        new_params['tc{}'.format(new_planet_index)].vary = False
         new_params['per{}'.format(new_planet_index)].vary = False
         new_params['secosw{}'.format(new_planet_index)].vary = False
         new_params['sesinw{}'.format(new_planet_index)].vary = False
@@ -128,9 +97,15 @@ class Search(object):
         '''
         1. Get default values for new planet parameters 1
         2. Initialize new radvel Parameter object, new_param, with n+1 planets !
-        3. COMPLETE Set values of 1st - nth planet in new_param COMPLETE
-        4. Set curvature fit parameters, check locked or unlocked !
-        5. Lock values of the n+1th plane t !
+        3. TO COMPLETE Set values of 1st - nth planet in new_param TO COMPLETE
+        4. Set curvature fit parameters, check locked or unlocked
+
+        5. Put some kinds of priors on the 1st-nth planet parameters (period, phase)
+            Allow phase, period to vary within ~5-10% of original value, ask Andrew
+            Or allow *all* params (except curv, dvdt)to be totally free. This is while making per_bics
+            Make 1 flag each for dvdt, curv at the start of the search. In search object
+                Force on, force off, or auto for 0-1 model. Off for Legacy
+
         6. Set number of planets in new_param? Not already done? !
         7. Add positive amp. & ecc. priors, set self.post to new posterior !
         8. Save old posterior to list containing history of posterior

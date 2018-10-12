@@ -23,7 +23,7 @@ class Periodogram:
     def __init__(self, post, basebic=None, num_known_planets=0, minsearchp=3, maxsearchp=10000,
                  baseline=True, num_freqs=None, search_pars = ['per'], valid_types = ['bic', 'aic', 'ls']):
         self.post = post
-        self.default_pdict = {}
+        self.default_pdict = {} #Default_pdict makes sense here, leave alone for now
         for k in post.params.keys():
             self.default_pdict[k] = post.params[k].value
 
@@ -100,10 +100,10 @@ class Periodogram:
             self.pers = 1/np.linspace(1/self.maxsearchP, 1/self.minsearchP, self.num_freqs)
 
         self.freqs = 1/self.pers
-''' This is what we need trend_test for, at the start of the search. Move to Search()
-    if num_planets_known == 0:
+        ''' This is what we need trend_test for, at the start of the search. Move to Search()
+        if num_planets_known == 0:
     	post = trend_test(post)
-'''
+        '''
     def trend_test(self):
         #Perform 0-planet baseline fit.
         post1 = copy.deepcopy(self.post)
