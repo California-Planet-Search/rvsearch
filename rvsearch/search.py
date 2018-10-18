@@ -63,10 +63,10 @@ class Search(object):
             for par in param_list:
                 parkey = par + str(planet)
                 if parkey in self.default_pdict.keys():
-                    val = radvel.Parameter(value=default_pdict[parkey])
+                    val = radvel.Parameter(value=self.default_pdict[parkey])
                 else:
                     parkey1 - parkey[:-1] + '1' #WHAT DOES THIS MEAN?
-                    val = radvel.Parameter(value=def_pars[parkey1].value)
+                    val = radvel.Parameter(value=default_pars[parkey1].value)
 
                 new_params[parkey] = val
 
@@ -95,7 +95,7 @@ class Search(object):
         self.post = new_post
 
         '''
-        1. Get default values for new planet parameters 1
+        1. Get default values for new planet parameters
         2. Initialize new radvel Parameter object, new_param, with n+1 planets !
         3. TO COMPLETE Set values of 1st - nth planet in new_param TO COMPLETE
         4. Set curvature fit parameters, check locked or unlocked
