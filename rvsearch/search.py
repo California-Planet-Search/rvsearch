@@ -4,8 +4,9 @@ import pandas
 import radvel
 import radvel.fitting
 
-from .periodogram import *
-from .utils import *
+import periodogram, utils
+#from .periodogram import *
+#from .utils import *
 #IS THIS GOOD PRACTICE?
 
 class Search(object):
@@ -19,8 +20,7 @@ class Search(object):
         aic: if True, use Akaike information criterion instead of BIC. STILL WORKING ON THIS
     """
 
-    def __init__(self, data, starname='', max_planets=5,
-                 priors=[], default_pdict=[], crit='bic'):
+    def __init__(self, data, starname='', max_planets=5, priors=[], crit='bic'):
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
             self.tels = np.unique(self.data['tel'].values)
@@ -31,9 +31,12 @@ class Search(object):
         self.starname = starname
         self.params = utils.initialize_default_pars(instnames=self.tels)
         self.priors = priors
+
         #Default pdict can contain known planet parameters, contains nplanets
             #Change it to an rvparams object, includes functionality of param objects. *init_params*
-        self.default_pdict = default_pdict
+        #self.default_pdict = default_pdict
+        #self.default_params = HOW DO WE DO THIS? 10/18
+
         #self.all_posts = []
 
         self.post = utils.initialize_post(self.data, self.params)
@@ -45,6 +48,8 @@ class Search(object):
         eif crit=='aic':
             self.crit = radvel.posterior.aic()
         self.critname = self.crit.__string__
+        else:
+            raise ValueError('Invalid information criterion.')
         #Play with calling __name__ of method
         '''
 
@@ -114,6 +119,7 @@ class Search(object):
 
     def sub_planet(self):
         #self.posts = self.posts[:-1] Not quite right
+        pass
 
     def fit_orbit(self):
         #Redundant with add_planet (current_planets, fitting_basis)? Make class properties?
