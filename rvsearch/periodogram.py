@@ -181,28 +181,26 @@ class Periodogram:
         self.power['ls'] = power
 
     def eFAP_thresh(self, fap=0.01):
-    	"""Calculate the threshold for significance based on BJ's eFAP algorithm
+        """Calculate the threshold for significance based on BJ's eFAP algorithm
         From Lea's code. LOMB-S OPTION?
-    	"""
-    	#select out intermediate values of BIC
-    	sBIC = np.sort(self.power['bic'])
-    	crop_BIC = sBIC[int(0.5*len(sBIC)):int(0.95*len(sBIC))] #select only median - 95% vals
+        """
+        #select out intermediate values of BIC
+        sBIC = np.sort(self.power['bic'])
+        crop_BIC = sBIC[int(0.5*len(sBIC)):int(0.95*len(sBIC))] #select only median - 95% vals
 
-    	#histogram
-    	hist, edge = np.histogram(crop_BIC, bins=10)
-    	cent = (edge[1:]+edge[:-1])/2.
-    	norm = float(np.sum(hist))
+        hist, edge = np.histogram(crop_BIC, bins=10)
+        cent = (edge[1:]+edge[:-1])/2.
+        norm = float(np.sum(hist))
 
-    	nhist = hist/norm
+        nhist = hist/norm
 
-    	func = np.poly1d(np.polyfit(cent, np.log10(nhist), 1))
-    	xmod = np.linspace(np.min(self.power['bic'][self.power['bic']==self.power['bic']]),
+        func = np.poly1d(np.polyfit(cent, np.log10(nhist), 1))
+        xmod = np.linspace(np.min(self.power['bic'][self.power['bic']==self.power['bic']]),
                            10.*np.max(self.power['bic']), 10000)
-    	lfit    = 10.**func(xmod)
-    	fap_min = 10.**func(sBIC[-1])*self.num_freqs #[-1] or [0]?
-
-    	#thresh = xmod[np.where(np.abs(lfit-fap/self.num_freqs) == np.min(np.abs(lfit-fap/self.num_freqs)))]
+        lfit = 10.**func(xmod)
+        fap_min = 10.**func(sBIC[-1])*self.num_freqs #[-1] or [0]?
         thresh = xmod[np.argmin(np.abs(lfit - fap/self.num_freqs))]
+        #thresh = xmod[np.where(np.abs(lfit-fap/self.num_freqs) == np.min(np.abs(lfit-fap/self.num_freqs)))]
         return thresh[0], fap_min
 
     def save_per(self, ls=False):
