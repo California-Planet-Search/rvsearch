@@ -4,7 +4,8 @@ import pandas
 import radvel
 import radvel.fitting
 
-import periodogram, utils
+import periodogram
+import utils
 #from .periodogram import *
 #from .utils import *
 #IS THIS GOOD PRACTICE?
