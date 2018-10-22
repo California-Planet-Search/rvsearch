@@ -64,7 +64,7 @@ class Search(object):
         default_pars = utils.initialize_default_pars(instnames=self.tels)
         new_params = radvel.Parameters(new_num_planets, basis=fitting_basis)
 
-        #THIS IS WRONG, DOESN'T SET 1-NTH PLANET PARAMETERS PROPERLY
+        #THIS IS WRONG, DOESN'T SET 1-NTH PLANET PARAMETERS PROPERLY. ASK BJ
         for planet in np.arange(1, new_num_planets + 1):
             for par in param_list:
                 parkey = par + str(planet)
@@ -87,15 +87,15 @@ class Search(object):
         if self.post.params['curv'].vary == False:
         	new_params['curv'].vary = False
 
-        new_params['per{}'.format(new_planet_index)].vary = False
-        new_params['secosw{}'.format(new_planet_index)].vary = False
-        new_params['sesinw{}'.format(new_planet_index)].vary = False
+        new_params['per{}'.format(new_num_planets)].vary = False
+        new_params['secosw{}'.format(new_num_planets)].vary = False
+        new_params['sesinw{}'.format(new_num_planets)].vary = False
 
         new_params.num_planets = new_num_planets
 
         priors = [radvel.prior.HardBounds('jit'+inst, 0.0, 20.0) for inst in self.tels]
-        priors.append(radvel.prior.PositiveKPrior(new_planet_index))
-        priors.append(radvel.prior.EccentricityPrior(new_planet_index))
+        priors.append(radvel.prior.PositiveKPrior(new_num_planets))
+        priors.append(radvel.prior.EccentricityPrior(new_num_planets))
 
         new_post = utils.initialize_post(new_params, self.data, priors)
         self.post = new_post
