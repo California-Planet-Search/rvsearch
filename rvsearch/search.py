@@ -65,19 +65,26 @@ class Search(object):
         new_params = radvel.Parameters(new_num_planets, basis=fitting_basis)
 
         #THIS IS WRONG, DOESN'T SET 1-NTH PLANET PARAMETERS PROPERLY. ASK BJ
-        for planet in np.arange(1, new_num_planets + 1):
+        for planet in np.arange(1, new_num_planets):
             for par in param_list:
                 parkey = par + str(planet)
+                new_params[parkey] = self.post.params[parkey]
+                '''
                 if parkey in self.default_pdict.keys():
                     val = radvel.Parameter(value=self.default_pdict[parkey])
                 else:
-                    parkey1 - parkey[:-1] + '1' #WHAT DOES THIS MEAN?
+                    parkey1 = parkey[:-1] + '1' #WHAT DOES THIS MEAN?
                     val = radvel.Parameter(value=default_pars[parkey1].value)
-
                 new_params[parkey] = val
-
+                '''
         for par in self.post.likelihood.extra_params: #WHAT DOES THIS MEAN
             new_params[par] = radvel.Parameter(value=self.default_pdict[par])
+
+        #Set default parameters for n+1th planet
+        default_params = utils.initialize_default_pars()#FIX INSTRUMENT_NAME PROBLEM
+        for par in param_list:
+            parkey = par + str(new_num_planets)
+            new_params[parkey] = default_params[parkey]
 
         new_params['dvdt'] = radvel.Parameter(value=default_pdict['dvdt'])
         new_params['curv'] = radvel.Parameter(value=default_pdict['curv'])
