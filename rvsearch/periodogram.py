@@ -108,7 +108,7 @@ class Periodogram:
         #Perform 0-planet baseline fit.
         post1 = copy.deepcopy(self.post)
 
-        trend_curve_bic = self.post.Likelihood.bic()
+        trend_curve_bic = self.post.likelihood.bic()
         dvdt_val = self.post.params['dvdt'].value
         curv_val = self.post.params['curv'].value
 
@@ -117,7 +117,7 @@ class Periodogram:
         post1.params['curv'].vary = False
         post1 = radvel.fitting.maxlike_fitting(post1)
 
-        trend_bic = post1.Likelihood.bic()
+        trend_bic = post1.likelihood.bic()
 
         #Test without trend or curvature
         post2 = copy.deepcopy(post1)
@@ -126,7 +126,7 @@ class Periodogram:
         post2.params['dvdt'].vary = False
         post2 = radvel.fitting.maxlike_fitting(post2)
 
-        flat_bic = post2.Likelihood.bic()
+        flat_bic = post2.likelihood.bic()
         print('Flat:{}; Trend:{}; Curv:{}'.format(flat_bic, trend_bic, trend_curve_bic))
 
         if trend_bic < flat_bic - 5.:
@@ -139,26 +139,25 @@ class Periodogram:
 
     def base_bic(self):
         base_post = self.trend_post()
-        self.base_bic = base_post.Likelihood.bic()
+        self.base_bic = base_post.bic()
 
     def per_bic(self):
         #BJ's method. Remove once final BIC/AIC method is established.
         """Compute delta-BIC periodogram. ADD: crit is BIC or AIC.
         """
 
-        """Can we track whether maxlike_fitting has been performed on a post?
-        If so, we should do this, so we don't have to fit a posterior that
-        has already been optimized.
+        """Can we track whether maxlike_fitting has already been performed on
+        a post? If so, we should do this, so we don't have to fit a posterior
+        that has already been optimized.
         """
+        print("Calculating BIC periodogram")
         #post = setup_posterior(self.post, self.num_known_planets)
-        baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=True)
-        #This assumes nth planet parameters, and all periods, were locked in/
-        baseline_bic = baseline_fit.Likelihood.bic()
-        #Run trend-post-test here
+        #This assumes nth planet parameters, and all periods, were locked in.
+        baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
+        baseline_bic = baseline_fit.likelihood.bic()
+        #Run trend-post-test here?
 
         #Allow amplitude and time offset to vary, fix eccentricity and period.
-        #self.post.params['k{}'.format(self.num_known_planets+1)].vary = True
-        #self.post.params['tc{}'.format(self.num_known_planets+1)].vary = True
         self.post.params['secosw{}'.format(self.num_known_planets+1)].vary = False
         self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary = False
         self.post.params['per{}'.format(self.num_known_planets+1)].vary = False
@@ -166,12 +165,14 @@ class Periodogram:
         power = np.zeros_like(self.pers)
         for i, per in enumerate(self.pers):
             #Reset posterior parameters to default values.
-            for k in post.params.keys():
-                self.post.params[k] = self.default_pdict[k]
-            #Fix new period and fit a circular orbit, with 1 - nth planet params free.
+            #for k in self.post.params.keys():
+            #    self.post.params[k] = self.default_pdict[k]
+            #Set new period and fit a circular orbit, with 1 - nth planet params free.
+            perkey = 'per{}'.format(self.num_known_planets+1)
             self.post.params[perkey].value = per
+
             fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
-            power[i] = baseline_bic - fit.Likelihood.bic()
+            power[i] = baseline_bic - fit.likelihood.bic()
 
         self.power['bic'] = power
         self.maxper = np.amax(power)
