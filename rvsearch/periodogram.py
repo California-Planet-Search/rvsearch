@@ -48,6 +48,8 @@ class Periodogram:
         self.power = {key: None for key in self.valid_types}
         self.maxper = None
 
+        self.bic_thresh = None
+
     @classmethod
     def from_pandas(cls, data):
         params = utils.initialize_default_pars(instnames=data.tel)
@@ -241,9 +243,13 @@ class Periodogram:
                    np.round(self.pers[peak], decimals=1)))
         ax.legend(loc=1)
 
-        #Plot day, month, and year aliases.
+        #If D-BIC threshold has been calculated, plot.
+        if self.bic_thresh != None:
+            ax.axhline(self.bic_thresh, ls=':', label=r'$\Delta$BIC threshold')
+
+        #Plot sidereal day, month, and year aliases.
         colors = ['r', 'b', 'g']
-        alias = [0.997, 27.25, 365.256] #Sidereal day, month, year
+        alias = [0.997, 27.25, 365.256]
         for i in np.arange(3):
             #Is this right? ASK BJ
             f_ap = f_real + 1./alias[i]
