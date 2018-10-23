@@ -245,10 +245,10 @@ class Periodogram:
         alias = [1, 30, 365]
         for i in np.arange(3):
             #Is this right? ASK BJ
-            f_ap = 1./alias[i] + f_real
-            f_am = 1./alias[i] - f_real
-            ax.axvline(1./f_am, linestyle='--', c=colors[i], label='Minus {} day alias'.format(alias[i]))
-            #ax.axvline(1./f_ap, linestyle='--', c=colors[i], label='Plus {} day alias'.format(alias[i]))
+            f_ap = f_real + 1./alias[i]
+            f_am = f_real - 1./alias[i]
+            ax.axvline(1./f_am, linestyle='--', c=colors[i], label='{} day alias'.format(alias[i]))
+            ax.axvline(1./f_ap, linestyle='--', c=colors[i])
         ax.legend(loc=3)
         ax.set_xscale('log')
         ax.set_xlabel('Period (days)')
