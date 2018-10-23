@@ -23,7 +23,7 @@ class Periodogram:
     def __init__(self, post, basebic=None, num_known_planets=0, minsearchp=3, maxsearchp=10000,
                  baseline=True, num_freqs=None, search_pars = ['per'], valid_types = ['bic', 'aic', 'ls']):
         self.post = post
-        self.default_pdict = {} #Default_pdict makes sense here, leave alone for now
+        self.default_pdict = {} #Default_pdict makes sense here, leave alone for now (10/22/18)
         for k in post.params.keys():
             self.default_pdict[k] = post.params[k].value
 
@@ -170,7 +170,6 @@ class Periodogram:
 
             fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
             power[i] = baseline_bic - fit.Likelihood.bic()
-            #print(i, per, power[i], fit.bic(), baseline_bic)
         self.power['bic'] = power
         self.maxper = np.amax(power)
 

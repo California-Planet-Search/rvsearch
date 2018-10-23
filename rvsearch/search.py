@@ -55,39 +55,36 @@ class Search(object):
         '''
 
     def add_planet(self):
+
         current_num_planets = self.post.params.num_planets
-        fitting_basis = self.post.params.basis
-        param_list = fittin_basis.split()
+        fitting_basis = self.post.params.basis.name
+        param_list = fitting_basis.split()
 
         new_num_planets = current_num_planets + 1
 
         default_pars = utils.initialize_default_pars(instnames=self.tels)
         new_params = radvel.Parameters(new_num_planets, basis=fitting_basis)
 
-        #THIS IS WRONG, DOESN'T SET 1-NTH PLANET PARAMETERS PROPERLY. ASK BJ
         for planet in np.arange(1, new_num_planets):
             for par in param_list:
                 parkey = par + str(planet)
                 new_params[parkey] = self.post.params[parkey]
-                '''
-                if parkey in self.default_pdict.keys():
-                    val = radvel.Parameter(value=self.default_pdict[parkey])
-                else:
-                    parkey1 = parkey[:-1] + '1' #WHAT DOES THIS MEAN?
-                    val = radvel.Parameter(value=default_pars[parkey1].value)
-                new_params[parkey] = val
-                '''
-        for par in self.post.likelihood.extra_params: #WHAT DOES THIS MEAN
-            new_params[par] = radvel.Parameter(value=self.default_pdict[par])
 
+        #for par in self.post.likelihood.extra_params: #WHAT DOES THIS MEAN? ASK LEA
+        #    new_params[par] = radvel.Parameter(value=self.default_pdict[par])
+        '''
+        for k in self.post.params.keys():
+            new_params[k] = self.post.params[k].value
+        '''
         #Set default parameters for n+1th planet
-        default_params = utils.initialize_default_pars()#FIX INSTRUMENT_NAME PROBLEM
+        default_params = utils.initialize_default_pars(self.tels)#FIX INSTRUMENT_NAME PROBLEM 10/22/18
         for par in param_list:
             parkey = par + str(new_num_planets)
-            new_params[parkey] = default_params[parkey]
+            onepar = par + '1' #MESSY, FIX THIS 10/22/18
+            new_params[parkey] = default_params[onepar]
 
-        new_params['dvdt'] = radvel.Parameter(value=default_pdict['dvdt'])
-        new_params['curv'] = radvel.Parameter(value=default_pdict['curv'])
+        new_params['dvdt'] = radvel.Parameter(value=self.post.params['dvdt'])
+        new_params['curv'] = radvel.Parameter(value=self.post.params['curv'])
 
         if self.post.params['dvdt'].vary == False:
         	new_params['dvdt'].vary = False
@@ -97,21 +94,25 @@ class Search(object):
         new_params['per{}'.format(new_num_planets)].vary = False
         new_params['secosw{}'.format(new_num_planets)].vary = False
         new_params['sesinw{}'.format(new_num_planets)].vary = False
-
+        '''
+        for inst in self.tels:
+            new_params['gamma_'+inst] = self.post.params['gamma_'+inst]
+            new_params['jit_'+inst] = self.post.params['jit_'+inst]
+        '''
         new_params.num_planets = new_num_planets
 
-        priors = [radvel.prior.HardBounds('jit'+inst, 0.0, 20.0) for inst in self.tels]
+        priors = [radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0) for inst in self.tels]
         priors.append(radvel.prior.PositiveKPrior(new_num_planets))
         priors.append(radvel.prior.EccentricityPrior(new_num_planets))
 
-        new_post = utils.initialize_post(new_params, self.data, priors)
+        new_post = utils.initialize_post(self.data, new_params, priors)
         self.post = new_post
 
         '''
-        1. Get default values for new planet parameters
+        1. Get default values for new planet parameters !
         2. Initialize new radvel Parameter object, new_param, with n+1 planets !
-        3. TO COMPLETE Set values of 1st - nth planet in new_param TO COMPLETE
-        4. Set curvature fit parameters, check locked or unlocked
+        3. TO COMPLETE Set values of 1st - nth planet in new_param !
+        4. Set curvature fit parameters, check locked or unlocked !
 
         5. Put some kinds of priors on the 1st-nth planet parameters (period, phase)
             Allow phase, period to vary within ~5-10% of original value, ask Andrew
@@ -131,22 +132,9 @@ class Search(object):
 
     def fit_orbit(self):
         #Redundant with add_planet (current_planets, fitting_basis)? Make class properties?
-        current_planets = self.post.params.num_planets
-        fitting_basis = self.post.params.basis.name
-        param_list = fitting_basis.split()
-
-        self.post.params['k{}'.format(current_planets)].vary = True #to initialize 1 planet bic
-        self.post.params['tc{}'.format(current_planets)].vary = True
-        self.post.params['secosw{}'.format(current_planets)].vary = True
-        self.post.params['sesinw{}'.format(current_planets)].vary = True
-
+        #current_planets = self.post.params.num_planets
         fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
-
-        self.post.params['k{}'.format(current_planets)].vary = False #to initialize 1 planet bic
-        self.post.params['tc{}'.format(current_planets)].vary = False
-        self.post.params['secosw{}'.format(current_planets)].vary = False
-        self.post.params['sesinw{}'.format(current_planets)].vary = False
-
+        
         self.post = fit
 
     '''
@@ -158,68 +146,6 @@ class Search(object):
             sub_gp
         except:
             raise RuntimeError('Model does not contain a Gaussian process.')
-    '''
-
-    '''
-    def nominal_model(self, data, starname, fitting_basis='per tc secosw sesinw k'):
-    	"""Define the default nominal model. If binary orbit, read from table. Otherwise,
-    		define from default pars.
-    	"""
-    	binary_table = pd.read_csv('binary_orbits.csv',
-    								dtype={'star':str,'per':np.float64,'tc':np.float64,
-    										'e':np.float64,'w':np.float64,'k':np.float64})
-    	binlist = binary_table['star'].values
-
-    	instnames = np.unique(data['tel'].values)
-    	priors = [radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0) for inst in instnames]
-    	priors.append(radvel.prior.PositiveKPrior( 1 ))
-
-    	#pdb.set_trace()
-    	bin_orb = binary_table[binary_table['star']==starname]
-
-    	#pdb.set_trace()
-
-    	if len(bin_orb) > 0:
-    		anybasis_params = radvel.Parameters(num_planets=1, basis='per tc e w k')
-    		anybasis_params['tc1'] = radvel.Parameter(value=bin_orb['tc'].values[0])
-    		anybasis_params['w1'] = radvel.Parameter(value=bin_orb['w'].values[0])
-    		anybasis_params['k1'] = radvel.Parameter(value=bin_orb['k'].values[0])
-    		anybasis_params['e1'] = radvel.Parameter(value=bin_orb['e'].values[0])
-    		anybasis_params['per1'] = radvel.Parameter(value=bin_orb['per'].values[0])
-
-    		anybasis_params['dvdt'] = radvel.Parameter(value=0.0)
-    		anybasis_params['curv'] = radvel.Parameter(value=0.0)
-
-    		for inst in instnames:
-    			anybasis_params['gamma_'+inst] = radvel.Parameter(value=0.0)
-    			anybasis_params['jit_'+inst] = radvel.Parameter(value=2.0)
-    		#pdb.set_trace()
-    		params = anybasis_params.basis.to_any_basis(anybasis_params, fitting_basis)
-    		params['dvdt'].vary = False
-    		params['curv'].vary = False
-    		planet_num = 2
-
-    		priors.append(radvel.prior.EccentricityPrior( 1 ))
-    		post = ut.initialize_post(params, data, priors)
-    		#pdb.set_trace()
-    		post = radvel.fitting.maxlike_fitting(post) #Fit the best params for binary
-
-    		default_pdict = {} #Save the binary orbital params
-    		for k in post.params.keys():
-    			default_pdict[k] = post.params[k].value
-
-    		#Now add the planet onto the binary, with K==0 and no new free params
-    		post = ut.add_planet(post, default_pdict, data)
-
-    	else:
-    		planet_num = 1
-    		params = ut.initialize_default_pars(instnames)
-
-    		priors.append(radvel.prior.EccentricityPrior( 1 ))
-    		post = ut.initialize_post(params, data, priors)
-    		post = radvel.fitting.maxlike_fitting(post, verbose=False)
-
-    	return post, priors, planet_num
     '''
 
     def save(self, post, filename=None):

@@ -2,8 +2,7 @@
 import numpy as np
 import pandas as pd
 import radvel
-import cpsutils
-from cpsutils import io
+
 
 """Functions for posterior modification (resetting parameters, intializing, etc.)
 """
@@ -54,13 +53,14 @@ def initialize_default_pars(instnames=['HIRES'], fitting_basis='per tc secosw se
 
     return params
 
-def initialize_post(data, params=None):
-    #TO-DO: DEFINE 'DATA' INPUT, FIGURE OUT WHICH DATAFRAME FORMAT
+def initialize_post(data, params=None, priors=None):
     """Initialize a posterior object with data, params, and priors.
     Args:
         data: a pandas dataframe.
     Returns:
         post (radvel Posterior object)
+
+	TO-DO: MAKE OPTION FOR MULTI-PLANET POSTERIOR
     """
 
     if params == None:
@@ -86,7 +86,8 @@ def initialize_post(data, params=None):
     like = radvel.likelihood.CompositeLikelihood(list(likes.values()))
 
     post = radvel.posterior.Posterior(like)
-    #post.priors = self.priors
+    if priors != None:
+	    post.priors = priors
     return post
 
 """Series of functions for reading data from various sources into pandas dataframes.
