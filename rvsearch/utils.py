@@ -43,13 +43,12 @@ def initialize_default_pars(instnames=['HIRES'], fitting_basis='per tc secosw se
         anybasis_params['jit_'+inst] = radvel.Parameter(value=2.0)
 
     params = anybasis_params.basis.to_any_basis(anybasis_params, fitting_basis)
-    '''
+
     params['secosw1'].vary = False
     params['sesinw1'].vary = False
     params['k1'].vary = False
     params['per1'].vary = False
     params['tc1'].vary = False
-    '''
 
     return params
 

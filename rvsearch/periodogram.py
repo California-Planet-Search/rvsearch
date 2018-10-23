@@ -168,9 +168,10 @@ class Periodogram:
         power = np.zeros_like(self.pers)
         for i, per in enumerate(self.pers):
             #Reset posterior parameters to default values.
-            #for k in self.post.params.keys():
-            #    self.post.params[k] = self.default_pdict[k]
-            #Set new period and fit a circular orbit, with 1 - nth planet params free.
+            for k in self.post.params.keys():
+                if k in self.default_pdict.keys():
+                    self.post.params[k].value = self.default_pdict[k]
+            #Set new period and fit a circular orbit.
             perkey = 'per{}'.format(self.num_known_planets+1)
             self.post.params[perkey].value = per
             self.post.params[perkey].vary = False
@@ -242,7 +243,7 @@ class Periodogram:
 
         #Plot day, month, and year aliases.
         colors = ['r', 'b', 'g']
-        alias = [1, 30, 365]
+        alias = [0.997, 27.25, 365.256] #Sidereal day, month, year
         for i in np.arange(3):
             #Is this right? ASK BJ
             f_ap = f_real + 1./alias[i]
