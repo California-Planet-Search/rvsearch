@@ -160,7 +160,10 @@ class Periodogram:
         #Allow amplitude and time offset to vary, fix eccentricity and period.
         self.post.params['secosw{}'.format(self.num_known_planets+1)].vary = False
         self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary = False
-        self.post.params['per{}'.format(self.num_known_planets+1)].vary = False
+        #self.post.params['per{}'.format(self.num_known_planets+1)].vary = False
+
+        self.post.params['k{}'.format(self.num_known_planets+1)].vary = True
+        self.post.params['tc{}'.format(self.num_known_planets+1)].vary = True
 
         power = np.zeros_like(self.pers)
         for i, per in enumerate(self.pers):
@@ -170,6 +173,7 @@ class Periodogram:
             #Set new period and fit a circular orbit, with 1 - nth planet params free.
             perkey = 'per{}'.format(self.num_known_planets+1)
             self.post.params[perkey].value = per
+            self.post.params[perkey].vary = False
 
             fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
             power[i] = baseline_bic - fit.likelihood.bic()
