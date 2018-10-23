@@ -161,15 +161,18 @@ class Periodogram:
         #self.post.params['tc{}'.format(self.num_known_planets+1)].vary = True
         self.post.params['secosw{}'.format(self.num_known_planets+1)].vary = False
         self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary = False
+        self.post.params['per{}'.format(self.num_known_planets+1)].vary = False
 
         power = np.zeros_like(self.pers)
         for i, per in enumerate(self.pers):
-            perkey = 'per{}'.format(self.num_known_planets+1)
+            #Reset posterior parameters to default values.
+            for k in post.params.keys():
+                self.post.params[k] = self.default_pdict[k]
+            #Fix new period and fit a circular orbit, with 1 - nth planet params free.
             self.post.params[perkey].value = per
-            self.post.params[perkey].vary = False
-
             fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
             power[i] = baseline_bic - fit.Likelihood.bic()
+
         self.power['bic'] = power
         self.maxper = np.amax(power)
 
