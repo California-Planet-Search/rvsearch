@@ -108,7 +108,7 @@ class Periodogram:
         #Perform 0-planet baseline fit.
         post1 = copy.deepcopy(self.post)
 
-        trend_curve_bic = self.post.Likelihood.bic()
+        trend_curve_bic = self.post.likelihood.bic()
         dvdt_val = self.post.params['dvdt'].value
         curv_val = self.post.params['curv'].value
 
@@ -117,7 +117,7 @@ class Periodogram:
         post1.params['curv'].vary = False
         post1 = radvel.fitting.maxlike_fitting(post1)
 
-        trend_bic = post1.Likelihood.bic()
+        trend_bic = post1.likelihood.bic()
 
         #Test without trend or curvature
         post2 = copy.deepcopy(post1)
@@ -126,7 +126,7 @@ class Periodogram:
         post2.params['dvdt'].vary = False
         post2 = radvel.fitting.maxlike_fitting(post2)
 
-        flat_bic = post2.Likelihood.bic()
+        flat_bic = post2.likelihood.bic()
         print('Flat:{}; Trend:{}; Curv:{}'.format(flat_bic, trend_bic, trend_curve_bic))
 
         if trend_bic < flat_bic - 5.:
@@ -139,7 +139,7 @@ class Periodogram:
 
     def base_bic(self):
         base_post = self.trend_post()
-        self.base_bic = base_post.Likelihood.bic()
+        self.base_bic = base_post.likelihood.bic()
 
     def per_bic(self):
         #BJ's method. Remove once final BIC/AIC method is established.
@@ -153,7 +153,7 @@ class Periodogram:
         #post = setup_posterior(self.post, self.num_known_planets)
         baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=True)
         #This assumes nth planet parameters, and all periods, were locked in/
-        baseline_bic = baseline_fit.Likelihood.bic()
+        baseline_bic = baseline_fit.likelihood.bic()
         #Run trend-post-test here
 
         #Allow amplitude and time offset to vary, fix eccentricity and period.
@@ -167,7 +167,7 @@ class Periodogram:
             self.post.params[perkey].vary = False
 
             fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
-            power[i] = baseline_bic - fit.Likelihood.bic()
+            power[i] = baseline_bic - fit.likelihood.bic()
             #print(i, per, power[i], fit.bic(), baseline_bic)
         self.power['bic'] = power
         self.maxper = np.amax(power)
