@@ -70,8 +70,9 @@ class Search(object):
                 parkey = par + str(planet)
                 new_params[parkey] = self.post.params[parkey]
 
-        #for par in self.post.likelihood.extra_params: #WHAT DOES THIS MEAN? ASK LEA
-        #    new_params[par] = radvel.Parameter(value=self.default_pdict[par])
+        for par in self.post.likelihood.extra_params: #WHAT DOES THIS MEAN? ASK LEA
+            #new_params[par] = radvel.Parameter(value=self.default_pdict[par])
+            new_params[par] = self.post.params[par]
         '''
         for k in self.post.params.keys():
             new_params[k] = self.post.params[k].value
@@ -83,8 +84,8 @@ class Search(object):
             onepar = par + '1' #MESSY, FIX THIS 10/22/18
             new_params[parkey] = default_params[onepar]
 
-        new_params['dvdt'] = radvel.Parameter(value=self.post.params['dvdt'])
-        new_params['curv'] = radvel.Parameter(value=self.post.params['curv'])
+        new_params['dvdt'] = self.post.params['dvdt']
+        new_params['curv'] = self.post.params['curv']
 
         if self.post.params['dvdt'].vary == False:
         	new_params['dvdt'].vary = False
@@ -134,7 +135,7 @@ class Search(object):
         #Redundant with add_planet (current_planets, fitting_basis)? Make class properties?
         #current_planets = self.post.params.num_planets
         fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
-        
+
         self.post = fit
 
     '''

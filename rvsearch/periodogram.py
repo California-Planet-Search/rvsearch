@@ -187,7 +187,7 @@ class Periodogram:
     def ls(self):
         """Astropy Lomb-Scargle periodogram.
         """
-
+        #FOR TESTING
         print("Calculating Lomb-Scargle periodogram")
         power = astropy.stats.LombScargle(self.times, self.vel, self.errvel).power(self.freq_array)
         self.power['ls'] = power
