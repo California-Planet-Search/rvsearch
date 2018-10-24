@@ -16,11 +16,11 @@ class Periodogram:
         minsearchp (float): minimum search period
         maxsearchp (float): maximum search period
         num_known_planets (int): Assume this many known planets in the system and search for one more
-        num_freqs (int): (optional) number of frequencies to test
+        num_pers (int): (optional) number of frequencies to test
             [default = calculated via rvsearch.periodograms.freq_spacing]
     """
 
-    def __init__(self, post, basebic=None, num_known_planets=0, minsearchp=3, maxsearchp=10000,
+    def __init__(self, post, basebic=None, num_known_planets=0, minsearchp=1, maxsearchp=10000,
                  baseline=True, basefactor=4., num_pers=None, search_pars=['per'],
                  valid_types = ['bic', 'aic', 'ls']):
         self.post = post
@@ -43,7 +43,7 @@ class Periodogram:
         self.num_pers = num_pers
 
         if self.baseline == True:
-            self.maxsearchP = self.basefactor * self.timelen #SHOULD '4' BE VARIABLE?
+            self.maxsearchP = self.basefactor * self.timelen
 
         self.search_pars = search_pars
         self.valid_types = valid_types
@@ -70,16 +70,13 @@ class Periodogram:
         post = utils.initialize_post(data, params=params)
         return cls(post)
 
-    def freq_spacing(self, oversampling=1, verbose=True):
+    def per_spacing(self, oversampling=1, verbose=True):
         """Get the number of sampled frequencies
 
         Condition for spacing: delta nu such that during the
         entire duration of observations, phase slip is no more than P/4
 
         Args:
-            times (array): array of timestamps
-            minp (float): minimum period
-            maxp (float): maximum period
             oversampling (float): (optional) oversampling factor
             verbose (bool): (optional) print extra messages
 
@@ -97,15 +94,15 @@ class Periodogram:
         if verbose:
             print("Number of test periods:", num_freq)
 
-        freqs = np.linspace(fmin, fmax, num_freq)
-        pers = 1 / freqs
+        freqs = np.linspace(fmax, fmin, num_freq)
+        pers = 1. / freqs
 
         self.num_pers = num_freq
         return pers
 
     def make_per_grid(self):
-        if self.num_freqs == None:
-            self.pers = self.freq_spacing()
+        if self.num_pers == None:
+            self.pers = self.per_spacing()
         else:
             self.pers = 1/np.linspace(1/self.maxsearchP, 1/self.minsearchP, self.num_pers)
 
@@ -221,11 +218,8 @@ class Periodogram:
                            10.*np.max(self.power['bic']), 10000)
         lfit = 10.**func(xmod)
         fap_min = 10.**func(sBIC[-1])*self.num_pers #[-1] or [0]?
-        thresh = xmod[np.argmin(np.abs(lfit - fap/self.num_freqs))]
-        #thresh = xmod[np.where(np.abs(lfit-fap/self.num_freqs) == np.min(np.abs(lfit-fap/self.num_freqs)))]
-
+        thresh = xmod[np.argmin(np.abs(lfit - fap/self.num_pers))]
         self.bic_thresh = thresh
-        #return thresh[0], fap_min
 
     def save_per(self, ls=False):
         if ls==False:
@@ -240,37 +234,41 @@ class Periodogram:
             except:
                 print('Have not generated a Lomb-Scargle periodogram.')
 
-    def plot_per(self, ls=False, save=True):
+    def plot_per(self, ls=False, alias=False, save=True):
         #TO-DO: WORK IN AIC/BIC OPTION, INCLUDE IN PLOT TITLE
         peak = np.argmax(self.power['bic'])
         f_real = self.freqs[peak]
 
         fig, ax = plt.subplots()
-        ax.set_title('Planet {} vs. planet {}'.format(self.num_known_planets+1, self.num_known_planets))
         ax.plot(self.pers, self.power['bic'])
         ax.scatter(self.pers[peak], self.power['bic'][peak], label='{} days'.format(
                    np.round(self.pers[peak], decimals=1)))
 
         #If D-BIC threshold has been calculated, plot.
         if self.bic_thresh != None:
-            ax.axhline(self.bic_thresh, ls=':', label=r'$\Delta$BIC threshold')
+            ax.axhline(self.bic_thresh, ls=':', c='y', label=r'$\Delta$BIC threshold')
+            upper = 1.05*max(np.amax(self.power['bic']), self.bic_thresh)
+            ax.set_ylim([np.amin(self.power['bic']), upper])
+        else:
+            ax.set_ylim([np.amin(self.power['bic']), 1.05*np.amax(self.power['bic'])])
+        ax.set_xlim([self.pers[0], self.pers[-1]])
 
-        #Plot sidereal day, month, and year aliases.
-        colors = ['r', 'b', 'g']
-        alias = [0.997, 27.25, 365.256]
-        for i in np.arange(3):
-            #Is this right? ASK BJ
-            f_ap = f_real + 1./alias[i]
-            f_am = f_real - 1./alias[i]
-            ax.axvline(1./f_am, linestyle='--', c=colors[i], label=
-                       '{} day alias'.format(np.round(alias[i], decimals=1)))
-            ax.axvline(1./f_ap, linestyle='--', c=colors[i])
+        if alias == True:
+            #Plot sidereal day, month, and year aliases.
+            colors = ['r', 'b', 'g']
+            alias = [0.997, 27.25, 365.256] #Sidereal or sydonic? 27.322 vs. 29.531
+            for i in np.arange(3):
+                f_ap = f_real + 1./alias[i]
+                f_am = f_real - 1./alias[i]
+                ax.axvline(1./f_am, linestyle='--', c=colors[i], label=
+                           '{} day alias'.format(np.round(alias[i], decimals=1)))
+                ax.axvline(1./f_ap, linestyle='--', c=colors[i])
 
-        ax.legend(loc=3)
+        ax.legend(loc=0)
         ax.set_xscale('log')
         ax.set_xlabel('Period (days)')
         ax.set_ylabel(r'$\Delta$BIC') #TO-DO: WORK IN AIC/BIC OPTION
-        ax.set_title('Planet {}'.format(self.num_known_planets+1))
+        ax.set_title('Planet {} vs. planet {}'.format(self.num_known_planets+1, self.num_known_planets))
 
         #Store figure as object attribute, make separate saving functionality?
         self.fig = fig
@@ -279,7 +277,7 @@ class Periodogram:
             fig.savefig('dbic.pdf')
 
 
-#TO-DO: MOVE THESE INTO CLASS STRUCTURE, OR REMOVE IF UNNECESSARY
+#TO-DO: MOVE THIS INTO CLASS STRUCTURE, OR REMOVE IF UNNECESSARY
 def setup_posterior(post, num_known_planets):
     """Setup radvel.posterior.Posterior object
 
