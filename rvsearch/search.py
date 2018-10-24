@@ -25,25 +25,22 @@ class Search(object):
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
             self.tels = np.unique(self.data['tel'].values)
-            #self.tels = set(self.data.tel) #Unique list of telescopes.
         else:
             raise ValueError('Incorrect data input.')
 
         self.starname = starname
         self.params = utils.initialize_default_pars(instnames=self.tels)
         self.priors = priors
-
+        '''
         #Default pdict can contain known planet parameters, contains nplanets
-            #Change it to an rvparams object, includes functionality of param objects. *init_params*
-        #self.default_pdict = default_pdict
+        #Change it to an rvparams object, includes functionality of param objects. *init_params*
         #self.default_params = HOW DO WE DO THIS? 10/18
-
-        #self.all_posts = []
-
+        '''
+        self.all_posts = []
         self.post = utils.initialize_post(self.data, self.params)
-
         #TRYING TO GENERALIZE INFORMATION CRITERION TO AIC OR BIC.
         '''
+        #Play with calling __name__ of method
         if crit=='bic':
             self.crit = radvel.posterior.bic()
         eif crit=='aic':
@@ -51,7 +48,6 @@ class Search(object):
         self.critname = self.crit.__string__
         else:
             raise ValueError('Invalid information criterion.')
-        #Play with calling __name__ of method
         '''
 
     def add_planet(self):
@@ -132,22 +128,18 @@ class Search(object):
         pass
 
     def fit_orbit(self):
-        #Redundant with add_planet (current_planets, fitting_basis)? Make class properties?
-        #current_planets = self.post.params.num_planets
+        #Redundant with periodogram? (current_planets, fitting_basis)? Make class properties?
         fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
-
         self.post = fit
 
-    '''
     def add_gp(self):
         pass
 
-    def sub_gp(self):
+    def sub_gp(self, num_gps=1):
         try:
             sub_gp
         except:
-            raise RuntimeError('Model does not contain a Gaussian process.')
-    '''
+            raise RuntimeError('Model contains fewer than {} Gaussian processes.'.format(num_gps))
 
     def save(self, post, filename=None):
         if filename != None:
@@ -160,10 +152,11 @@ class Search(object):
         pass
 
     def save_all_posts(self):
-        #Return list of posteriors for each nth planet model
+        #Pickle the list of posteriors for each nth planet model
         #self.all_posts
         pass
 
     def run_search(self):
         #Use all of the above routines to run a search.
+
         pass

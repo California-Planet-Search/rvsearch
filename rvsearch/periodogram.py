@@ -21,7 +21,8 @@ class Periodogram:
     """
 
     def __init__(self, post, basebic=None, num_known_planets=0, minsearchp=3, maxsearchp=10000,
-                 baseline=True, num_freqs=None, search_pars = ['per'], valid_types = ['bic', 'aic', 'ls']):
+                 baseline=True, basefactor=4., num_pers=None, search_pars=['per'],
+                 valid_types = ['bic', 'aic', 'ls']):
         self.post = post
         self.default_pdict = {} #Default_pdict makes sense here, leave alone for now (10/22/18)
         for k in post.params.keys():
@@ -38,17 +39,23 @@ class Periodogram:
         self.minsearchP = minsearchp
         self.maxsearchP = maxsearchp
         self.baseline = baseline
-        self.num_freqs = num_freqs
+        self.basefactor = basefactor
+        self.num_pers = num_pers
 
         if self.baseline == True:
-            self.maxsearchP = 4. * self.timelen #SHOULD '4' BE VARIABLE?
+            self.maxsearchP = self.basefactor * self.timelen #SHOULD '4' BE VARIABLE?
 
         self.search_pars = search_pars
         self.valid_types = valid_types
         self.power = {key: None for key in self.valid_types}
-        self.maxper = None
+
+        self.best_per = None
+        self.best_bic = None
 
         self.bic_thresh = None
+
+        #Automatically generate a period grid upon initialization.
+        self.make_per_grid()
 
     @classmethod
     def from_pandas(cls, data):
@@ -93,13 +100,14 @@ class Periodogram:
         freqs = np.linspace(fmin, fmax, num_freq)
         pers = 1 / freqs
 
+        self.num_pers = num_freq
         return pers
 
     def make_per_grid(self):
-        if self.num_freqs is None:
-            self.pers = self.freq_spacing()#(self.times, self.minsearchP, self.maxsearchP)
+        if self.num_freqs == None:
+            self.pers = self.freq_spacing()
         else:
-            self.pers = 1/np.linspace(1/self.maxsearchP, 1/self.minsearchP, self.num_freqs)
+            self.pers = 1/np.linspace(1/self.maxsearchP, 1/self.minsearchP, self.num_pers)
 
         self.freqs = 1/self.pers
         ''' This is what we need trend_test for, at the start of the search. Move to Search()
@@ -153,7 +161,6 @@ class Periodogram:
         that has already been optimized.
         """
         print("Calculating BIC periodogram")
-        #post = setup_posterior(self.post, self.num_known_planets)
         #This assumes nth planet parameters, and all periods, were locked in.
         baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
         baseline_bic = baseline_fit.likelihood.bic()
@@ -173,7 +180,7 @@ class Periodogram:
             for k in self.post.params.keys():
                 if k in self.default_pdict.keys():
                     self.post.params[k].value = self.default_pdict[k]
-            #Set new period and fit a circular orbit.
+            #Set new period, fix period, and fit a circular orbit.
             perkey = 'per{}'.format(self.num_known_planets+1)
             self.post.params[perkey].value = per
             self.post.params[perkey].vary = False
@@ -182,7 +189,8 @@ class Periodogram:
             power[i] = baseline_bic - fit.likelihood.bic()
 
         self.power['bic'] = power
-        self.maxper = np.amax(power)
+        self.best_per = self.pers[np.argmax(power)]
+        self.best_bic = np.amax(power)
 
         self.post.params['secosw{}'.format(self.num_known_planets+1)].vary = True
         self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary = True
@@ -206,17 +214,18 @@ class Periodogram:
         hist, edge = np.histogram(crop_BIC, bins=10)
         cent = (edge[1:]+edge[:-1])/2.
         norm = float(np.sum(hist))
-
         nhist = hist/norm
 
         func = np.poly1d(np.polyfit(cent, np.log10(nhist), 1))
         xmod = np.linspace(np.min(self.power['bic'][self.power['bic']==self.power['bic']]),
                            10.*np.max(self.power['bic']), 10000)
         lfit = 10.**func(xmod)
-        fap_min = 10.**func(sBIC[-1])*self.num_freqs #[-1] or [0]?
+        fap_min = 10.**func(sBIC[-1])*self.num_pers #[-1] or [0]?
         thresh = xmod[np.argmin(np.abs(lfit - fap/self.num_freqs))]
         #thresh = xmod[np.where(np.abs(lfit-fap/self.num_freqs) == np.min(np.abs(lfit-fap/self.num_freqs)))]
-        return thresh[0], fap_min
+
+        self.bic_thresh = thresh
+        #return thresh[0], fap_min
 
     def save_per(self, ls=False):
         if ls==False:
@@ -237,11 +246,10 @@ class Periodogram:
         f_real = self.freqs[peak]
 
         fig, ax = plt.subplots()
-        ax.set_title('Planet ' + str(self.num_known_planets+1)) #TO-DO: GET PLANET NUMBER RIGHT
+        ax.set_title('Planet {} vs. planet {}'.format(self.num_known_planets+1, self.num_known_planets))
         ax.plot(self.pers, self.power['bic'])
         ax.scatter(self.pers[peak], self.power['bic'][peak], label='{} days'.format(
                    np.round(self.pers[peak], decimals=1)))
-        ax.legend(loc=1)
 
         #If D-BIC threshold has been calculated, plot.
         if self.bic_thresh != None:
@@ -254,18 +262,20 @@ class Periodogram:
             #Is this right? ASK BJ
             f_ap = f_real + 1./alias[i]
             f_am = f_real - 1./alias[i]
-            ax.axvline(1./f_am, linestyle='--', c=colors[i], label='{} day alias'.format(alias[i]))
+            ax.axvline(1./f_am, linestyle='--', c=colors[i], label=
+                       '{} day alias'.format(np.round(alias[i], decimals=1)))
             ax.axvline(1./f_ap, linestyle='--', c=colors[i])
+
         ax.legend(loc=3)
         ax.set_xscale('log')
         ax.set_xlabel('Period (days)')
         ax.set_ylabel(r'$\Delta$BIC') #TO-DO: WORK IN AIC/BIC OPTION
-        ax.set_title('Planet {}'.format(self.num_known_planets+1)) #TO-DO: FIGURE OUT WHERE PLANET_NUM IS
+        ax.set_title('Planet {}'.format(self.num_known_planets+1))
 
         #Store figure as object attribute, make separate saving functionality?
         self.fig = fig
         if save == True:
-            #FINISH THIS
+            #FINISH THIS, WRITE NAMING PROCEDURE
             fig.savefig('dbic.pdf')
 
 
