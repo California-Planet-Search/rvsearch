@@ -166,7 +166,6 @@ class Periodogram:
         #Allow amplitude and time offset to vary, fix eccentricity and period.
         self.post.params['secosw{}'.format(self.num_known_planets+1)].vary = False
         self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary = False
-        #self.post.params['per{}'.format(self.num_known_planets+1)].vary = False
 
         self.post.params['k{}'.format(self.num_known_planets+1)].vary = True
         self.post.params['tc{}'.format(self.num_known_planets+1)].vary = True
@@ -185,12 +184,12 @@ class Periodogram:
             fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
             power[i] = baseline_bic - fit.likelihood.bic()
 
+        self.post.params['secosw{}'.format(self.num_known_planets+1)].vary = True
+        self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary = True
+
         self.power['bic'] = power
         self.best_per = self.pers[np.argmax(power)]
         self.best_bic = np.amax(power)
-
-        self.post.params['secosw{}'.format(self.num_known_planets+1)].vary = True
-        self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary = True
 
     def ls(self):
         """Astropy Lomb-Scargle periodogram.

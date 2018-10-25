@@ -1,4 +1,6 @@
 #Search class.
+import copy
+
 import numpy as np
 import pandas
 import radvel
@@ -31,13 +33,11 @@ class Search(object):
         self.starname = starname
         self.params = utils.initialize_default_pars(instnames=self.tels)
         self.priors = priors
-        '''
-        #Default pdict can contain known planet parameters, contains nplanets
-        #Change it to an rvparams object, includes functionality of param objects. *init_params*
-        #self.default_params = HOW DO WE DO THIS? 10/18
-        '''
+
         self.all_posts = []
         self.post = utils.initialize_post(self.data, self.params)
+
+        self.num_planets = 0
         #TRYING TO GENERALIZE INFORMATION CRITERION TO AIC OR BIC.
         '''
         #Play with calling __name__ of method
@@ -66,15 +66,14 @@ class Search(object):
                 parkey = par + str(planet)
                 new_params[parkey] = self.post.params[parkey]
 
-        for par in self.post.likelihood.extra_params: #WHAT DOES THIS MEAN? ASK LEA
-            #new_params[par] = radvel.Parameter(value=self.default_pdict[par])
+        for par in self.post.likelihood.extra_params:
             new_params[par] = self.post.params[par]
         '''
         for k in self.post.params.keys():
             new_params[k] = self.post.params[k].value
         '''
         #Set default parameters for n+1th planet
-        default_params = utils.initialize_default_pars(self.tels)#FIX INSTRUMENT_NAME PROBLEM 10/22/18
+        default_params = utils.initialize_default_pars(self.tels) #FIX INSTRUMENT_NAME PROBLEM 10/22/18
         for par in param_list:
             parkey = par + str(new_num_planets)
             onepar = par + '1' #MESSY, FIX THIS 10/22/18
@@ -92,7 +91,7 @@ class Search(object):
         new_params['secosw{}'.format(new_num_planets)].vary = False
         new_params['sesinw{}'.format(new_num_planets)].vary = False
         '''
-        for inst in self.tels:
+        for inst in self.tels: #Covered by post.likelihood.extra_params above
             new_params['gamma_'+inst] = self.post.params['gamma_'+inst]
             new_params['jit_'+inst] = self.post.params['jit_'+inst]
         '''
@@ -112,8 +111,9 @@ class Search(object):
         4. Set curvature fit parameters, check locked or unlocked !
 
         5. Put some kinds of priors on the 1st-nth planet parameters (period, phase)
-            Allow phase, period to vary within ~5-10% of original value, ask Andrew
+            Allow phase, period to vary within ~5-10% of original value, ask Andrew.
             Or allow *all* params (except curv, dvdt)to be totally free. This is while making per_bics
+
             Make 1 flag each for dvdt, curv at the start of the search. In search object
                 Force on, force off, or auto for 0-1 model. Off for Legacy
 
@@ -121,10 +121,11 @@ class Search(object):
         7. Add positive amp. & ecc. priors, set self.post to new posterior !
         8. Save old posterior to list containing history of posterior
         '''
-        pass
 
     def sub_planet(self):
-        #self.posts = self.posts[:-1] Not quite right
+        pass
+
+    def reset_priors(self):
         pass
 
     def fit_orbit(self):
@@ -137,7 +138,7 @@ class Search(object):
 
     def sub_gp(self, num_gps=1):
         try:
-            sub_gp
+            pass
         except:
             raise RuntimeError('Model contains fewer than {} Gaussian processes.'.format(num_gps))
 
@@ -158,5 +159,22 @@ class Search(object):
 
     def run_search(self):
         #Use all of the above routines to run a search.
+        run = True
+        while run == True:
+            '''
+            In n = 0 case, we already have a 1 planet posterior. No need
+            to run the self.add_planet() routine, as written. 10/24/18
+            '''
+            if self.num_planets != 0:
+                self.add_planet()
+            perioder = periodogram.Periodogram(self.post)
+            perioder.per_bic()
+            perioder.eFAP_thresh()
+            if perioder.best_per > perioder.bic_thresh:
+                #Fix period of newest planet
 
-        pass
+                self.fit_orbit()
+                self.num_planets += 1
+            else:
+                self.sub_planet() #FINISH SUB_PLANET() 10/24/18
+                run == False

@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 import radvel
 
-
 """Functions for posterior modification (resetting parameters, intializing, etc.)
 """
 
@@ -92,7 +91,7 @@ def initialize_post(data, params=None, priors=None):
 """Series of functions for reading data from various sources into pandas dataframes.
 """
 def read_from_csv(filename, verbose=True):
-    data = pd.DataFrame.from_csv(filename)
+    data = pd.read_csv(filename)
     if 'tel' not in data.columns:
         if verbose:
             print('Telescope type not given, defaulting to HIRES.')
