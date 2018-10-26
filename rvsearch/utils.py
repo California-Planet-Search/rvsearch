@@ -58,7 +58,7 @@ def initialize_post(data, params=None, priors=None):
     Returns:
         post (radvel Posterior object)
 
-	TO-DO: MAKE OPTION FOR MULTI-PLANET POSTERIOR
+	TO-DO: MAKE OPTION FOR KNOWN MULTI-PLANET POSTERIOR
     """
 
     if params == None:
@@ -84,8 +84,12 @@ def initialize_post(data, params=None, priors=None):
     like = radvel.likelihood.CompositeLikelihood(list(likes.values()))
 
     post = radvel.posterior.Posterior(like)
+	#FIX TO COMBINE GIVEN PRIORS AND NEEDED PRIORS
     if priors != None:
 	    post.priors = priors
+	else:
+	    priors = [radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0) for inst in telgrps.keys()]
+		post.priors = priors
     return post
 
 """Series of functions for reading data from various sources into pandas dataframes.

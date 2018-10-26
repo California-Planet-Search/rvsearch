@@ -1,5 +1,7 @@
 #Search class.
 import copy
+import time
+import pdb
 
 import numpy as np
 import pandas
@@ -23,7 +25,7 @@ class Search(object):
         aic: if True, use Akaike information criterion instead of BIC. STILL WORKING ON THIS
     """
 
-    def __init__(self, data, starname='', max_planets=5, priors=[], crit='bic'):
+    def __init__(self, data, starname='', max_planets=3, priors=[], crit='bic', verbose=True):
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
             self.tels = np.unique(self.data['tel'].values)
@@ -37,8 +39,8 @@ class Search(object):
         self.all_posts = []
         self.post = utils.initialize_post(self.data, self.params)
 
+        self.max_planets = max_planets
         self.num_planets = 0
-        #TRYING TO GENERALIZE INFORMATION CRITERION TO AIC OR BIC.
         '''
         #Play with calling __name__ of method
         if crit=='bic':
@@ -67,13 +69,13 @@ class Search(object):
                 new_params[parkey] = self.post.params[parkey]
 
         for par in self.post.likelihood.extra_params:
-            new_params[par] = self.post.params[par]
+            new_params[par] = self.post.params[par] #For gamma and jitter
         '''
         for k in self.post.params.keys():
             new_params[k] = self.post.params[k].value
         '''
         #Set default parameters for n+1th planet
-        default_params = utils.initialize_default_pars(self.tels) #FIX INSTRUMENT_NAME PROBLEM 10/22/18
+        default_params = utils.initialize_default_pars(self.tels)
         for par in param_list:
             parkey = par + str(new_num_planets)
             onepar = par + '1' #MESSY, FIX THIS 10/22/18
@@ -90,11 +92,7 @@ class Search(object):
         new_params['per{}'.format(new_num_planets)].vary = False
         new_params['secosw{}'.format(new_num_planets)].vary = False
         new_params['sesinw{}'.format(new_num_planets)].vary = False
-        '''
-        for inst in self.tels: #Covered by post.likelihood.extra_params above
-            new_params['gamma_'+inst] = self.post.params['gamma_'+inst]
-            new_params['jit_'+inst] = self.post.params['jit_'+inst]
-        '''
+
         new_params.num_planets = new_num_planets
 
         priors = [radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0) for inst in self.tels]
@@ -129,8 +127,20 @@ class Search(object):
         pass
 
     def fit_orbit(self):
-        #Redundant with periodogram? (current_planets, fitting_basis)? Make class properties?
+        #REWRITE TO ITERATE OVER ALL PARAM KEYS? INCLUDING DVDT AND CURV? 10/26/18
+        for planet in np.arange(1, self.num_planets+1):
+            self.post.params['per{}'.format(planet)].vary = True
+            self.post.params['k{}'.format(planet)].vary = True
+            self.post.params['tc{}'.format(planet)].vary = True
+            self.post.params['secosw{}'.format(planet)].vary = True
+            self.post.params['sesinw{}'.format(planet)].vary = True
         fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
+        for planet in np.arange(1, self.num_planets+1):
+            self.post.params['per{}'.format(planet)].vary = False
+            self.post.params['k{}'.format(planet)].vary = False
+            self.post.params['tc{}'.format(planet)].vary = False
+            self.post.params['secosw{}'.format(planet)].vary = False
+            self.post.params['sesinw{}'.format(planet)].vary = False
         self.post = fit
 
     def add_gp(self):
@@ -154,27 +164,37 @@ class Search(object):
 
     def save_all_posts(self):
         #Pickle the list of posteriors for each nth planet model
-        #self.all_posts
         pass
 
     def run_search(self):
-        #Use all of the above routines to run a search.
+        t1 = time.process_time()
+        #Use all of the above routines to run a search. TO-DO: KNOW WHEN TO FIX, FREE PARAMS 10/15/18
         run = True
         while run == True:
-            '''
-            In n = 0 case, we already have a 1 planet posterior. No need
-            to run the self.add_planet() routine, as written. 10/24/18
-            '''
             if self.num_planets != 0:
                 self.add_planet()
-            perioder = periodogram.Periodogram(self.post)
-            perioder.per_bic()
-            perioder.eFAP_thresh()
-            if perioder.best_per > perioder.bic_thresh:
-                #Fix period of newest planet
+            perioder = periodogram.Periodogram(self.post, num_known_planets=self.num_planets)
 
-                self.fit_orbit()
+            pdb.set_trace()
+            t3 = time.process_time()
+            perioder.per_bic()
+            t4 = time.process_time()
+            print('Time = {}'.format(t4 - t3))
+
+            perioder.eFAP_thresh()
+            if perioder.best_bic > perioder.bic_thresh:
+                perioder.plot_per()
                 self.num_planets += 1
+                perkey = 'per{}'.format(self.num_planets)
+                self.post.params[perkey].vary = False
+                self.post.params[perkey].value = perioder.best_per
+                self.post.params['k{}'.format(self.num_planets)].value = perioder.best_k
+                self.post.params['tc{}'.format(self.num_planets)].value = perioder.best_tc
+                self.fit_orbit()
             else:
                 self.sub_planet() #FINISH SUB_PLANET() 10/24/18
-                run == False
+                run = False
+            if self.num_planets >= self.max_planets:
+                run = False
+        t2 = time.process_time()
+        print('Time = {}'.format(t2 - t1))

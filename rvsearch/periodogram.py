@@ -20,10 +20,10 @@ class Periodogram:
             [default = calculated via rvsearch.periodograms.freq_spacing]
     """
 
-    def __init__(self, post, basebic=None, num_known_planets=0, minsearchp=1, maxsearchp=10000,
+    def __init__(self, post, basebic=None, num_known_planets=0, minsearchp=5, maxsearchp=10000,
                  baseline=True, basefactor=4., num_pers=None, search_pars=['per'],
                  valid_types = ['bic', 'aic', 'ls']):
-        self.post = post
+        self.post = copy.deepcopy(post)
         self.default_pdict = {} #Default_pdict makes sense here, leave alone for now (10/22/18)
         for k in post.params.keys():
             self.default_pdict[k] = post.params[k].value
@@ -163,14 +163,21 @@ class Periodogram:
         baseline_bic = baseline_fit.likelihood.bic()
         #Run trend-post-test here?
 
-        #Allow amplitude and time offset to vary, fix eccentricity and period.
-        self.post.params['secosw{}'.format(self.num_known_planets+1)].vary = False
-        self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary = False
+        #Allow amplitude and time offset to vary, fix eccentricity and period. Fix all ecc.s for speed
+        for planet in np.arange(1, self.num_known_planets+2):
+            self.post.params['secosw{}'.format(planet)].vary = False
+            self.post.params['sesinw{}'.format(planet)].vary = False
+
+        #self.post.params['secosw{}'.format(self.num_known_planets+1)].vary = False
+        #self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary = False
 
         self.post.params['k{}'.format(self.num_known_planets+1)].vary = True
         self.post.params['tc{}'.format(self.num_known_planets+1)].vary = True
 
         power = np.zeros_like(self.pers)
+        ks = np.zeros_like(self.pers)
+        tcs = np.zeros_like(self.pers)
+
         for i, per in enumerate(self.pers):
             #Reset posterior parameters to default values.
             for k in self.post.params.keys():
@@ -183,13 +190,19 @@ class Periodogram:
 
             fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
             power[i] = baseline_bic - fit.likelihood.bic()
+            ks[i] = fit.params['k{}'.format(self.num_known_planets+1)].value
+            tcs[i] =fit.params['tc{}'.format(self.num_known_planets+1)].value
 
-        self.post.params['secosw{}'.format(self.num_known_planets+1)].vary = True
-        self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary = True
+        #self.post.params['secosw{}'.format(self.num_known_planets+1)].vary = True
+        #self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary = True
+
+        fit_index = np.argmax(power)
+        self.best_per = self.pers[fit_index]
+        self.best_k = ks[fit_index]
+        self.best_tc = tcs[fit_index]
+        self.best_bic = power[fit_index]
 
         self.power['bic'] = power
-        self.best_per = self.pers[np.argmax(power)]
-        self.best_bic = np.amax(power)
 
     def ls(self):
         """Astropy Lomb-Scargle periodogram.
@@ -199,13 +212,13 @@ class Periodogram:
         power = astropy.stats.LombScargle(self.times, self.vel, self.errvel).power(self.freq_array)
         self.power['ls'] = power
 
-    def eFAP_thresh(self, fap=0.01):
+    def eFAP_thresh(self, fap=0.003):
         """Calculate the threshold for significance based on BJ's eFAP algorithm
         From Lea's code. LOMB-S OPTION?
         """
-        #select out intermediate values of BIC
+        #select out intermediate values of BIC, median - 95%
         sBIC = np.sort(self.power['bic'])
-        crop_BIC = sBIC[int(0.5*len(sBIC)):int(0.95*len(sBIC))] #select only median - 95% vals
+        crop_BIC = sBIC[int(0.5*len(sBIC)):int(0.95*len(sBIC))]
 
         hist, edge = np.histogram(crop_BIC, bins=10)
         cent = (edge[1:]+edge[:-1])/2.
@@ -224,16 +237,16 @@ class Periodogram:
         if ls==False:
             try:
                 #FIX THIS; SPECIFY DIRECTORY/NAME, NUMBER OF PLANETS IN FILENAME, AND ARRAY ORDERING
-                np.savetxt((self.per_array, self.power['bic']), filename='BIC_periodogram.csv')
+                np.savetxt((self.pers, self.power['bic']), filename='BIC_periodogram.csv')
             except:
                 print('Have not generated a delta-BIC periodogram.')
         else:
             try:
-                np.savetxt((self.pers, self.power['LS']), filename='LS_periodogram.csv')
+                np.savetxt((self.pers, self.power['ls']), filename='LS_periodogram.csv')
             except:
                 print('Have not generated a Lomb-Scargle periodogram.')
 
-    def plot_per(self, ls=False, alias=False, save=True):
+    def plot_per(self, ls=False, alias=True, save=True):
         #TO-DO: WORK IN AIC/BIC OPTION, INCLUDE IN PLOT TITLE
         peak = np.argmax(self.power['bic'])
         f_real = self.freqs[peak]
@@ -259,9 +272,9 @@ class Periodogram:
             for i in np.arange(3):
                 f_ap = f_real + 1./alias[i]
                 f_am = f_real - 1./alias[i]
-                ax.axvline(1./f_am, linestyle='--', c=colors[i], label=
+                ax.axvline(1./f_am, linestyle='--', c=colors[i], alpha=0.5, label=
                            '{} day alias'.format(np.round(alias[i], decimals=1)))
-                ax.axvline(1./f_ap, linestyle='--', c=colors[i])
+                ax.axvline(1./f_ap, linestyle='--', c=colors[i], alpha=0.5)
 
         ax.legend(loc=0)
         ax.set_xscale('log')
@@ -273,7 +286,7 @@ class Periodogram:
         self.fig = fig
         if save == True:
             #FINISH THIS, WRITE NAMING PROCEDURE
-            fig.savefig('dbic.pdf')
+            fig.savefig('dbic{}.pdf'.format(self.num_known_planets+1))
 
 
 #TO-DO: MOVE THIS INTO CLASS STRUCTURE, OR REMOVE IF UNNECESSARY
