@@ -86,10 +86,10 @@ def initialize_post(data, params=None, priors=None):
     post = radvel.posterior.Posterior(like)
 	#FIX TO COMBINE GIVEN PRIORS AND NEEDED PRIORS
     if priors != None:
-	    post.priors = priors
-	else:
-	    priors = [radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0) for inst in telgrps.keys()]
-		post.priors = priors
+        post.priors = priors
+    else:
+        priors = [radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0) for inst in telgrps.keys()]
+        post.priors = priors
     return post
 
 """Series of functions for reading data from various sources into pandas dataframes.

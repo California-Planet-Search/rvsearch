@@ -25,7 +25,8 @@ class Search(object):
         aic: if True, use Akaike information criterion instead of BIC. STILL WORKING ON THIS
     """
 
-    def __init__(self, data, starname='', max_planets=3, priors=[], crit='bic', verbose=True):
+    def __init__(self, data, starname='', max_planets=3, priors=[], crit='bic', fap=0.01,
+                 dvdt=False, curv=False, verbose=True):
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
             self.tels = np.unique(self.data['tel'].values)
@@ -51,6 +52,42 @@ class Search(object):
         else:
             raise ValueError('Invalid information criterion.')
         '''
+        self.fap = fap
+        self.dvdt = dvdt
+        self.curv = curv 
+
+    def trend_test(self):
+        #Perform 0-planet baseline fit.
+        post1 = copy.deepcopy(self.post)
+
+        trend_curve_bic = self.post.likelihood.bic()
+        dvdt_val = self.post.params['dvdt'].value
+        curv_val = self.post.params['curv'].value
+
+        #Test without curvature
+        post1.params['curv'].value = 0.0
+        post1.params['curv'].vary = False
+        post1 = radvel.fitting.maxlike_fitting(post1)
+
+        trend_bic = post1.likelihood.bic()
+
+        #Test without trend or curvature
+        post2 = copy.deepcopy(post1)
+
+        post2.params['dvdt'].value = 0.0
+        post2.params['dvdt'].vary = False
+        post2 = radvel.fitting.maxlike_fitting(post2)
+
+        flat_bic = post2.likelihood.bic()
+        print('Flat:{}; Trend:{}; Curv:{}'.format(flat_bic, trend_bic, trend_curve_bic))
+
+        if trend_bic < flat_bic - 10.:
+    		#Flat model is excluded, check on curvature
+    	    if trend_curve_bic < trend_bic - 10.:
+    			#curvature model is preferred
+    		    return self.post #t+c
+    	    return post1 #trend only
+        return post2 #flat
 
     def add_planet(self):
 
@@ -134,14 +171,16 @@ class Search(object):
             self.post.params['tc{}'.format(planet)].vary = True
             self.post.params['secosw{}'.format(planet)].vary = True
             self.post.params['sesinw{}'.format(planet)].vary = True
+
         fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
+        self.post = fit
+
         for planet in np.arange(1, self.num_planets+1):
             self.post.params['per{}'.format(planet)].vary = False
             self.post.params['k{}'.format(planet)].vary = False
             self.post.params['tc{}'.format(planet)].vary = False
             self.post.params['secosw{}'.format(planet)].vary = False
             self.post.params['sesinw{}'.format(planet)].vary = False
-        self.post = fit
 
     def add_gp(self):
         pass
@@ -167,7 +206,6 @@ class Search(object):
         pass
 
     def run_search(self):
-        t1 = time.process_time()
         #Use all of the above routines to run a search. TO-DO: KNOW WHEN TO FIX, FREE PARAMS 10/15/18
         run = True
         while run == True:
@@ -175,15 +213,15 @@ class Search(object):
                 self.add_planet()
             perioder = periodogram.Periodogram(self.post, num_known_planets=self.num_planets)
 
-            pdb.set_trace()
-            t3 = time.process_time()
+            #pdb.set_trace()
+            t1 = time.process_time()
             perioder.per_bic()
-            t4 = time.process_time()
-            print('Time = {}'.format(t4 - t3))
+            t2 = time.process_time()
+            print('Time = {} seconds'.format(t2 - t1))
 
             perioder.eFAP_thresh()
+            perioder.plot_per()
             if perioder.best_bic > perioder.bic_thresh:
-                perioder.plot_per()
                 self.num_planets += 1
                 perkey = 'per{}'.format(self.num_planets)
                 self.post.params[perkey].vary = False
@@ -196,5 +234,4 @@ class Search(object):
                 run = False
             if self.num_planets >= self.max_planets:
                 run = False
-        t2 = time.process_time()
-        print('Time = {}'.format(t2 - t1))
+        pdb.set_trace()
