@@ -140,9 +140,6 @@ class Periodogram:
             self.post.params['secosw{}'.format(planet)].vary = False
             self.post.params['sesinw{}'.format(planet)].vary = False
 
-        #self.post.params['secosw{}'.format(self.num_known_planets+1)].vary = False
-        #self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary = False
-
         self.post.params['k{}'.format(self.num_known_planets+1)].vary = True
         self.post.params['tc{}'.format(self.num_known_planets+1)].vary = True
 
@@ -165,9 +162,6 @@ class Periodogram:
             power[i] = baseline_bic - fit.likelihood.bic()
             ks[i] = fit.params['k{}'.format(self.num_known_planets+1)].value
             tcs[i] =fit.params['tc{}'.format(self.num_known_planets+1)].value
-
-        #self.post.params['secosw{}'.format(self.num_known_planets+1)].vary = True
-        #self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary = True
 
         fit_index = np.argmax(power)
         self.best_per = self.pers[fit_index]
