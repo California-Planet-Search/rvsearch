@@ -20,7 +20,7 @@ class Periodogram:
             [default = calculated via rvsearch.periodograms.freq_spacing]
     """
 
-    def __init__(self, post, basebic=None, num_known_planets=0, minsearchp=1, maxsearchp=10000,
+    def __init__(self, post, basebic=None, num_known_planets=0, minsearchp=3, maxsearchp=10000,
                  baseline=True, basefactor=4., num_pers=None, search_pars=['per'],
                  valid_types = ['bic', 'aic', 'ls']):
         self.post = copy.deepcopy(post)
@@ -146,7 +146,7 @@ class Periodogram:
         tcs = np.zeros_like(self.pers)
 
         for i, per in enumerate(self.pers):
-            print(i, self.num_pers)
+            #print(i, self.num_pers)
             #Reset posterior parameters to default values.
             for k in self.post.params.keys():
                 if k in self.default_pdict.keys():
