@@ -125,15 +125,13 @@ class Periodogram:
         a post? If so, we should do this, so we don't have to fit a posterior
         that has already been optimized.
         """
+
         print("Calculating BIC periodogram")
         #This assumes nth planet parameters, and all periods, were locked in.
         #if self.num_known_planets == 0:
         #self.post = self.trend_test()
         baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
         baseline_bic = baseline_fit.likelihood.bic()
-        #else:
-        #    baseline_bic = self.post.likelihood.bic()
-        #Run trend-post-test here?
 
         #Allow amplitude and time offset to vary, fix eccentricity and period. Fix all ecc.s for speed
         for planet in np.arange(1, self.num_known_planets+2):
@@ -161,7 +159,7 @@ class Periodogram:
             fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
             power[i] = baseline_bic - fit.likelihood.bic()
             ks[i] = fit.params['k{}'.format(self.num_known_planets+1)].value
-            tcs[i] =fit.params['tc{}'.format(self.num_known_planets+1)].value
+            tcs[i] = fit.params['tc{}'.format(self.num_known_planets+1)].value
 
         fit_index = np.argmax(power)
         self.best_per = self.pers[fit_index]
