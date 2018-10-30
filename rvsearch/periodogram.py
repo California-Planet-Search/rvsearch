@@ -20,7 +20,7 @@ class Periodogram:
             [default = calculated via rvsearch.periodograms.freq_spacing]
     """
 
-    def __init__(self, post, basebic=None, num_known_planets=0, minsearchp=3, maxsearchp=10000,
+    def __init__(self, post, basebic=None, num_known_planets=0, minsearchp=1, maxsearchp=10000,
                  baseline=True, basefactor=4., num_pers=None, search_pars=['per'],
                  valid_types = ['bic', 'aic', 'ls']):
         self.post = copy.deepcopy(post)
