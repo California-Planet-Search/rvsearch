@@ -1,12 +1,15 @@
 #Search class.
+import os
 import copy
 import time
 import pdb
 
 import numpy as np
 import pandas
+import matplotlib.pyplot as plt
 import radvel
 import radvel.fitting
+from radvel.plot import orbit_plots
 
 import periodogram
 import utils
@@ -25,7 +28,7 @@ class Search(object):
         aic: if True, use Akaike information criterion instead of BIC. STILL WORKING ON THIS
     """
 
-    def __init__(self, data, starname='', max_planets=3, priors=[], crit='bic', fap=0.01,
+    def __init__(self, data, starname=None, max_planets=3, priors=[], crit='bic', fap=0.01,
                  dvdt=False, curv=False, verbose=True):
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
@@ -33,7 +36,10 @@ class Search(object):
         else:
             raise ValueError('Incorrect data input.')
 
-        self.starname = starname
+        if starname == None:
+            self.starname = 'star'
+        else:
+            self.starname = starname
         self.params = utils.initialize_default_pars(instnames=self.tels)
         self.priors = priors
 
@@ -54,7 +60,7 @@ class Search(object):
         '''
         self.fap = fap
         self.dvdt = dvdt
-        self.curv = curv 
+        self.curv = curv
 
     def trend_test(self):
         #Perform 0-planet baseline fit.
@@ -132,9 +138,11 @@ class Search(object):
 
         new_params.num_planets = new_num_planets
 
-        priors = [radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0) for inst in self.tels]
-        priors.append(radvel.prior.PositiveKPrior(new_num_planets))
-        priors.append(radvel.prior.EccentricityPrior(new_num_planets))
+        #priors = [radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0) for inst in self.tels]
+        priors = []
+        for planet in np.arange(1, new_num_planets+1):
+            priors.append(radvel.prior.PositiveKPrior(new_num_planets))
+            priors.append(radvel.prior.EccentricityPrior(new_num_planets))
 
         new_post = utils.initialize_post(self.data, new_params, priors)
         self.post = new_post
@@ -158,7 +166,39 @@ class Search(object):
         '''
 
     def sub_planet(self):
-        pass
+
+        current_num_planets = self.post.params.num_planets
+        fitting_basis = self.post.params.basis.name
+        param_list = fitting_basis.split()
+
+        new_num_planets = current_num_planets - 1
+
+        default_pars = utils.initialize_default_pars(instnames=self.tels)
+        new_params = radvel.Parameters(new_num_planets, basis=fitting_basis)
+
+        for planet in np.arange(1, new_num_planets+1):
+            for par in param_list:
+                parkey = par + str(planet)
+                new_params[parkey] = self.post.params[parkey]
+
+        for par in self.post.likelihood.extra_params:
+            new_params[par] = self.post.params[par] #For gamma and jitter
+
+        new_params['dvdt'] = self.post.params['dvdt']
+        new_params['curv'] = self.post.params['curv']
+
+        if self.post.params['dvdt'].vary == False:
+        	new_params['dvdt'].vary = False
+        if self.post.params['curv'].vary == False:
+        	new_params['curv'].vary = False
+
+        priors = []
+        for planet in np.arange(1, new_num_planets+1):
+            priors.append(radvel.prior.PositiveKPrior(new_num_planets))
+            priors.append(radvel.prior.EccentricityPrior(new_num_planets))
+
+        new_post = utils.initialize_post(self.data, new_params, priors)
+        self.post = new_post
 
     def reset_priors(self):
         pass
@@ -191,11 +231,11 @@ class Search(object):
         except:
             raise RuntimeError('Model contains fewer than {} Gaussian processes.'.format(num_gps))
 
-    def save(self, post, filename=None):
+    def save(self, filename=None):
         if filename != None:
-            post.writeto(filename)
+            self.post.writeto(filename)
         else:
-            post.writeto('post_final.pkl')
+            self.post.writeto('post_final.pkl')
         #Write this so that it can be iteratively applied with each planet addition.
 
     def plot_model(self, post):
@@ -219,7 +259,7 @@ class Search(object):
             t2 = time.process_time()
             print('Time = {} seconds'.format(t2 - t1))
 
-            perioder.eFAP_thresh()
+            perioder.eFAP_thresh(fap=self.fap)
             perioder.plot_per()
             if perioder.best_bic > perioder.bic_thresh:
                 self.num_planets += 1
@@ -234,4 +274,12 @@ class Search(object):
                 run = False
             if self.num_planets >= self.max_planets:
                 run = False
+
+        os.mkdir('./' + self.starname)
+        RVPlot = orbit_plots.MultipanelPlot(self.post,
+                                            saveplot='./'+self.starname+'/orbit_plot.pdf')
+        multiplot_fig, ax_list = RVPlot.plot_multipanel()
+        multiplot_fig.savefig('./'+self.starname+'/orbit_plot.pdf')
+        self.save(filename='./'+self.starname+'/post_final.pkl')
+
         pdb.set_trace()

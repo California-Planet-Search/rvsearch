@@ -20,7 +20,7 @@ class Periodogram:
             [default = calculated via rvsearch.periodograms.freq_spacing]
     """
 
-    def __init__(self, post, basebic=None, num_known_planets=0, minsearchp=3, maxsearchp=10000,
+    def __init__(self, post, basebic=None, num_known_planets=0, minsearchp=5, maxsearchp=10000,
                  baseline=True, basefactor=4., num_pers=None, search_pars=['per'],
                  valid_types = ['bic', 'aic', 'ls']):
         self.post = copy.deepcopy(post)
@@ -128,8 +128,6 @@ class Periodogram:
 
         print("Calculating BIC periodogram")
         #This assumes nth planet parameters, and all periods, were locked in.
-        #if self.num_known_planets == 0:
-        #self.post = self.trend_test()
         baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
         baseline_bic = baseline_fit.likelihood.bic()
 
@@ -146,10 +144,10 @@ class Periodogram:
         tcs = np.zeros_like(self.pers)
 
         for i, per in enumerate(self.pers):
-            #print(i, self.num_pers)
+            print(i, self.num_pers)
             #Reset posterior parameters to default values.
             for k in self.post.params.keys():
-                if k in self.default_pdict.keys():
+                if k in self.default_pdict.keys(): #REMOVE 'IF' STATEMENT
                     self.post.params[k].value = self.default_pdict[k]
             #Set new period, fix period, and fit a circular orbit.
             perkey = 'per{}'.format(self.num_known_planets+1)
