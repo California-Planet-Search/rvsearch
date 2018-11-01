@@ -235,8 +235,10 @@ class Search(object):
             self.post.writeto('post_final.pkl')
         # Write this so that it can be iteratively applied with each planet addition.
 
-    def plot_model(self, post):
-        pass
+    def plot_model(self, outdir):
+        rvplot = orbit_plots.MultipanelPlot(self.post)
+        multiplot_fig, ax_list = rvplot.plot_multipanel()
+        multiplot_fig.savefig(outdir + '/orbit_plot{:d}.pdf'.format(self.post.num_planets))
 
     def save_all_posts(self):
         # Pickle the list of posteriors for each nth planet model
@@ -245,6 +247,11 @@ class Search(object):
     def run_search(self):
         # Use all of the above routines to run a search.
         # TO-DO: KNOW WHEN TO FIX, FREE PARAMS 10/15/18
+
+        outdir = os.path.join(os.getcwd(), self.starname)
+        if not os.path.exists(outdir):
+            os.mkdir(outdir)
+
         run = True
         while run:
             if self.num_planets != 0:
@@ -259,6 +266,7 @@ class Search(object):
 
             perioder.eFAP_thresh(fap=self.fap)
             perioder.plot_per()
+            perioder.save_per(os.path.join(outdir, 'BIC_periodogram_{:d}.txt'.format(self.num_planets)))
             if perioder.best_bic > perioder.bic_thresh:
                 self.num_planets += 1
                 perkey = 'per{}'.format(self.num_planets)
@@ -267,19 +275,13 @@ class Search(object):
                 self.post.params['k{}'.format(self.num_planets)].value = perioder.best_k
                 self.post.params['tc{}'.format(self.num_planets)].value = perioder.best_tc
                 self.fit_orbit()
+                self.plot_model(outdir)
             else:
                 self.sub_planet()  # FINISH SUB_PLANET() 10/24/18
                 run = False
             if self.num_planets >= self.max_planets:
                 run = False
 
-        outdir = os.path.join(os.getcwd(), self.starname)
-        if not os.path.exists(outdir):
-            os.mkdir(outdir)
-
-        if self.num_planets > 0:
-            rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+'/orbit_plot.pdf')
-            multiplot_fig, ax_list = rvplot.plot_multipanel()
-            multiplot_fig.savefig(outdir+'/orbit_plot.pdf')
+        self.plot_model(outdir)
 
         self.save(filename=outdir+'/post_final.pkl')

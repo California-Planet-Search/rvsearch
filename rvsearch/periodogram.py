@@ -87,8 +87,8 @@ class Periodogram:
         fmin = 1. / self.maxsearchP
         fmax = 1. / self.minsearchP
 
-        dnu       = 1. / (4. * self.timelen)
-        num_freq  = int((fmax - fmin) / dnu + 1)
+        dnu = 1. / (4. * self.timelen)
+        num_freq = int((fmax - fmin) / dnu + 1)
         num_freq *= oversampling
 
         if verbose:
@@ -109,7 +109,7 @@ class Periodogram:
         self.freqs = 1/self.pers
         ''' This is what we need trend_test for, at the start of the search. Move to Search()
         if num_planets_known == 0:
-    	post = trend_test(post)
+        post = trend_test(post)
         '''
 
     def base_bic(self):
@@ -127,11 +127,11 @@ class Periodogram:
         """
 
         print("Calculating BIC periodogram")
-        #This assumes nth planet parameters, and all periods, were locked in.
+        # This assumes nth planet parameters, and all periods, were locked in.
         baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
         baseline_bic = baseline_fit.likelihood.bic()
 
-        #Allow amplitude and time offset to vary, fix eccentricity and period. Fix all ecc.s for speed
+        # Allow amplitude and time offset to vary, fix eccentricity and period. Fix all ecc.s for speed
         for planet in np.arange(1, self.num_known_planets+2):
             self.post.params['secosw{}'.format(planet)].vary = False
             self.post.params['sesinw{}'.format(planet)].vary = False
@@ -145,13 +145,13 @@ class Periodogram:
 
         for i, per in enumerate(self.pers):
             # print(i, self.num_pers)
-            #Reset posterior parameters to default values.
+            # Reset posterior parameters to default values.
             for k in self.post.params.keys():
-                #self.post.params[k].value = self.default_pdict[k]
+                # self.post.params[k].value = self.default_pdict[k]
                 if k in self.default_pdict.keys(): #REMOVE 'IF' STATEMENT?
                     self.post.params[k].value = self.default_pdict[k]
 
-            #Set new period, fix period, and fit a circular orbit.
+            # Set new period, fix period, and fit a circular orbit.
             perkey = 'per{}'.format(self.num_known_planets+1)
             self.post.params[perkey].value = per
             self.post.params[perkey].vary = False
@@ -172,7 +172,7 @@ class Periodogram:
     def ls(self):
         """Astropy Lomb-Scargle periodogram.
         """
-        #FOR TESTING
+        # FOR TESTING
         print("Calculating Lomb-Scargle periodogram")
         periodogram = astropy.stats.LombScargle(self.times, self.vel, self.errvel)
         power = periodogram.power(self.freq_array)
@@ -200,21 +200,21 @@ class Periodogram:
         thresh = xmod[np.argmin(np.abs(lfit - fap/self.num_pers))]
         self.bic_thresh = thresh
 
-    def save_per(self, ls=False):
-        if ls==False:
+    def save_per(self, filename, ls=False):
+        if not ls:
             try:
-                #FIX THIS; SPECIFY DIRECTORY/NAME, NUMBER OF PLANETS IN FILENAME, AND ARRAY ORDERING
-                np.savetxt((self.pers, self.power['bic']), filename='BIC_periodogram.csv')
+                # FIX THIS; SPECIFY DIRECTORY/NAME, NUMBER OF PLANETS IN FILENAME, AND ARRAY ORDERING
+                np.savetxt((self.pers, self.power['bic']), filename=filename)
             except:
                 print('Have not generated a delta-BIC periodogram.')
         else:
             try:
-                np.savetxt((self.pers, self.power['ls']), filename='LS_periodogram.csv')
+                np.savetxt((self.pers, self.power['ls']), filename=filename)
             except:
                 print('Have not generated a Lomb-Scargle periodogram.')
 
     def plot_per(self, ls=False, alias=True, save=True):
-        #TO-DO: WORK IN AIC/BIC OPTION, INCLUDE IN PLOT TITLE
+        # TO-DO: WORK IN AIC/BIC OPTION, INCLUDE IN PLOT TITLE
         peak = np.argmax(self.power['bic'])
         f_real = self.freqs[peak]
 
