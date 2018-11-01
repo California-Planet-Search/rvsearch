@@ -279,13 +279,14 @@ class Search(object):
                 self.post.params['k{}'.format(self.num_planets)].value = perioder.best_k
                 self.post.params['tc{}'.format(self.num_planets)].value = perioder.best_tc
                 self.fit_orbit()
-                self.plot_model(outdir)
-                self.save(filename=outdir + '/post_{:d}.pkl'.format(self.num_planets))
+                self.plot_model(outdir + '/orbit_plot_{:d}.pdf'.format(self.num_planets))
             else:
                 self.sub_planet()  # FINISH SUB_PLANET() 10/24/18
                 run = False
             if self.num_planets >= self.max_planets:
                 run = False
+
+            self.save(filename=outdir + '/post_{:d}.pkl'.format(self.num_planets))
 
         self.plot_model(outdir + '/orbit_plot_{:d}.pdf'.format(self.num_planets))
 

@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import astropy.stats
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
 import radvel
 import radvel.fitting
@@ -73,7 +74,7 @@ class Periodogram:
         post = utils.initialize_post(data, params=params)
         return cls(post)
 
-    def per_spacing(self, oversampling=0.1, verbose=True):
+    def per_spacing(self, oversampling=2, verbose=True):
         """Get the number of sampled frequencies
 
         Condition for spacing: delta nu such that during the
@@ -256,13 +257,14 @@ class Periodogram:
         ax.set_ylabel(r'$\Delta$BIC')  # TO-DO: WORK IN AIC/BIC OPTION
         ax.set_title('Planet {} vs. planet {}'.format(self.num_known_planets+1, self.num_known_planets))
 
+        formatter = ticker.ScalarFormatter()
+        formatter.set_scientific(False)
+        ax.xaxis.set_major_formatter(formatter)
+
         # Store figure as object attribute, make separate saving functionality?
         self.fig = fig
 
         return fig
-        if save:
-            # FINISH THIS, WRITE NAMING PROCEDURE
-            fig.savefig('dbic{}.pdf'.format(self.num_known_planets+1))
 
 
 # TO-DO: MOVE THIS INTO CLASS STRUCTURE, OR REMOVE IF UNNECESSARY
