@@ -237,8 +237,11 @@ class Search(object):
 
     def plot_model(self, outdir):
         rvplot = orbit_plots.MultipanelPlot(self.post)
-        multiplot_fig, ax_list = rvplot.plot_multipanel()
-        multiplot_fig.savefig(outdir + '/orbit_plot{:d}.pdf'.format(self.post.num_planets))
+        if self.post.params.num_planets == 0:
+            multiplot_fig, ax_list = rvplot.plot_multipanel(nophase=True)
+        else:
+            multiplot_fig, ax_list = rvplot.plot_multipanel(nophase=False)
+        multiplot_fig.savefig(outdir + '/orbit_plot{:d}.pdf'.format(self.post.params.num_planets))
 
     def save_all_posts(self):
         # Pickle the list of posteriors for each nth planet model
@@ -266,7 +269,7 @@ class Search(object):
 
             perioder.eFAP_thresh(fap=self.fap)
             perioder.plot_per()
-            perioder.save_per(os.path.join(outdir, 'BIC_periodogram_{:d}.txt'.format(self.num_planets)))
+            perioder.save_per(os.path.join(outdir, 'BIC_periodogram_{:d}.csv'.format(self.post.params.num_planets)))
             if perioder.best_bic > perioder.bic_thresh:
                 self.num_planets += 1
                 perkey = 'per{}'.format(self.num_planets)

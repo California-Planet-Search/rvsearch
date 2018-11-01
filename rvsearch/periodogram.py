@@ -1,9 +1,12 @@
+import copy
+
 import numpy as np
+import pandas as pd
 import astropy.stats
+import matplotlib.pyplot as plt
+
 import radvel
 import radvel.fitting
-import matplotlib.pyplot as plt
-import copy
 
 import rvsearch.utils
 
@@ -70,7 +73,7 @@ class Periodogram:
         post = utils.initialize_post(data, params=params)
         return cls(post)
 
-    def per_spacing(self, oversampling=1, verbose=True):
+    def per_spacing(self, oversampling=0.1, verbose=True):
         """Get the number of sampled frequencies
 
         Condition for spacing: delta nu such that during the
@@ -117,7 +120,7 @@ class Periodogram:
         self.base_bic = base_post.bic()
 
     def per_bic(self):
-        #BJ's method. Remove once final BIC/AIC method is established.
+        # BJ's method. Remove once final BIC/AIC method is established.
         """Compute delta-BIC periodogram. ADD: crit is BIC or AIC.
         """
 
@@ -201,17 +204,21 @@ class Periodogram:
         self.bic_thresh = thresh
 
     def save_per(self, filename, ls=False):
+        df = pd.DataFrame([])
+        df['period'] = self.pers
         if not ls:
             try:
                 # FIX THIS; SPECIFY DIRECTORY/NAME, NUMBER OF PLANETS IN FILENAME, AND ARRAY ORDERING
-                np.savetxt((self.pers, self.power['bic']), filename=filename)
-            except:
+                df['power'] = self.power['bic']
+            except KeyError:
                 print('Have not generated a delta-BIC periodogram.')
         else:
             try:
-                np.savetxt((self.pers, self.power['ls']), filename=filename)
-            except:
+                df['power'] = self.power['ls']
+            except KeyError:
                 print('Have not generated a Lomb-Scargle periodogram.')
+
+        df.to_csv(filename, index=False)
 
     def plot_per(self, ls=False, alias=True, save=True):
         # TO-DO: WORK IN AIC/BIC OPTION, INCLUDE IN PLOT TITLE
