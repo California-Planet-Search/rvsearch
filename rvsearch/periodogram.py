@@ -183,7 +183,7 @@ class Periodogram:
         """Calculate the threshold for significance based on BJ's eFAP algorithm
         From Lea's code. LOMB-S OPTION?
         """
-        #select out intermediate values of BIC, median - 95%
+        # select out intermediate values of BIC, median - 95%
         sBIC = np.sort(self.power['bic'])
         crop_BIC = sBIC[int(0.5*len(sBIC)):int(0.95*len(sBIC))]
 
@@ -223,8 +223,8 @@ class Periodogram:
         ax.scatter(self.pers[peak], self.power['bic'][peak], label='{} days'.format(
                    np.round(self.pers[peak], decimals=1)))
 
-        #If D-BIC threshold has been calculated, plot.
-        if self.bic_thresh != None:
+        # If D-BIC threshold has been calculated, plot.
+        if self.bic_thresh is not None:
             ax.axhline(self.bic_thresh, ls=':', c='y', label=r'$\Delta$BIC threshold')
             upper = 1.05*max(np.amax(self.power['bic']), self.bic_thresh)
             ax.set_ylim([np.amin(self.power['bic']), upper])
@@ -232,7 +232,7 @@ class Periodogram:
             ax.set_ylim([np.amin(self.power['bic']), 1.05*np.amax(self.power['bic'])])
         ax.set_xlim([self.pers[0], self.pers[-1]])
 
-        if alias == True:
+        if alias:
             # Plot sidereal day, lunation period, and sidereal year aliases.
             colors = ['r', 'b', 'g']
             alias = [0.997, 29.531, 365.256]
@@ -246,17 +246,17 @@ class Periodogram:
         ax.legend(loc=0)
         ax.set_xscale('log')
         ax.set_xlabel('Period (days)')
-        ax.set_ylabel(r'$\Delta$BIC') #TO-DO: WORK IN AIC/BIC OPTION
+        ax.set_ylabel(r'$\Delta$BIC')  # TO-DO: WORK IN AIC/BIC OPTION
         ax.set_title('Planet {} vs. planet {}'.format(self.num_known_planets+1, self.num_known_planets))
 
-        #Store figure as object attribute, make separate saving functionality?
+        # Store figure as object attribute, make separate saving functionality?
         self.fig = fig
-        if save == True:
-            #FINISH THIS, WRITE NAMING PROCEDURE
+        if save:
+            # FINISH THIS, WRITE NAMING PROCEDURE
             fig.savefig('dbic{}.pdf'.format(self.num_known_planets+1))
 
 
-#TO-DO: MOVE THIS INTO CLASS STRUCTURE, OR REMOVE IF UNNECESSARY
+# TO-DO: MOVE THIS INTO CLASS STRUCTURE, OR REMOVE IF UNNECESSARY
 def setup_posterior(post, num_known_planets):
     """Setup radvel.posterior.Posterior object
 
@@ -282,5 +282,5 @@ def setup_posterior(post, num_known_planets):
             elif par == 'logk':
                 post.params[parname].value = -9
 
-    #return (base_post, search_post)
+    # return (base_post, search_post)
     return search_post

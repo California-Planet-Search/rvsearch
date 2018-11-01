@@ -273,11 +273,13 @@ class Search(object):
             if self.num_planets >= self.max_planets:
                 run = False
 
-        os.mkdir('./' + self.starname)
-        RVPlot = orbit_plots.MultipanelPlot(self.post,
-                                            saveplot='./'+self.starname+'/orbit_plot.pdf')
-        multiplot_fig, ax_list = RVPlot.plot_multipanel()
-        multiplot_fig.savefig('./'+self.starname+'/orbit_plot.pdf')
-        self.save(filename='./'+self.starname+'/post_final.pkl')
+        outdir = os.path.join(os.getcwd(), self.starname)
+        if not os.path.exists(outdir):
+            os.mkdir(outdir)
+        rvplot = orbit_plots.MultipanelPlot(self.post,
+                                            saveplot=outdir+'/orbit_plot.pdf')
+        multiplot_fig, ax_list = rvplot.plot_multipanel()
+        multiplot_fig.savefig(outdir+'/orbit_plot.pdf')
+        self.save(filename=outdir+'/post_final.pkl')
 
         pdb.set_trace()
