@@ -3,8 +3,6 @@ import numpy as np
 import pandas as pd
 import radvel
 
-import cpsutils
-from cpsutils import io
 
 """Functions for posterior modification (resetting parameters, intializing, etc.)
 """
