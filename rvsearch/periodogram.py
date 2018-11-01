@@ -144,7 +144,7 @@ class Periodogram:
         tcs = np.zeros_like(self.pers)
 
         for i, per in enumerate(self.pers):
-            print(i, self.num_pers)
+            # print(i, self.num_pers)
             #Reset posterior parameters to default values.
             for k in self.post.params.keys():
                 if k in self.default_pdict.keys(): #REMOVE 'IF' STATEMENT
