@@ -220,7 +220,7 @@ class Periodogram:
 
         df.to_csv(filename, index=False)
 
-    def plot_per(self, ls=False, alias=True, save=True):
+    def plot_per(self, ls=False, alias=True):
         # TO-DO: WORK IN AIC/BIC OPTION, INCLUDE IN PLOT TITLE
         peak = np.argmax(self.power['bic'])
         f_real = self.freqs[peak]
@@ -258,6 +258,8 @@ class Periodogram:
 
         # Store figure as object attribute, make separate saving functionality?
         self.fig = fig
+
+        return fig
         if save:
             # FINISH THIS, WRITE NAMING PROCEDURE
             fig.savefig('dbic{}.pdf'.format(self.num_known_planets+1))

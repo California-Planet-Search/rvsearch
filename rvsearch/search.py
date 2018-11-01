@@ -235,13 +235,13 @@ class Search(object):
             self.post.writeto('post_final.pkl')
         # Write this so that it can be iteratively applied with each planet addition.
 
-    def plot_model(self, outdir):
+    def plot_model(self, filename):
         rvplot = orbit_plots.MultipanelPlot(self.post)
         if self.post.params.num_planets == 0:
             multiplot_fig, ax_list = rvplot.plot_multipanel(nophase=True)
         else:
             multiplot_fig, ax_list = rvplot.plot_multipanel(nophase=False)
-        multiplot_fig.savefig(outdir + '/orbit_plot{:d}.pdf'.format(self.post.params.num_planets))
+        multiplot_fig.savefig(filename)
 
     def save_all_posts(self):
         # Pickle the list of posteriors for each nth planet model
@@ -268,8 +268,9 @@ class Search(object):
             print('Time = {} seconds'.format(t2 - t1))
 
             perioder.eFAP_thresh(fap=self.fap)
-            perioder.plot_per()
-            perioder.save_per(os.path.join(outdir, 'BIC_periodogram_{:d}.csv'.format(self.post.params.num_planets)))
+            perplot = perioder.plot_per()
+            perplot.savefig(os.path.join(outdir, 'dbic_{:d}.pdf'.format(self.num_planets)))
+            perioder.save_per(os.path.join(outdir, 'BIC_periodogram_{:d}.csv'.format(self.num_planets)))
             if perioder.best_bic > perioder.bic_thresh:
                 self.num_planets += 1
                 perkey = 'per{}'.format(self.num_planets)
@@ -279,12 +280,13 @@ class Search(object):
                 self.post.params['tc{}'.format(self.num_planets)].value = perioder.best_tc
                 self.fit_orbit()
                 self.plot_model(outdir)
+                self.save(filename=outdir + '/post_{:d}.pkl'.format(self.num_planets))
             else:
                 self.sub_planet()  # FINISH SUB_PLANET() 10/24/18
                 run = False
             if self.num_planets >= self.max_planets:
                 run = False
 
-        self.plot_model(outdir)
+        self.plot_model(outdir + '/orbit_plot_{:d}.pdf'.format(self.num_planets))
 
         self.save(filename=outdir+'/post_final.pkl')
