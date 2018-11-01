@@ -233,9 +233,9 @@ class Periodogram:
         ax.set_xlim([self.pers[0], self.pers[-1]])
 
         if alias == True:
-            #Plot sidereal day, month, and year aliases.
+            # Plot sidereal day, lunation period, and sidereal year aliases.
             colors = ['r', 'b', 'g']
-            alias = [0.997, 27.25, 365.256] #Sidereal or sydonic? 27.322 vs. 29.531
+            alias = [0.997, 29.531, 365.256]
             for i in np.arange(3):
                 f_ap = f_real + 1./alias[i]
                 f_am = f_real - 1./alias[i]
