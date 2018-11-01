@@ -1,4 +1,5 @@
-#Search class.
+"""Search class"""
+
 import os
 import copy
 import time
@@ -11,11 +12,9 @@ import radvel
 import radvel.fitting
 from radvel.plot import orbit_plots
 
-import periodogram
-import utils
-#from .periodogram import *
-#from .utils import *
-#IS THIS GOOD PRACTICE?
+import rvsearch.periodogram as periodogram
+import rvsearch.utils as utils
+
 
 class Search(object):
     """Class to initialize and modify posteriors as planet search runs,
@@ -138,7 +137,7 @@ class Search(object):
 
         new_params.num_planets = new_num_planets
 
-        #priors = [radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0) for inst in self.tels]
+        # priors = [radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0) for inst in self.tels]
         priors = []
         for planet in np.arange(1, new_num_planets+1):
             priors.append(radvel.prior.PositiveKPrior(new_num_planets))
@@ -236,24 +235,25 @@ class Search(object):
             self.post.writeto(filename)
         else:
             self.post.writeto('post_final.pkl')
-        #Write this so that it can be iteratively applied with each planet addition.
+        # Write this so that it can be iteratively applied with each planet addition.
 
     def plot_model(self, post):
         pass
 
     def save_all_posts(self):
-        #Pickle the list of posteriors for each nth planet model
+        # Pickle the list of posteriors for each nth planet model
         pass
 
     def run_search(self):
-        #Use all of the above routines to run a search. TO-DO: KNOW WHEN TO FIX, FREE PARAMS 10/15/18
+        # Use all of the above routines to run a search.
+        # TO-DO: KNOW WHEN TO FIX, FREE PARAMS 10/15/18
         run = True
-        while run == True:
+        while run:
             if self.num_planets != 0:
                 self.add_planet()
             perioder = periodogram.Periodogram(self.post, num_known_planets=self.num_planets)
 
-            #pdb.set_trace()
+            # pdb.set_trace()
             t1 = time.process_time()
             perioder.per_bic()
             t2 = time.process_time()
@@ -270,7 +270,7 @@ class Search(object):
                 self.post.params['tc{}'.format(self.num_planets)].value = perioder.best_tc
                 self.fit_orbit()
             else:
-                self.sub_planet() #FINISH SUB_PLANET() 10/24/18
+                self.sub_planet()  # FINISH SUB_PLANET() 10/24/18
                 run = False
             if self.num_planets >= self.max_planets:
                 run = False
