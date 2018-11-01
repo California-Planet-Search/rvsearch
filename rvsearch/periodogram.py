@@ -147,8 +147,10 @@ class Periodogram:
             print(i, self.num_pers)
             #Reset posterior parameters to default values.
             for k in self.post.params.keys():
-                if k in self.default_pdict.keys(): #REMOVE 'IF' STATEMENT
+                #self.post.params[k].value = self.default_pdict[k]
+                if k in self.default_pdict.keys(): #REMOVE 'IF' STATEMENT?
                     self.post.params[k].value = self.default_pdict[k]
+
             #Set new period, fix period, and fit a circular orbit.
             perkey = 'per{}'.format(self.num_known_planets+1)
             self.post.params[perkey].value = per
@@ -172,7 +174,9 @@ class Periodogram:
         """
         #FOR TESTING
         print("Calculating Lomb-Scargle periodogram")
-        power = astropy.stats.LombScargle(self.times, self.vel, self.errvel).power(self.freq_array)
+        periodogram = astropy.stats.LombScargle(self.times, self.vel, self.errvel)
+        power = periodogram.power(self.freq_array)
+        #freqs = periodogram
         self.power['ls'] = power
 
     def eFAP_thresh(self, fap=0.01):
