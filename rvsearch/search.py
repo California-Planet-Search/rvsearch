@@ -276,10 +276,10 @@ class Search(object):
         outdir = os.path.join(os.getcwd(), self.starname)
         if not os.path.exists(outdir):
             os.mkdir(outdir)
-        rvplot = orbit_plots.MultipanelPlot(self.post,
-                                            saveplot=outdir+'/orbit_plot.pdf')
-        multiplot_fig, ax_list = rvplot.plot_multipanel()
-        multiplot_fig.savefig(outdir+'/orbit_plot.pdf')
-        self.save(filename=outdir+'/post_final.pkl')
 
-        pdb.set_trace()
+        if self.num_planets > 0:
+            rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+'/orbit_plot.pdf')
+            multiplot_fig, ax_list = rvplot.plot_multipanel()
+            multiplot_fig.savefig(outdir+'/orbit_plot.pdf')
+
+        self.save(filename=outdir+'/post_final.pkl')
