@@ -25,8 +25,9 @@ class Search(object):
         aic: if True, use Akaike information criterion instead of BIC. STILL WORKING ON THIS
     """
 
-    def __init__(self, data, starname=None, max_planets=3, priors=[], crit='bic', fap=0.01,
-                 dvdt=False, curv=False, verbose=True, debug=False):
+    def __init__(self, data, starname=None, max_planets=4, priors=[], crit='bic', fap=0.01,
+                 dvdt=False, curv=False, verbose=True):
+
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
             self.tels = np.unique(self.data['tel'].values)
@@ -190,9 +191,8 @@ class Search(object):
             new_params['curv'].vary = False
 
         priors = []
-        for planet in np.arange(1, new_num_planets+1):
-            priors.append(radvel.prior.PositiveKPrior(new_num_planets))
-            priors.append(radvel.prior.EccentricityPrior(new_num_planets))
+        priors.append(radvel.prior.PositiveKPrior(new_num_planets))
+        priors.append(radvel.prior.EccentricityPrior(new_num_planets))
 
         new_post = utils.initialize_post(self.data, new_params, priors)
         self.post = new_post

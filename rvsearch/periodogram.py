@@ -239,8 +239,8 @@ class Periodogram:
             for i in np.arange(3):
                 f_ap = f_real + 1./alias[i]
                 f_am = f_real - 1./alias[i]
-                ax.axvline(1./f_am, linestyle='--', c=colors[i], alpha=0.5, label=
-                           '{} day alias'.format(np.round(alias[i], decimals=1)))
+                ax.axvline(1./f_am, linestyle='--', c=colors[i], alpha=0.5,
+                           label='{} day alias'.format(np.round(alias[i], decimals=1)))
                 ax.axvline(1./f_ap, linestyle='--', c=colors[i], alpha=0.5)
 
         ax.legend(loc=0)
