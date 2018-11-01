@@ -211,14 +211,14 @@ class Search(object):
 
         fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
         self.post = fit
-
+        '''
         for planet in np.arange(1, self.num_planets+1):
             self.post.params['per{}'.format(planet)].vary = False
             self.post.params['k{}'.format(planet)].vary = False
             self.post.params['tc{}'.format(planet)].vary = False
             self.post.params['secosw{}'.format(planet)].vary = False
             self.post.params['sesinw{}'.format(planet)].vary = False
-
+        '''
     def add_gp(self):
         pass
 

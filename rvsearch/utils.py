@@ -88,7 +88,11 @@ def initialize_post(data, params=None, priors=None):
 	#FIX TO COMBINE GIVEN PRIORS AND NEEDED PRIORS
     if priors != None:
         post.priors = priors
-    #else:
+    else:
+        priors = []
+        priors.append(radvel.prior.PositiveKPrior(1))
+        priors.append(radvel.prior.EccentricityPrior(1))
+        post.priors = priors
     #    priors = [radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0) for inst in telgrps.keys()]
     #    post.priors = priors
     return post
