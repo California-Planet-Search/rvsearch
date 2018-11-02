@@ -10,8 +10,9 @@ import radvel
 import radvel.fitting
 from radvel.plot import orbit_plots
 
-import rvsearch.periodogram as periodogram
-import rvsearch.utils as utils
+import periodogram, utils
+# import rvsearch.periodogram as periodogram
+# import rvsearch.utils as utils
 
 
 class Search(object):
@@ -59,6 +60,8 @@ class Search(object):
         self.fap = fap
         self.dvdt = dvdt
         self.curv = curv
+
+        self.basebic = None
 
     def trend_test(self):
         # Perform 0-planet baseline fit.
@@ -138,9 +141,8 @@ class Search(object):
 
         # priors = [radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0) for inst in self.tels]
         priors = []
-        for planet in np.arange(1, new_num_planets+1):
-            priors.append(radvel.prior.PositiveKPrior(new_num_planets))
-            priors.append(radvel.prior.EccentricityPrior(new_num_planets))
+        priors.append(radvel.prior.PositiveKPrior(new_num_planets))
+        priors.append(radvel.prior.EccentricityPrior(new_num_planets))
 
         new_post = utils.initialize_post(self.data, new_params, priors)
         self.post = new_post
@@ -244,14 +246,17 @@ class Search(object):
 
     def run_search(self):
         # Use all of the above routines to run a search.
-        # TO-DO: KNOW WHEN TO FIX, FREE PARAMS 10/15/18
+        outdir = os.path.join(os.getcwd(), self.starname)
+        if not os.path.exists(outdir):
+            os.mkdir(outdir)
+
         run = True
         while run:
             if self.num_planets != 0:
                 self.add_planet()
-            perioder = periodogram.Periodogram(self.post, num_known_planets=self.num_planets)
+            perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
+                                               num_known_planets=self.num_planets)
 
-            # pdb.set_trace()
             t1 = time.process_time()
             perioder.per_bic()
             t2 = time.process_time()
@@ -259,6 +264,7 @@ class Search(object):
 
             perioder.eFAP_thresh(fap=self.fap)
             perioder.plot_per()
+            perioder.fig.savefig(outdir+'/dbic{}.pdf'.format(self.num_planets+1))
             if perioder.best_bic > perioder.bic_thresh:
                 self.num_planets += 1
                 perkey = 'per{}'.format(self.num_planets)
@@ -267,15 +273,12 @@ class Search(object):
                 self.post.params['k{}'.format(self.num_planets)].value = perioder.best_k
                 self.post.params['tc{}'.format(self.num_planets)].value = perioder.best_tc
                 self.fit_orbit()
+                self.basebic = self.post.bic()
             else:
                 self.sub_planet()  # FINISH SUB_PLANET() 10/24/18
                 run = False
             if self.num_planets >= self.max_planets:
                 run = False
-
-        outdir = os.path.join(os.getcwd(), self.starname)
-        if not os.path.exists(outdir):
-            os.mkdir(outdir)
 
         if self.num_planets > 0:
             rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+'/orbit_plot.pdf')

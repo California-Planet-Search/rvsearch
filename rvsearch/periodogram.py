@@ -5,7 +5,8 @@ import radvel.fitting
 import matplotlib.pyplot as plt
 import copy
 
-import rvsearch.utils
+import utils
+# import rvsearch.utils
 
 
 class Periodogram:
@@ -128,8 +129,11 @@ class Periodogram:
 
         print("Calculating BIC periodogram")
         #This assumes nth planet parameters, and all periods, were locked in.
-        baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
-        baseline_bic = baseline_fit.likelihood.bic()
+        if self.basebic is None:
+            baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
+            baseline_bic = baseline_fit.likelihood.bic()
+        else:
+            baseline_bic = self.basebic
 
         #Allow amplitude and time offset to vary, fix eccentricity and period. Fix all ecc.s for speed
         for planet in np.arange(1, self.num_known_planets+2):
@@ -144,7 +148,7 @@ class Periodogram:
         tcs = np.zeros_like(self.pers)
 
         for i, per in enumerate(self.pers):
-            # print(i, self.num_pers)
+            print(i, self.num_pers)
             #Reset posterior parameters to default values.
             for k in self.post.params.keys():
                 #self.post.params[k].value = self.default_pdict[k]
@@ -197,7 +201,8 @@ class Periodogram:
                            10.*np.max(self.power['bic']), 10000)
         lfit = 10.**func(xmod)
         fap_min = 10.**func(sBIC[-1])*self.num_pers #[-1] or [0]?
-        thresh = xmod[np.argmin(np.abs(lfit - fap/self.num_pers))]
+        # thresh = xmod[np.argmin(np.abs(lfit - fap/self.num_pers))]
+        thresh = xmod[np.where(np.abs(lfit-fap/len(BICarr)) == np.min(np.abs(lfit-fap/len(BICarr))))]
         self.bic_thresh = thresh
 
     def save_per(self, ls=False):
@@ -213,7 +218,7 @@ class Periodogram:
             except:
                 print('Have not generated a Lomb-Scargle periodogram.')
 
-    def plot_per(self, ls=False, alias=True, save=True):
+    def plot_per(self, ls=False, alias=True, save=False):
         #TO-DO: WORK IN AIC/BIC OPTION, INCLUDE IN PLOT TITLE
         peak = np.argmax(self.power['bic'])
         f_real = self.freqs[peak]
