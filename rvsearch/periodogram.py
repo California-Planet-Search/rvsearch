@@ -21,7 +21,7 @@ class Periodogram:
             [default = calculated via rvsearch.periodograms.freq_spacing]
     """
 
-    def __init__(self, post, basebic=None, num_known_planets=0, minsearchp=5, maxsearchp=10000,
+    def __init__(self, post, basebic=None, num_known_planets=0, minsearchp=100, maxsearchp=10000,
                  baseline=True, basefactor=4., num_pers=None, search_pars=['per'],
                  valid_types = ['bic', 'aic', 'ls']):
         self.post = copy.deepcopy(post)
@@ -200,9 +200,9 @@ class Periodogram:
         xmod = np.linspace(np.min(self.power['bic'][self.power['bic']==self.power['bic']]),
                            10.*np.max(self.power['bic']), 10000)
         lfit = 10.**func(xmod)
-        fap_min = 10.**func(sBIC[-1])*self.num_pers #[-1] or [0]?
-        # thresh = xmod[np.argmin(np.abs(lfit - fap/self.num_pers))]
-        thresh = xmod[np.where(np.abs(lfit-fap/len(BICarr)) == np.min(np.abs(lfit-fap/len(BICarr))))]
+        fap_min = 10.**func(sBIC[-1])*self.num_pers
+        thresh = xmod[np.argmin(np.abs(lfit - fap/self.num_pers))]
+        # thresh = xmod[np.where(np.abs(lfit-fap/self.num_pers) == np.min(np.abs(lfit-fap/self.num_pers)))]
         self.bic_thresh = thresh
 
     def save_per(self, ls=False):

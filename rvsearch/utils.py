@@ -94,10 +94,7 @@ def initialize_post(data, params=None, priors=None):
         priors.append(radvel.prior.EccentricityPrior(post.params.num_planets))
         post.priors = priors
     	# priors = [radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0) for inst in telgrps.keys()]
-
-    # Set K equal to the rms of the known planet model residuals.
-    rms = np.std(post.likelihood.residuals()**2.)
-    post.params['k{}'.format(post.params.num_planets)].value = rms
+		
     return post
 
 """Series of functions for reading data from various sources into pandas dataframes.

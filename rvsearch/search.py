@@ -48,7 +48,7 @@ class Search(object):
         self.max_planets = max_planets
         self.num_planets = 0
         '''
-        #Play with calling __name__ of method
+        # Play with calling __name__ of method
         if crit=='bic':
             self.crit = radvel.posterior.bic()
         eif crit=='aic':
@@ -65,7 +65,9 @@ class Search(object):
 
     def trend_test(self):
         # Perform 0-planet baseline fit.
+        '''
         post1 = copy.deepcopy(self.post)
+        post1 =radvel.fitting.maxlike_fitting(post1, verbose=False)
 
         trend_curve_bic = self.post.likelihood.bic()
         dvdt_val = self.post.params['dvdt'].value
@@ -74,7 +76,8 @@ class Search(object):
         # Test without curvature
         post1.params['curv'].value = 0.0
         post1.params['curv'].vary = False
-        post1 = radvel.fitting.maxlike_fitting(post1)
+        post1 = radvel.fitting.maxlike_fitting(post1, verbose=False)
+        post1.params['dvdt'].vary = False
 
         trend_bic = post1.likelihood.bic()
 
@@ -83,7 +86,8 @@ class Search(object):
 
         post2.params['dvdt'].value = 0.0
         post2.params['dvdt'].vary = False
-        post2 = radvel.fitting.maxlike_fitting(post2)
+        post2 = radvel.fitting.maxlike_fitting(post2, verbose=False)
+        post1.params['curv'].vary = False
 
         flat_bic = post2.likelihood.bic()
         print('Flat:{}; Trend:{}; Curv:{}'.format(flat_bic, trend_bic, trend_curve_bic))
@@ -91,10 +95,15 @@ class Search(object):
         if trend_bic < flat_bic - 10.:
             # Flat model is excluded, check on curvature
             if trend_curve_bic < trend_bic - 10.:
+                self.post = radvel.fitting.maxlike_fitting(self.post, verbose=False)
+                self.post.params['dvdt'].vary = False
+                self.post.params['curv'].vary = False
                 # curvature model is preferred
-                return self.post  # t+c
-            return post1  # trend only
-        return post2  # flat
+                #return self.post  # t+c
+            self.post = post1  # trend only
+        self.post = post2  # flat
+        '''
+        pass
 
     def add_planet(self):
 
@@ -250,19 +259,30 @@ class Search(object):
         if not os.path.exists(outdir):
             os.mkdir(outdir)
 
+        # self.trend_test()
+        if self.dvdt == False:
+            self.post.params['dvdt'].vary = False
+        if self.curv == False:
+            self.post.params['curv'].vary = False
+
         run = True
         while run:
             if self.num_planets != 0:
                 self.add_planet()
+            # Set K equal to the rms of the known planet model residuals.
+            rms = np.std(self.post.likelihood.residuals()**2.)
+            self.post.params['k{}'.format(self.post.params.num_planets)].value = rms
+
             perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
                                                num_known_planets=self.num_planets)
-
+            pdb.set_trace()
             t1 = time.process_time()
             perioder.per_bic()
             t2 = time.process_time()
             print('Time = {} seconds'.format(t2 - t1))
 
             perioder.eFAP_thresh(fap=self.fap)
+            pdb.set_trace()
             perioder.plot_per()
             perioder.fig.savefig(outdir+'/dbic{}.pdf'.format(self.num_planets+1))
             if perioder.best_bic > perioder.bic_thresh:
@@ -274,15 +294,14 @@ class Search(object):
                 self.post.params['tc{}'.format(self.num_planets)].value = perioder.best_tc
                 self.fit_orbit()
                 self.basebic = self.post.bic()
+
+                rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+'/orbit_plot{}.pdf'.format(self.num_planets))
+                multiplot_fig, ax_list = rvplot.plot_multipanel()
+                multiplot_fig.savefig(outdir+'/orbit_plot{}.pdf'.format(self.num_planets))
             else:
                 self.sub_planet()  # FINISH SUB_PLANET() 10/24/18
                 run = False
             if self.num_planets >= self.max_planets:
                 run = False
-
-        if self.num_planets > 0:
-            rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+'/orbit_plot.pdf')
-            multiplot_fig, ax_list = rvplot.plot_multipanel()
-            multiplot_fig.savefig(outdir+'/orbit_plot.pdf')
 
         self.save(filename=outdir+'/post_final.pkl')
