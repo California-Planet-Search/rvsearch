@@ -4,6 +4,7 @@ import radvel
 import radvel.fitting
 import matplotlib.pyplot as plt
 import copy
+import pdb
 
 import utils
 # import rvsearch.utils
@@ -135,10 +136,9 @@ class Periodogram:
         else:
             baseline_bic = self.basebic
 
-        #Allow amplitude and time offset to vary, fix eccentricity and period. Fix all ecc.s for speed
-        for planet in np.arange(1, self.num_known_planets+2):
-            self.post.params['secosw{}'.format(planet)].vary = False
-            self.post.params['sesinw{}'.format(planet)].vary = False
+        # Allow amplitude and time offset to vary, fix eccentricity and period.
+        self.post.params['secosw{}'.format(self.num_known_planets+1)].vary = False
+        self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary = False
 
         self.post.params['k{}'.format(self.num_known_planets+1)].vary = True
         self.post.params['tc{}'.format(self.num_known_planets+1)].vary = True
@@ -149,10 +149,10 @@ class Periodogram:
 
         for i, per in enumerate(self.pers):
             print(i, self.num_pers)
-            #Reset posterior parameters to default values.
+            # Reset posterior parameters to default values.
             for k in self.post.params.keys():
                 #self.post.params[k].value = self.default_pdict[k]
-                if k in self.default_pdict.keys(): #REMOVE 'IF' STATEMENT?
+                if k in self.default_pdict.keys():
                     self.post.params[k].value = self.default_pdict[k]
 
             #Set new period, fix period, and fit a circular orbit.
@@ -160,8 +160,11 @@ class Periodogram:
             self.post.params[perkey].value = per
             self.post.params[perkey].vary = False
 
-            fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
+            fit = radvel.fitting.maxlike_fitting(copy.deepcopy(self.post), verbose=False)
             power[i] = baseline_bic - fit.likelihood.bic()
+            # Debugging the fit failure, 11/5/18
+            if power[i] < -20:
+                pdb.set_trace()
             ks[i] = fit.params['k{}'.format(self.num_known_planets+1)].value
             tcs[i] = fit.params['tc{}'.format(self.num_known_planets+1)].value
 
@@ -242,8 +245,8 @@ class Periodogram:
             colors = ['r', 'b', 'g']
             alias = [0.997, 29.531, 365.256]
             for i in np.arange(3):
-                f_ap = f_real + 1./alias[i]
-                f_am = f_real - 1./alias[i]
+                f_ap = 1./alias[i] + f_real
+                f_am = 1./alias[i] - f_real
                 ax.axvline(1./f_am, linestyle='--', c=colors[i], alpha=0.5,
                            label='{} day alias'.format(np.round(alias[i], decimals=1)))
                 ax.axvline(1./f_ap, linestyle='--', c=colors[i], alpha=0.5)

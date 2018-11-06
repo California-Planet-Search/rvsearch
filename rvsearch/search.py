@@ -27,7 +27,7 @@ class Search(object):
     """
 
     def __init__(self, data, starname=None, max_planets=4, priors=[], crit='bic', fap=0.01,
-                 dvdt=False, curv=False, verbose=True):
+                 dvdt=True, curv=True, verbose=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
@@ -282,7 +282,6 @@ class Search(object):
             print('Time = {} seconds'.format(t2 - t1))
 
             perioder.eFAP_thresh(fap=self.fap)
-            pdb.set_trace()
             perioder.plot_per()
             perioder.fig.savefig(outdir+'/dbic{}.pdf'.format(self.num_planets+1))
             if perioder.best_bic > perioder.bic_thresh:
