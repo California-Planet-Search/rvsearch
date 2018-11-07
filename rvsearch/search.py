@@ -63,6 +63,9 @@ class Search(object):
 
         self.basebic = None
 
+        self.periodograms = []
+        self.bic_threshes = []
+
     def trend_test(self):
         # Perform 0-planet baseline fit.
         '''
@@ -220,7 +223,8 @@ class Search(object):
             self.post.params['secosw{}'.format(planet)].vary = True
             self.post.params['sesinw{}'.format(planet)].vary = True
 
-        fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
+        #fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
+        fit = radvel.fitting.maxlike_fitting(copy.deepcopy(self.post), verbose=False)
         self.post = fit
         '''
         for planet in np.arange(1, self.num_planets+1):

@@ -26,6 +26,7 @@ class Periodogram:
                  baseline=True, basefactor=4., num_pers=None, search_pars=['per'],
                  valid_types = ['bic', 'aic', 'ls']):
         self.post = copy.deepcopy(post)
+        #self.post = post
         self.default_pdict = {}  # Default_pdict makes sense here, leave alone for now (10/22/18)
         for k in post.params.keys():
             self.default_pdict[k] = post.params[k].value
@@ -109,10 +110,6 @@ class Periodogram:
             self.pers = 1/np.linspace(1/self.maxsearchP, 1/self.minsearchP, self.num_pers)
 
         self.freqs = 1/self.pers
-        ''' This is what we need trend_test for, at the start of the search. Move to Search()
-        if num_planets_known == 0:
-    	post = trend_test(post)
-        '''
 
     def base_bic(self):
         base_post = self.trend_post()
@@ -160,7 +157,7 @@ class Periodogram:
             self.post.params[perkey].value = per
             self.post.params[perkey].vary = False
 
-            fit = radvel.fitting.maxlike_fitting(copy.deepcopy(self.post), verbose=False)
+            fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
             power[i] = baseline_bic - fit.likelihood.bic()
             # Debugging the fit failure, 11/5/18
             if power[i] < -20:
