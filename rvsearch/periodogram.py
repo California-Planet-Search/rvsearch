@@ -74,7 +74,7 @@ class Periodogram:
         return cls(post)
 
     def per_spacing(self, oversampling=1, verbose=True):
-        """Get the number of sampled frequencies
+        """Get the number of sampled frequencies and return a period grid
 
         Condition for spacing: delta nu such that during the
         entire duration of observations, phase slip is no more than P/4
@@ -108,7 +108,6 @@ class Periodogram:
             self.pers = self.per_spacing()
         else:
             self.pers = 1/np.linspace(1/self.maxsearchP, 1/self.minsearchP, self.num_pers)
-
         self.freqs = 1/self.pers
 
     def base_bic(self):
@@ -208,7 +207,7 @@ class Periodogram:
     def save_per(self, ls=False):
         if ls==False:
             try:
-                #FIX THIS; SPECIFY DIRECTORY/NAME, NUMBER OF PLANETS IN FILENAME, AND ARRAY ORDERING
+                # FIX THIS; SPECIFY DIRECTORY/NAME, NUMBER OF PLANETS IN FILENAME, AND ARRAY ORDERING
                 np.savetxt((self.pers, self.power['bic']), filename='BIC_periodogram.csv')
             except:
                 print('Have not generated a delta-BIC periodogram.')
@@ -219,7 +218,7 @@ class Periodogram:
                 print('Have not generated a Lomb-Scargle periodogram.')
 
     def plot_per(self, ls=False, alias=True, save=False):
-        #TO-DO: WORK IN AIC/BIC OPTION, INCLUDE IN PLOT TITLE
+        # TO-DO: WORK IN AIC/BIC OPTION, INCLUDE IN PLOT TITLE
         peak = np.argmax(self.power['bic'])
         f_real = self.freqs[peak]
 
@@ -228,7 +227,7 @@ class Periodogram:
         ax.scatter(self.pers[peak], self.power['bic'][peak], label='{} days'.format(
                    np.round(self.pers[peak], decimals=1)))
 
-        # If D-BIC threshold has been calculated, plot.
+        # If DBIC threshold has been calculated, plot.
         if self.bic_thresh is not None:
             ax.axhline(self.bic_thresh, ls=':', c='y', label=r'$\Delta$BIC threshold')
             upper = 1.05*max(np.amax(self.power['bic']), self.bic_thresh)

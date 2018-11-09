@@ -63,6 +63,7 @@ class Search(object):
 
         self.basebic = None
 
+        self.per_grid = None
         self.periodograms = []
         self.bic_threshes = []
 
@@ -285,6 +286,11 @@ class Search(object):
             t2 = time.process_time()
             print('Time = {} seconds'.format(t2 - t1))
 
+            self.periodograms.append(perioder.power[self.crit])
+            self.bic_threshes.append(perioder.bic_thresh)
+            if self.num_planets == 0:
+                self.per_grid = perioder.pers
+
             perioder.eFAP_thresh(fap=self.fap)
             perioder.plot_per()
             perioder.fig.savefig(outdir+'/dbic{}.pdf'.format(self.num_planets+1))
@@ -297,6 +303,8 @@ class Search(object):
                 self.post.params['tc{}'.format(self.num_planets)].value = perioder.best_tc
                 self.fit_orbit()
                 self.basebic = self.post.bic()
+
+                self.all_posts.append(copy.deepcopy(self.post))
 
                 rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+'/orbit_plot{}.pdf'.format(self.num_planets))
                 multiplot_fig, ax_list = rvplot.plot_multipanel()

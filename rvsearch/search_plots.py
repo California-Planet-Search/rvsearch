@@ -17,17 +17,113 @@ class PeriodModelPlot(object):
             posteriors for each added planet.
 
     """
-    def __init__(self, search, saveplot=None, epoch=2450000):
+    def __init__(self, search, saveplot=None, epoch=2450000, phase_nrows=None,
+                 yscale_auto=False, yscale_sigma=3.0, phase_ncols=None,
+                 uparams=None, telfmts={}, legend=True, nobin=False,
+                 phasetext_size='large', rv_phase_space=0.08, figwidth=7.5,
+                 fit_linewidth=2.0, set_xlim=None, text_size=9,
+                 legend_kwards=dict(loc='best')):
 
         self.search = search
+        self.post = self.search.post
         self.num_known_planets = self.search.num_planets
         self.pers = self.search.pers
         self.periodograms = self.search.periodograms
+        self.bic_threshes = self.search.bic_threshes
+
         self.saveplot = saveplot
         self.epoch = epoch
+        self.phase_nrows = phase_nrows
+        self.phase_ncols = phase_ncols
+        self.uparams = None
+        self.telfmts = telfmts
+        self.legend = legend
+        self.nobin = nobin
+        self.phasetext_size = phasetext_size
+        self.rv_phase_space = rv_phase_space
+        self.figwidth = figwidth
+        self.fit_linewidth = fit_linewidth
+        self.set_lim = set_xlim
+        self.text_size =etext_size
+        self.legend_kwargs = legend_kwargs
+
+        if isinstance(self.post.likelihood, radvel,likelihood.CompositeLikelihood):
+            self.like_list = self.post.likelihood.like_list
+        else:
+            self.like_list = [ self.post.likelihood ]
+
+        # FIGURE PROVISIONING
+        self.ax_rv_height = self.figwidth * 0.6
+        self.ax_phase_height = self.ax_rv_height / 1.4
+
+        # convert params to synth basis
+        synthparams = self.post.params.basis.to_synth(self.post.params)
+        self.post.params.update(synthparams)
+
+        self.model = self.post.likelihood.model
+        self.rvtimes = self.post.likelihood.x
+        self.rverr = self.post.likelihood.errorbars()
+        self.num_planets = self.model.num_planets
+
+        self.rawresid = self.post.likelihood.residuals()
+
+        self.resid = (
+            self.rawresid + self.post.params['dvdt'].value*(self.rvtimes-self.model.time_base)
+            + self.post.params['curv'].value*(self.rvtimes-self.model.time_base)**2
+        )
+
+        if self.saveplot is not None:
+            resolution = 10000
+        else:
+            resolution = 2000
+
+        periods = []
+        for i in range(self.num_planets):
+            periods.append(synthparams['per%d' % (i+1)].value)
+        if len(periods) > 0:
+            longp = max(periods)
+        else:
+            longp = max(self.post.likelihood.x) - min(self.post.likelihood.x)
+
+        self.dt = max(self.rvtimes) - min(self.rvtimes)
+        self.rvmodt = np.linspace(
+            min(self.rvtimes) - 0.05 * self.dt, max(self.rvtimes) + 0.05 * self.dt + longp,
+            int(resolution)
+        )
+
+        self.orbit_model = self.model(self.rvmodt)
+        self.rvmod = self.model(self.rvtimes)
+
+        if ((self.rvtimes - self.epoch) < -2.4e6).any():
+            self.plttimes = self.rvtimes
+            self.mplttimes = self.rvmodt
+        elif self.epoch == 0:
+            self.epoch = 2450000
+            self.plttimes = self.rvtimes - self.epoch
+            self.mplttimes = self.rvmodt - self.epoch
+        else:
+           self.plttimes = self.rvtimes - self.epoch
+           self.mplttimes = self.rvmodt - self.epoch
+
+
+        self.slope = (
+            self.post.params['dvdt'].value * (self.rvmodt-self.model.time_base)
+            + self.post.params['curv'].value * (self.rvmodt-self.model.time_base)**2
+        )
+        self.slope_low = (
+            self.post.params['dvdt'].value * (self.rvtimes-self.model.time_base)
+            + self.post.params['curv'].value * (self.rvtimes-self.model.time_base)**2
+        )
+
+        # list for Axes objects
+        self.ax_list = []
 
     def plot_timeseries(self):
-        pass
+        """Make a plot of the RV data and model in the current Axes.
+        """
+
+        ax = plt.gca()
+        ax.hline(0, color='0.5', linestyle='--')
 
     def plot_phasefold(self, pltletter, pnum=0):
         pass
@@ -44,7 +140,7 @@ class PeriodModelPlot(object):
 
         # If D-BIC threshold has been calculated, plot.
         if self.bic_thresh[pnum] is not None:
-            ax.axhline(self.bic_thresh[pnum], ls=':', c='y', label=r'$\Delta$BIC threshold')
+            ax.axhline(self.bic_thresh[pnum ], ls=':', c='y', label=r'$\Delta$BIC threshold')
             upper = 1.05*max(np.amax(self.periodograms[pnum]), self.bic_thresh)
             ax.set_ylim([np.amin(self.periodograms[pnum]), upper])
         else:
