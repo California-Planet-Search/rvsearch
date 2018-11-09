@@ -29,7 +29,7 @@ class Periodogram:
         #self.post = post
         self.default_pdict = {}  # Default_pdict makes sense here, leave alone for now (10/22/18)
         for k in post.params.keys():
-            self.default_pdict[k] = post.params[k].value
+            self.default_pdict[k] = self.post.params[k].value
 
         self.basebic = basebic
         self.num_known_planets = num_known_planets
@@ -126,11 +126,18 @@ class Periodogram:
 
         print("Calculating BIC periodogram")
         #This assumes nth planet parameters, and all periods, were locked in.
+        # SET ALL PARS TO BE FIXED, EXCEPT gamma, jitter, dvdt, curv
         if self.basebic is None:
+            self.post.params['tc1'].vary = False
+            self.post.params['k1'].vary = False
+            # Vary ONLY gamma, jitter, dvdt, curv. All else fixed, and k=0
             baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
             baseline_bic = baseline_fit.likelihood.bic()
         else:
             baseline_bic = self.basebic
+        rms = np.std(self.post.likelihood.residuals())
+        #self.post.params['k{}'.format(self.post.params.num_planets)].value = rms
+        self.default_pdict['k{}'.format(self.post.params.num_planets)] = rms
 
         # Allow amplitude and time offset to vary, fix eccentricity and period.
         self.post.params['secosw{}'.format(self.num_known_planets+1)].vary = False
@@ -146,10 +153,8 @@ class Periodogram:
         for i, per in enumerate(self.pers):
             print(i, self.num_pers)
             # Reset posterior parameters to default values.
-            for k in self.post.params.keys():
-                #self.post.params[k].value = self.default_pdict[k]
-                if k in self.default_pdict.keys():
-                    self.post.params[k].value = self.default_pdict[k]
+            for k in self.default_pdict.keys():
+                self.post.params[k].value = self.default_pdict[k]
 
             #Set new period, fix period, and fit a circular orbit.
             perkey = 'per{}'.format(self.num_known_planets+1)

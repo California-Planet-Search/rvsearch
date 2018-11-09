@@ -47,6 +47,8 @@ class Search(object):
 
         self.max_planets = max_planets
         self.num_planets = 0
+
+        self.crit = crit
         '''
         # Play with calling __name__ of method
         if crit=='bic':
@@ -224,9 +226,7 @@ class Search(object):
             self.post.params['secosw{}'.format(planet)].vary = True
             self.post.params['sesinw{}'.format(planet)].vary = True
 
-        #fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
-        fit = radvel.fitting.maxlike_fitting(copy.deepcopy(self.post), verbose=False)
-        self.post = fit
+        self.post = radvel.fitting.maxlike_fitting(self.post, verbose=False)
         '''
         for planet in np.arange(1, self.num_planets+1):
             self.post.params['per{}'.format(planet)].vary = False
@@ -275,12 +275,10 @@ class Search(object):
             if self.num_planets != 0:
                 self.add_planet()
             # Set K equal to the rms of the known planet model residuals.
-            rms = np.std(self.post.likelihood.residuals()**2.)
-            self.post.params['k{}'.format(self.post.params.num_planets)].value = rms
-
+            # pdb.set_trace()
             perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
                                                num_known_planets=self.num_planets)
-            pdb.set_trace()
+            # pdb.set_trace()
             t1 = time.process_time()
             perioder.per_bic()
             t2 = time.process_time()
@@ -294,6 +292,8 @@ class Search(object):
             perioder.eFAP_thresh(fap=self.fap)
             perioder.plot_per()
             perioder.fig.savefig(outdir+'/dbic{}.pdf'.format(self.num_planets+1))
+            pdb.set_trace()
+            self.all_posts.append(copy.deepcopy(self.post))
             if perioder.best_bic > perioder.bic_thresh:
                 self.num_planets += 1
                 perkey = 'per{}'.format(self.num_planets)
@@ -301,10 +301,9 @@ class Search(object):
                 self.post.params[perkey].value = perioder.best_per
                 self.post.params['k{}'.format(self.num_planets)].value = perioder.best_k
                 self.post.params['tc{}'.format(self.num_planets)].value = perioder.best_tc
+                # UPDATE DVDT, CURV, GAMMA, HIRES
                 self.fit_orbit()
                 self.basebic = self.post.bic()
-
-                self.all_posts.append(copy.deepcopy(self.post))
 
                 rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+'/orbit_plot{}.pdf'.format(self.num_planets))
                 multiplot_fig, ax_list = rvplot.plot_multipanel()
