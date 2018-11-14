@@ -1,12 +1,19 @@
-#Search class.
+"""Search class"""
+
+import os
+import copy
+import time
+import pdb
+
 import numpy as np
-import pandas
 import radvel
 import radvel.fitting
+from radvel.plot import orbit_plots
 
-from .periodogram import *
-from .utils import *
-#IS THIS GOOD PRACTICE?
+import periodogram, utils
+# import rvsearch.periodogram as periodogram
+# import rvsearch.utils as utils
+
 
 class Search(object):
     """Class to initialize and modify posteriors as planet search runs,
@@ -19,90 +26,148 @@ class Search(object):
         aic: if True, use Akaike information criterion instead of BIC. STILL WORKING ON THIS
     """
 
-    def __init__(self, data, starname='', max_planets=5,
-                 priors=[], default_pdict=[], crit='bic'):
+    def __init__(self, data, starname=None, max_planets=4, priors=None, crit='bic', fap=0.01,
+                 dvdt=True, curv=True, verbose=True):
+
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
             self.tels = np.unique(self.data['tel'].values)
-            #self.tels = set(self.data.tel) #Unique list of telescopes.
         else:
             raise ValueError('Incorrect data input.')
 
-        self.starname = starname
+        if starname is None:
+            self.starname = 'star'
+        else:
+            self.starname = starname
         self.params = utils.initialize_default_pars(instnames=self.tels)
         self.priors = priors
-        #Default pdict can contain known planet parameters, contains nplanets
-            #Change it to an rvparams object, includes functionality of param objects. *init_params*
-        self.default_pdict = default_pdict
-        #self.all_posts = []
 
-        self.post = utils.initialize_post(self.data, self.params)
+        self.all_posts = []
+        self.post = utils.initialize_post(self.data, self.params, self.priors)
 
-        #TRYING TO GENERALIZE INFORMATION CRITERION TO AIC OR BIC.
+        self.max_planets = max_planets
+        self.num_planets = 0
+
+        self.crit = crit
         '''
+        # Play with calling __name__ of method
         if crit=='bic':
             self.crit = radvel.posterior.bic()
         eif crit=='aic':
             self.crit = radvel.posterior.aic()
         self.critname = self.crit.__string__
-        #Play with calling __name__ of method
+        else:
+            raise ValueError('Invalid information criterion.')
         '''
+        self.fap = fap
+        self.dvdt = dvdt
+        self.curv = curv
+
+        self.verbose = verbose
+
+        self.basebic = None
+
+        self.per_grid = None
+        self.periodograms = []
+        self.bic_threshes = []
+
+    def trend_test(self):
+        # Perform 0-planet baseline fit.
+        post1 = copy.deepcopy(self.post)
+        post1 =radvel.fitting.maxlike_fitting(post1, verbose=False)
+
+        trend_curve_bic = self.post.likelihood.bic()
+        dvdt_val = self.post.params['dvdt'].value
+        curv_val = self.post.params['curv'].value
+
+        # Test without curvature
+        post1.params['curv'].value = 0.0
+        post1.params['curv'].vary = False
+        post1 = radvel.fitting.maxlike_fitting(post1, verbose=False)
+        post1.params['dvdt'].vary = False
+
+        trend_bic = post1.likelihood.bic()
+
+        # Test without trend or curvature
+        post2 = copy.deepcopy(post1)
+
+        post2.params['dvdt'].value = 0.0
+        post2.params['dvdt'].vary = False
+        post2 = radvel.fitting.maxlike_fitting(post2, verbose=False)
+        post1.params['curv'].vary = False
+
+        flat_bic = post2.likelihood.bic()
+        print('Flat:{}; Trend:{}; Curv:{}'.format(flat_bic, trend_bic, trend_curve_bic))
+
+        if trend_bic < flat_bic - 10.:
+            # Flat model is excluded, check on curvature
+            if trend_curve_bic < trend_bic - 10.:
+                self.post = radvel.fitting.maxlike_fitting(self.post, verbose=False)
+                self.post.params['dvdt'].vary = False
+                self.post.params['curv'].vary = False
+                # curvature model is preferred
+            self.post = post1  # trend only
+        self.post = post2  # flat
+
 
     def add_planet(self):
+
         current_num_planets = self.post.params.num_planets
-        fitting_basis = self.post.params.basis
-        param_list = fittin_basis.split()
+        fitting_basis = self.post.params.basis.name
+        param_list = fitting_basis.split()
 
         new_num_planets = current_num_planets + 1
 
         default_pars = utils.initialize_default_pars(instnames=self.tels)
         new_params = radvel.Parameters(new_num_planets, basis=fitting_basis)
 
-        #THIS IS WRONG, DOESN'T SET 1-NTH PLANET PARAMETERS PROPERLY
-        for planet in np.arange(1, new_num_planets + 1):
+        for planet in np.arange(1, new_num_planets):
             for par in param_list:
                 parkey = par + str(planet)
-                if parkey in self.default_pdict.keys():
-                    val = radvel.Parameter(value=default_pdict[parkey])
-                else:
-                    parkey1 - parkey[:-1] + '1' #WHAT DOES THIS MEAN?
-                    val = radvel.Parameter(value=def_pars[parkey1].value)
+                new_params[parkey] = self.post.params[parkey]
 
-                new_params[parkey] = val
+        for par in self.post.likelihood.extra_params:
+            new_params[par] = self.post.params[par]  # For gamma and jitter
 
-        for par in self.post.likelihood.extra_params: #WHAT DOES THIS MEAN
-            new_params[par] = radvel.Parameter(value=self.default_pdict[par])
+        # Set default parameters for n+1th planet
+        default_params = utils.initialize_default_pars(self.tels)
+        for par in param_list:
+            parkey = par + str(new_num_planets)
+            onepar = par + '1'  # MESSY, FIX THIS 10/22/18
+            new_params[parkey] = default_params[onepar]
 
-        new_params['dvdt'] = radvel.Parameter(value=default_pdict['dvdt'])
-        new_params['curv'] = radvel.Parameter(value=default_pdict['curv'])
+        new_params['dvdt'] = self.post.params['dvdt']
+        new_params['curv'] = self.post.params['curv']
 
-        if self.post.params['dvdt'].vary == False:
-        	new_params['dvdt'].vary = False
-        if self.post.params['curv'].vary == False:
-        	new_params['curv'].vary = False
+        if not self.post.params['dvdt'].vary:
+            new_params['dvdt'].vary = False
+        if not self.post.params['curv'].vary:
+            new_params['curv'].vary = False
 
-        new_params['per{}'.format(new_planet_index)].vary = False
-        new_params['secosw{}'.format(new_planet_index)].vary = False
-        new_params['sesinw{}'.format(new_planet_index)].vary = False
+        new_params['per{}'.format(new_num_planets)].vary = False
+        new_params['secosw{}'.format(new_num_planets)].vary = False
+        new_params['sesinw{}'.format(new_num_planets)].vary = False
 
         new_params.num_planets = new_num_planets
 
-        priors = [radvel.prior.HardBounds('jit'+inst, 0.0, 20.0) for inst in self.tels]
-        priors.append(radvel.prior.PositiveKPrior(new_planet_index))
-        priors.append(radvel.prior.EccentricityPrior(new_planet_index))
+        # priors = [radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0) for inst in self.tels]
+        priors = []
+        priors.append(radvel.prior.PositiveKPrior(new_num_planets))
+        priors.append(radvel.prior.EccentricityPrior(new_num_planets))
 
-        new_post = utils.initialize_post(new_params, self.data, priors)
+        new_post = utils.initialize_post(self.data, new_params, priors)
         self.post = new_post
 
         '''
-        1. Get default values for new planet parameters 1
+        1. Get default values for new planet parameters !
         2. Initialize new radvel Parameter object, new_param, with n+1 planets !
-        3. TO COMPLETE Set values of 1st - nth planet in new_param TO COMPLETE
-        4. Set curvature fit parameters, check locked or unlocked
+        3. TO COMPLETE Set values of 1st - nth planet in new_param !
+        4. Set curvature fit parameters, check locked or unlocked !
 
         5. Put some kinds of priors on the 1st-nth planet parameters (period, phase)
-            Allow phase, period to vary within ~5-10% of original value, ask Andrew
-            Or allow *all* params (except curv, dvdt)to be totally free. This is while making per_bics
+            Allow phase, period to vary within ~5-10% of original value, ask Andrew.
+            Or allow *all* params (except curv, dvdt)to be totally free. This while making per_bics
+
             Make 1 flag each for dvdt, curv at the start of the search. In search object
                 Force on, force off, or auto for 0-1 model. Off for Legacy
 
@@ -110,119 +175,141 @@ class Search(object):
         7. Add positive amp. & ecc. priors, set self.post to new posterior !
         8. Save old posterior to list containing history of posterior
         '''
-        pass
 
     def sub_planet(self):
-        #self.posts = self.posts[:-1] Not quite right
 
-    def fit_orbit(self):
-        #Redundant with add_planet (current_planets, fitting_basis)? Make class properties?
-        current_planets = self.post.params.num_planets
+        current_num_planets = self.post.params.num_planets
         fitting_basis = self.post.params.basis.name
         param_list = fitting_basis.split()
 
-        self.post.params['k{}'.format(current_planets)].vary = True #to initialize 1 planet bic
-        self.post.params['tc{}'.format(current_planets)].vary = True
-        self.post.params['secosw{}'.format(current_planets)].vary = True
-        self.post.params['sesinw{}'.format(current_planets)].vary = True
+        new_num_planets = current_num_planets - 1
 
-        fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
+        default_pars = utils.initialize_default_pars(instnames=self.tels)
+        new_params = radvel.Parameters(new_num_planets, basis=fitting_basis)
 
-        self.post.params['k{}'.format(current_planets)].vary = False #to initialize 1 planet bic
-        self.post.params['tc{}'.format(current_planets)].vary = False
-        self.post.params['secosw{}'.format(current_planets)].vary = False
-        self.post.params['sesinw{}'.format(current_planets)].vary = False
+        for planet in np.arange(1, new_num_planets+1):
+            for par in param_list:
+                parkey = par + str(planet)
+                new_params[parkey] = self.post.params[parkey]
 
-        self.post = fit
+        for par in self.post.likelihood.extra_params:
+            new_params[par] = self.post.params[par]  # For gamma and jitter
 
-    '''
+        new_params['dvdt'] = self.post.params['dvdt']
+        new_params['curv'] = self.post.params['curv']
+
+        if not self.post.params['dvdt'].vary:
+            new_params['dvdt'].vary = False
+        if not self.post.params['curv'].vary:
+            new_params['curv'].vary = False
+
+        priors = []
+        priors.append(radvel.prior.PositiveKPrior(new_num_planets))
+        priors.append(radvel.prior.EccentricityPrior(new_num_planets))
+
+        new_post = utils.initialize_post(self.data, new_params, priors)
+        self.post = new_post
+
+    def reset_priors(self):
+        pass
+
+    def fit_orbit(self):
+        # REWRITE TO ITERATE OVER ALL PARAM KEYS? INCLUDING DVDT AND CURV? 10/26/18
+        for planet in np.arange(1, self.num_planets+1):
+            self.post.params['per{}'.format(planet)].vary = True
+            self.post.params['k{}'.format(planet)].vary = True
+            self.post.params['tc{}'.format(planet)].vary = True
+            self.post.params['secosw{}'.format(planet)].vary = True
+            self.post.params['sesinw{}'.format(planet)].vary = True
+
+        self.post = radvel.fitting.maxlike_fitting(self.post, verbose=False)
+        '''
+        for planet in np.arange(1, self.num_planets+1):
+            self.post.params['per{}'.format(planet)].vary = False
+            self.post.params['k{}'.format(planet)].vary = False
+            self.post.params['tc{}'.format(planet)].vary = False
+            self.post.params['secosw{}'.format(planet)].vary = False
+            self.post.params['sesinw{}'.format(planet)].vary = False
+        '''
     def add_gp(self):
         pass
 
-    def sub_gp(self):
+    def sub_gp(self, num_gps=1):
         try:
-            sub_gp
+            pass
         except:
-            raise RuntimeError('Model does not contain a Gaussian process.')
-    '''
+            raise RuntimeError('Model contains fewer than {} Gaussian processes.'.format(num_gps))
 
-    '''
-    def nominal_model(self, data, starname, fitting_basis='per tc secosw sesinw k'):
-    	"""Define the default nominal model. If binary orbit, read from table. Otherwise,
-    		define from default pars.
-    	"""
-    	binary_table = pd.read_csv('binary_orbits.csv',
-    								dtype={'star':str,'per':np.float64,'tc':np.float64,
-    										'e':np.float64,'w':np.float64,'k':np.float64})
-    	binlist = binary_table['star'].values
-
-    	instnames = np.unique(data['tel'].values)
-    	priors = [radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0) for inst in instnames]
-    	priors.append(radvel.prior.PositiveKPrior( 1 ))
-
-    	#pdb.set_trace()
-    	bin_orb = binary_table[binary_table['star']==starname]
-
-    	#pdb.set_trace()
-
-    	if len(bin_orb) > 0:
-    		anybasis_params = radvel.Parameters(num_planets=1, basis='per tc e w k')
-    		anybasis_params['tc1'] = radvel.Parameter(value=bin_orb['tc'].values[0])
-    		anybasis_params['w1'] = radvel.Parameter(value=bin_orb['w'].values[0])
-    		anybasis_params['k1'] = radvel.Parameter(value=bin_orb['k'].values[0])
-    		anybasis_params['e1'] = radvel.Parameter(value=bin_orb['e'].values[0])
-    		anybasis_params['per1'] = radvel.Parameter(value=bin_orb['per'].values[0])
-
-    		anybasis_params['dvdt'] = radvel.Parameter(value=0.0)
-    		anybasis_params['curv'] = radvel.Parameter(value=0.0)
-
-    		for inst in instnames:
-    			anybasis_params['gamma_'+inst] = radvel.Parameter(value=0.0)
-    			anybasis_params['jit_'+inst] = radvel.Parameter(value=2.0)
-    		#pdb.set_trace()
-    		params = anybasis_params.basis.to_any_basis(anybasis_params, fitting_basis)
-    		params['dvdt'].vary = False
-    		params['curv'].vary = False
-    		planet_num = 2
-
-    		priors.append(radvel.prior.EccentricityPrior( 1 ))
-    		post = ut.initialize_post(params, data, priors)
-    		#pdb.set_trace()
-    		post = radvel.fitting.maxlike_fitting(post) #Fit the best params for binary
-
-    		default_pdict = {} #Save the binary orbital params
-    		for k in post.params.keys():
-    			default_pdict[k] = post.params[k].value
-
-    		#Now add the planet onto the binary, with K==0 and no new free params
-    		post = ut.add_planet(post, default_pdict, data)
-
-    	else:
-    		planet_num = 1
-    		params = ut.initialize_default_pars(instnames)
-
-    		priors.append(radvel.prior.EccentricityPrior( 1 ))
-    		post = ut.initialize_post(params, data, priors)
-    		post = radvel.fitting.maxlike_fitting(post, verbose=False)
-
-    	return post, priors, planet_num
-    '''
-
-    def save(self, post, filename=None):
-        if filename != None:
-            post.writeto(filename)
+    def save(self, filename=None):
+        if filename is not None:
+            self.post.writeto(filename)
         else:
-            post.writeto('post_final.pkl')
-        #Write this so that it can be iteratively applied with each planet addition.
+            self.post.writeto('post_final.pkl')
+        # Write this so that it can be iteratively applied with each planet addition.
 
     def plot_model(self, post):
         pass
 
     def save_all_posts(self):
-        #Return list of posteriors for each nth planet model
-        #self.all_posts
+        # Pickle the list of posteriors for each nth planet model
         pass
 
     def run_search(self):
-        #Use all of the above routines to run a search.
-        pass
+        # Use all of the above routines to run a search.
+        outdir = os.path.join(os.getcwd(), self.starname)
+        if not os.path.exists(outdir):
+            os.mkdir(outdir)
+
+        # self.trend_test()
+        if self.dvdt == False:
+            self.post.params['dvdt'].vary = False
+        if self.curv == False:
+            self.post.params['curv'].vary = False
+
+        run = True
+        while run:
+            if self.num_planets != 0:
+                self.add_planet()
+
+            perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
+                                               num_known_planets=self.num_planets)
+            t1 = time.process_time()
+            perioder.per_bic()
+            t2 = time.process_time()
+            print('Time = {} seconds'.format(t2 - t1))
+
+            self.periodograms.append(perioder.power[self.crit])
+            self.bic_threshes.append(perioder.bic_thresh)
+            if self.num_planets == 0:
+                self.per_grid = perioder.pers
+
+            perioder.eFAP_thresh(fap=self.fap)
+            perioder.plot_per()
+            perioder.fig.savefig(outdir+'/dbic{}.pdf'.format(self.num_planets+1))
+            self.all_posts.append(copy.deepcopy(self.post))
+            if perioder.best_bic > perioder.bic_thresh:
+                self.num_planets += 1
+                perkey = 'per{}'.format(self.num_planets)
+                self.post.params[perkey].vary = False
+                self.post.params[perkey].value = perioder.best_per
+                self.post.params['k{}'.format(self.num_planets)].value = perioder.best_k
+                self.post.params['tc{}'.format(self.num_planets)].value = perioder.best_tc
+                self.post.params['dvdt'].value = perioder.best_dvdt
+                self.post.params['curv'].value = perioder.best_curv
+                for tel in self.tels:
+                    self.post.params['gamma_'+tel].value = perioder.best_gamma[tel]
+                    self.post.params['jit_'+tel].value = perioder.best_jit[tel]
+                self.fit_orbit()
+                self.basebic = self.post.bic()
+
+                rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+
+                                                    '/orbit_plot{}.pdf'.format(self.num_planets))
+                multiplot_fig, ax_list = rvplot.plot_multipanel()
+                multiplot_fig.savefig(outdir+'/orbit_plot{}.pdf'.format(self.num_planets))
+            else:
+                self.sub_planet()  # FINISH SUB_PLANET() 10/24/18
+                run = False
+            if self.num_planets >= self.max_planets:
+                run = False
+
+        self.save(filename=outdir+'/post_final.pkl')
