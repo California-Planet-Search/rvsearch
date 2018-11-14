@@ -166,9 +166,6 @@ class Periodogram:
 
             fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
             power[i] = baseline_bic - fit.likelihood.bic()
-<<<<<<< HEAD
-            #print(i, per, power[i], fit.bic(), baseline_bic)
-=======
             ks[i] = fit.params['k{}'.format(self.num_known_planets+1)].value
             tcs[i] = fit.params['tc{}'.format(self.num_known_planets+1)].value
             dvdts[i] = fit.params['dvdt'].value
@@ -187,7 +184,6 @@ class Periodogram:
         self.best_gamma = {tel:jits[tel][fit_index] for tel in self.tels}
         self.best_jit = {tel:gammas[tel][fit_index] for tel in self.tels}
 
->>>>>>> 1f096d3abf74029eb181ba6c86e0ca76939156e8
         self.power['bic'] = power
 
     def ls(self):
