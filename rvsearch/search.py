@@ -298,13 +298,12 @@ class Search(object):
                 self.post.params['tc{}'.format(self.num_planets)].value = perioder.best_tc
                 self.post.params['dvdt'].value = perioder.best_dvdt
                 self.post.params['curv'].value = perioder.best_curv
-                # TO-DO: UPDATE DVDT, CURV, GAMMA, HIRES. 11/12/18
-                # pdb.set_trace()
+                # TO-DO: UPDATE GAMMA, JIT, WITH TELS. 11/12/18
                 self.fit_orbit()
-                # pdb.set_trace()
                 self.basebic = self.post.bic()
 
-                rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+'/orbit_plot{}.pdf'.format(self.num_planets))
+                rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+
+                                                    '/orbit_plot{}.pdf'.format(self.num_planets))
                 multiplot_fig, ax_list = rvplot.plot_multipanel()
                 multiplot_fig.savefig(outdir+'/orbit_plot{}.pdf'.format(self.num_planets))
             else:

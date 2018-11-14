@@ -1,4 +1,6 @@
 #Utilities for loading data, checking for known planets, etc.
+import pdb
+
 import numpy as np
 import pandas as pd
 import radvel
@@ -53,49 +55,51 @@ def initialize_default_pars(instnames=['HIRES'], fitting_basis='per tc secosw se
     return params
 
 def initialize_post(data, params=None, priors=None):
-    """Initialize a posterior object with data, params, and priors.
-    Args:
-        data: a pandas dataframe.
-    Returns:
-        post (radvel Posterior object)
+	"""Initialize a posterior object with data, params, and priors.
+	Args:
+		data: a pandas dataframe.
+		params: a list of radvel parameter objects.
+		priors: a list of priors to place on the posterior object.
+	Returns:
+		post (radvel Posterior object)
 
 	TO-DO: MAKE OPTION FOR KNOWN MULTI-PLANET POSTERIOR
-    """
+	"""
 
-    if params == None:
-        params = radvel.Parameters(1, basis='per tc secosw sesinw logk')
-    iparams = radvel.basis._copy_params(params)
+	if params == None:
+		params = radvel.Parameters(1, basis='per tc secosw sesinw logk')
+	iparams = radvel.basis._copy_params(params)
 
-    #initialize RVModel
-    time_base = np.mean([data['time'].max(), data['time'].min()])
-    mod = radvel.RVModel(params, time_base=time_base)
+	#initialize RVModel
+	time_base = np.mean([data['time'].max(), data['time'].min()])
+	mod = radvel.RVModel(params, time_base=time_base)
 
-    #initialize Likelihood objects for each instrument
-    telgrps = data.groupby('tel').groups
-    likes = {}
+	#initialize Likelihood objects for each instrument
+	telgrps = data.groupby('tel').groups
+	likes = {}
 
-    for inst in telgrps.keys():
-        likes[inst] = radvel.likelihood.RVLikelihood(
-            mod, data.iloc[telgrps[inst]].time, data.iloc[telgrps[inst]].mnvel,
-            data.iloc[telgrps[inst]].errvel, suffix='_'+inst)
+	for inst in telgrps.keys():
+		likes[inst] = radvel.likelihood.RVLikelihood(
+			mod, data.iloc[telgrps[inst]].time, data.iloc[telgrps[inst]].mnvel,
+			data.iloc[telgrps[inst]].errvel, suffix='_'+inst)
 
-        likes[inst].params['gamma_'+inst] = iparams['gamma_'+inst]
-        likes[inst].params['jit_'+inst] = iparams['jit_'+inst]
+		likes[inst].params['gamma_'+inst] = iparams['gamma_'+inst]
+		likes[inst].params['jit_'+inst] = iparams['jit_'+inst]
 	#Can this be cleaner? like = radvel.likelihood.CompositeLikelihood(likes), if likes is array, not dic.
-    like = radvel.likelihood.CompositeLikelihood(list(likes.values()))
+	like = radvel.likelihood.CompositeLikelihood(list(likes.values()))
 
-    post = radvel.posterior.Posterior(like)
+	post = radvel.posterior.Posterior(like)
 	#FIX TO COMBINE GIVEN PRIORS AND NEEDED PRIORS
-    if priors is not None:
-        post.priors = priors
-    else:
-        priors = []
-        priors.append(radvel.prior.PositiveKPrior(post.params.num_planets))
-        priors.append(radvel.prior.EccentricityPrior(post.params.num_planets))
+	if priors is not None:
+		post.priors = priors
+	else:
+		priors = []
+		priors.append(radvel.prior.PositiveKPrior(post.params.num_planets))
+		priors.append(radvel.prior.EccentricityPrior(post.params.num_planets))
 		#priors.append([radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0) for inst in telgrps.keys()])
-        post.priors = priors
+		post.priors = priors
 
-    return post
+	return post
 
 """Series of functions for reading data from various sources into pandas dataframes.
 """

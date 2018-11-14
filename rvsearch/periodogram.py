@@ -162,9 +162,6 @@ class Periodogram:
 
             fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
             power[i] = baseline_bic - fit.likelihood.bic()
-            # Debugging the fit failure, 11/5/18
-            if power[i] < -20:
-                pdb.set_trace()
             ks[i] = fit.params['k{}'.format(self.num_known_planets+1)].value
             tcs[i] = fit.params['tc{}'.format(self.num_known_planets+1)].value
             dvdts[i] = fit.params['dvdt'].value
@@ -210,8 +207,8 @@ class Periodogram:
         xmod = np.linspace(np.min(sBIC[np.isfinite(sBIC)]), 10.*np.max(sBIC), 10000)
         lfit = 10.**func(xmod)
         fap_min = 10.**func(sBIC[-1])*self.num_pers
-        thresh = xmod[np.where(np.abs(lfit-fap/self.num_pers) == np.min(np.abs(lfit-fap/self.num_pers)))]
-        pdb.set_trace()
+        thresh = xmod[np.argmin(lfit-fap/self.num_pers)]
+        #thresh = xmod[np.where(np.abs(lfit-fap/self.num_pers) == np.min(np.abs(lfit-fap/self.num_pers)))]
         self.bic_thresh = thresh
 
     def save_per(self, ls=False):
