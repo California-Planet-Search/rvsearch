@@ -1,10 +1,10 @@
 import numpy as np
-import astropy.stats
-import radvel
-import radvel.fitting
 import matplotlib.pyplot as plt
 import copy
 import pdb
+import astropy.stats
+import radvel
+import radvel.fitting
 
 import utils
 # import rvsearch.utils
@@ -24,7 +24,7 @@ class Periodogram:
 
     def __init__(self, post, basebic=None, num_known_planets=0, minsearchp=100, maxsearchp=10000,
                  baseline=True, basefactor=4., num_pers=None, search_pars=['per'],
-                 valid_types = ['bic', 'aic', 'ls']):
+                 valid_types = ['bic', 'aic', 'ls'], verbose=True):
         self.post = copy.deepcopy(post)
         self.default_pdict = {}
         for k in post.params.keys():
@@ -37,6 +37,11 @@ class Periodogram:
         self.vel = self.post.likelihood.y
         self.errvel = self.post.likelihood.yerr
         self.timelen = np.amax(self.times) - np.amin(self.times)
+
+        self.tels = []
+        for val in self.post.params.keys():
+            if 'gamma_' in val:
+                self.tels.append(val.split('_')[1])
 
         self.minsearchP = minsearchp
         self.maxsearchP = maxsearchp
@@ -51,12 +56,14 @@ class Periodogram:
         self.valid_types = valid_types
         self.power = {key: None for key in self.valid_types}
 
+        self.verbose = verbose
+
         self.best_per = None
         self.best_bic = None
 
         self.bic_thresh = None
 
-        #Automatically generate a period grid upon initialization.
+        # Automatically generate a period grid upon initialization.
         self.make_per_grid()
 
     @classmethod
@@ -92,6 +99,7 @@ class Periodogram:
         dnu       = 1. / (4. * self.timelen)
         num_freq  = int((fmax - fmin) / dnu + 1)
         num_freq *= oversampling
+        num_freq  = int(num_freq)
 
         if verbose:
             print("Number of test periods:", num_freq)
@@ -115,7 +123,7 @@ class Periodogram:
         """
 
         print("Calculating BIC periodogram")
-        #This assumes nth planet parameters, and all periods, were locked in.
+        # This assumes nth planet parameters, and all periods, were locked in.
         # SET ALL PARS TO BE FIXED, EXCEPT gamma, jitter, dvdt, curv
         if self.basebic is None:
             self.post.params['per1'].vary = False
@@ -127,7 +135,6 @@ class Periodogram:
         else:
             baseline_bic = self.basebic
         rms = np.std(self.post.likelihood.residuals())
-        #self.post.params['k{}'.format(self.post.params.num_planets)].value = rms
         self.default_pdict['k{}'.format(self.post.params.num_planets)] = rms
 
         # Allow amplitude and time offset to vary, fix eccentricity and period.
@@ -142,15 +149,12 @@ class Periodogram:
         tcs = np.zeros_like(self.pers)
         dvdts = np.zeros_like(self.pers)
         curvs = np.zeros_like(self.pers)
-        '''
-
-        for tel in tels:
-            jits = np.zeros_like(self.pers)
-            gammas = np.zeros_like(self.pers)
-        '''
+        jits = {tel:[] for tel in self.tels}
+        gammas = {tel:[] for tel in self.tels}
 
         for i, per in enumerate(self.pers):
-            print(' {}'.format(i), '/', self.num_pers, end='\r')
+            if self.verbose:
+                print(' {}'.format(i), '/', self.num_pers, end='\r')
             # Reset posterior parameters to default values.
             for k in self.default_pdict.keys():
                 self.post.params[k].value = self.default_pdict[k]
@@ -166,8 +170,9 @@ class Periodogram:
             tcs[i] = fit.params['tc{}'.format(self.num_known_planets+1)].value
             dvdts[i] = fit.params['dvdt'].value
             curvs[i] = fit.params['curv'].value
-            # jits[i] = fit.params['k{}'.format(self.num_known_planets+1)].value
-            # gammas[i] = fit.params['tc{}'.format(self.num_known_planets+1)].value
+            for tel in self.tels:
+                jits[tel].append(fit.params['k{}'.format(self.num_known_planets+1)].value)
+                gammas[tel].append(fit.params['tc{}'.format(self.num_known_planets+1)].value)
 
         fit_index = np.argmax(power)
         self.best_per = self.pers[fit_index]
@@ -176,6 +181,8 @@ class Periodogram:
         self.best_dvdt = dvdts[fit_index]
         self.best_curv = curvs[fit_index]
         self.best_bic = power[fit_index]
+        self.best_gamma = {tel:jits[tel][fit_index] for tel in self.tels}
+        self.best_jit = {tel:gammas[tel][fit_index] for tel in self.tels}
 
         self.power['bic'] = power
 
@@ -207,8 +214,7 @@ class Periodogram:
         xmod = np.linspace(np.min(sBIC[np.isfinite(sBIC)]), 10.*np.max(sBIC), 10000)
         lfit = 10.**func(xmod)
         fap_min = 10.**func(sBIC[-1])*self.num_pers
-        thresh = xmod[np.argmin(lfit-fap/self.num_pers)]
-        #thresh = xmod[np.where(np.abs(lfit-fap/self.num_pers) == np.min(np.abs(lfit-fap/self.num_pers)))]
+        thresh = xmod[np.where(np.abs(lfit-fap/self.num_pers) == np.min(np.abs(lfit-fap/self.num_pers)))]
         self.bic_thresh = thresh
 
     def save_per(self, ls=False):

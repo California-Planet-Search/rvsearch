@@ -26,7 +26,7 @@ class Search(object):
         aic: if True, use Akaike information criterion instead of BIC. STILL WORKING ON THIS
     """
 
-    def __init__(self, data, starname=None, max_planets=4, priors=[], crit='bic', fap=0.01,
+    def __init__(self, data, starname=None, max_planets=4, priors=None, crit='bic', fap=0.01,
                  dvdt=True, curv=True, verbose=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
@@ -43,7 +43,7 @@ class Search(object):
         self.priors = priors
 
         self.all_posts = []
-        self.post = utils.initialize_post(self.data, self.params)
+        self.post = utils.initialize_post(self.data, self.params, self.priors)
 
         self.max_planets = max_planets
         self.num_planets = 0
@@ -62,6 +62,8 @@ class Search(object):
         self.fap = fap
         self.dvdt = dvdt
         self.curv = curv
+
+        self.verbose = verbose
 
         self.basebic = None
 
@@ -104,7 +106,6 @@ class Search(object):
                 self.post.params['dvdt'].vary = False
                 self.post.params['curv'].vary = False
                 # curvature model is preferred
-                #return self.post  # t+c
             self.post = post1  # trend only
         self.post = post2  # flat
 
@@ -127,10 +128,7 @@ class Search(object):
 
         for par in self.post.likelihood.extra_params:
             new_params[par] = self.post.params[par]  # For gamma and jitter
-        '''
-        for k in self.post.params.keys():
-            new_params[k] = self.post.params[k].value
-        '''
+
         # Set default parameters for n+1th planet
         default_params = utils.initialize_default_pars(self.tels)
         for par in param_list:
@@ -168,7 +166,7 @@ class Search(object):
 
         5. Put some kinds of priors on the 1st-nth planet parameters (period, phase)
             Allow phase, period to vary within ~5-10% of original value, ask Andrew.
-            Or allow *all* params (except curv, dvdt)to be totally free. This is while making per_bics
+            Or allow *all* params (except curv, dvdt)to be totally free. This while making per_bics
 
             Make 1 flag each for dvdt, curv at the start of the search. In search object
                 Force on, force off, or auto for 0-1 model. Off for Legacy
@@ -298,7 +296,9 @@ class Search(object):
                 self.post.params['tc{}'.format(self.num_planets)].value = perioder.best_tc
                 self.post.params['dvdt'].value = perioder.best_dvdt
                 self.post.params['curv'].value = perioder.best_curv
-                # TO-DO: UPDATE GAMMA, JIT, WITH TELS. 11/12/18
+                for tel in self.tels:
+                    self.post.params['gamma_'+tel].value = perioder.best_gamma[tel]
+                    self.post.params['jit_'+tel].value = perioder.best_jit[tel]
                 self.fit_orbit()
                 self.basebic = self.post.bic()
 
