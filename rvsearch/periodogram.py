@@ -26,8 +26,7 @@ class Periodogram:
                  baseline=True, basefactor=4., num_pers=None, search_pars=['per'],
                  valid_types = ['bic', 'aic', 'ls']):
         self.post = copy.deepcopy(post)
-        #self.post = post
-        self.default_pdict = {}  # Default_pdict makes sense here, leave alone for now (10/22/18)
+        self.default_pdict = {}
         for k in post.params.keys():
             self.default_pdict[k] = self.post.params[k].value
 
@@ -110,24 +109,16 @@ class Periodogram:
             self.pers = 1/np.linspace(1/self.maxsearchP, 1/self.minsearchP, self.num_pers)
         self.freqs = 1/self.pers
 
-    def base_bic(self):
-        base_post = self.trend_post()
-        self.base_bic = base_post.bic()
-
     def per_bic(self):
         #BJ's method. Remove once final BIC/AIC method is established.
         """Compute delta-BIC periodogram. ADD: crit is BIC or AIC.
-        """
-
-        """Can we track whether maxlike_fitting has already been performed on
-        a post? If so, we should do this, so we don't have to fit a posterior
-        that has already been optimized.
         """
 
         print("Calculating BIC periodogram")
         #This assumes nth planet parameters, and all periods, were locked in.
         # SET ALL PARS TO BE FIXED, EXCEPT gamma, jitter, dvdt, curv
         if self.basebic is None:
+            self.post.params['per1'].vary = False
             self.post.params['tc1'].vary = False
             self.post.params['k1'].vary = False
             # Vary ONLY gamma, jitter, dvdt, curv. All else fixed, and k=0
@@ -149,9 +140,17 @@ class Periodogram:
         power = np.zeros_like(self.pers)
         ks = np.zeros_like(self.pers)
         tcs = np.zeros_like(self.pers)
+        dvdts = np.zeros_like(self.pers)
+        curvs = np.zeros_like(self.pers)
+        '''
+
+        for tel in tels:
+            jits = np.zeros_like(self.pers)
+            gammas = np.zeros_like(self.pers)
+        '''
 
         for i, per in enumerate(self.pers):
-            print(i, self.num_pers)
+            print(' {}'.format(i), '/', self.num_pers, end='\r')
             # Reset posterior parameters to default values.
             for k in self.default_pdict.keys():
                 self.post.params[k].value = self.default_pdict[k]
@@ -168,11 +167,17 @@ class Periodogram:
                 pdb.set_trace()
             ks[i] = fit.params['k{}'.format(self.num_known_planets+1)].value
             tcs[i] = fit.params['tc{}'.format(self.num_known_planets+1)].value
+            dvdts[i] = fit.params['dvdt'].value
+            curvs[i] = fit.params['curv'].value
+            # jits[i] = fit.params['k{}'.format(self.num_known_planets+1)].value
+            # gammas[i] = fit.params['tc{}'.format(self.num_known_planets+1)].value
 
         fit_index = np.argmax(power)
         self.best_per = self.pers[fit_index]
         self.best_k = ks[fit_index]
         self.best_tc = tcs[fit_index]
+        self.best_dvdt = dvdts[fit_index]
+        self.best_curv = curvs[fit_index]
         self.best_bic = power[fit_index]
 
         self.power['bic'] = power
@@ -199,14 +204,14 @@ class Periodogram:
         cent = (edge[1:]+edge[:-1])/2.
         norm = float(np.sum(hist))
         nhist = hist/norm
+        loghist = np.log10(nhist)
 
-        func = np.poly1d(np.polyfit(cent, np.log10(nhist), 1))
-        xmod = np.linspace(np.min(self.power['bic'][self.power['bic']==self.power['bic']]),
-                           10.*np.max(self.power['bic']), 10000)
+        func = np.poly1d(np.polyfit(cent[np.isfinite(loghist)], loghist[np.isfinite(loghist)], 1))
+        xmod = np.linspace(np.min(sBIC[np.isfinite(sBIC)]), 10.*np.max(sBIC), 10000)
         lfit = 10.**func(xmod)
         fap_min = 10.**func(sBIC[-1])*self.num_pers
-        thresh = xmod[np.argmin(np.abs(lfit - fap/self.num_pers))]
-        # thresh = xmod[np.where(np.abs(lfit-fap/self.num_pers) == np.min(np.abs(lfit-fap/self.num_pers)))]
+        thresh = xmod[np.where(np.abs(lfit-fap/self.num_pers) == np.min(np.abs(lfit-fap/self.num_pers)))]
+        pdb.set_trace()
         self.bic_thresh = thresh
 
     def save_per(self, ls=False):
@@ -246,11 +251,11 @@ class Periodogram:
             colors = ['r', 'b', 'g']
             alias = [0.997, 29.531, 365.256]
             for i in np.arange(3):
-                f_ap = 1./alias[i] + f_real
-                f_am = 1./alias[i] - f_real
-                ax.axvline(1./f_am, linestyle='--', c=colors[i], alpha=0.5,
+                f_ap = f_real + 1./alias[i]
+                f_am = f_real - 1./alias[i]
+                ax.axvline(1./f_am, linestyle='--', c=colors[i], alpha=0.75,
                            label='{} day alias'.format(np.round(alias[i], decimals=1)))
-                ax.axvline(1./f_ap, linestyle='--', c=colors[i], alpha=0.5)
+                ax.axvline(1./f_ap, linestyle='--', c=colors[i], alpha=0.75)
 
         ax.legend(loc=0)
         ax.set_xscale('log')

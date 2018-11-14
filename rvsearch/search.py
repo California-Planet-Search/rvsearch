@@ -71,7 +71,6 @@ class Search(object):
 
     def trend_test(self):
         # Perform 0-planet baseline fit.
-        '''
         post1 = copy.deepcopy(self.post)
         post1 =radvel.fitting.maxlike_fitting(post1, verbose=False)
 
@@ -108,8 +107,7 @@ class Search(object):
                 #return self.post  # t+c
             self.post = post1  # trend only
         self.post = post2  # flat
-        '''
-        pass
+
 
     def add_planet(self):
 
@@ -274,11 +272,9 @@ class Search(object):
         while run:
             if self.num_planets != 0:
                 self.add_planet()
-            # Set K equal to the rms of the known planet model residuals.
-            # pdb.set_trace()
+
             perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
                                                num_known_planets=self.num_planets)
-            # pdb.set_trace()
             t1 = time.process_time()
             perioder.per_bic()
             t2 = time.process_time()
@@ -292,7 +288,6 @@ class Search(object):
             perioder.eFAP_thresh(fap=self.fap)
             perioder.plot_per()
             perioder.fig.savefig(outdir+'/dbic{}.pdf'.format(self.num_planets+1))
-            pdb.set_trace()
             self.all_posts.append(copy.deepcopy(self.post))
             if perioder.best_bic > perioder.bic_thresh:
                 self.num_planets += 1
@@ -301,8 +296,12 @@ class Search(object):
                 self.post.params[perkey].value = perioder.best_per
                 self.post.params['k{}'.format(self.num_planets)].value = perioder.best_k
                 self.post.params['tc{}'.format(self.num_planets)].value = perioder.best_tc
-                # UPDATE DVDT, CURV, GAMMA, HIRES
+                self.post.params['dvdt'].value = perioder.best_dvdt
+                self.post.params['curv'].value = perioder.best_curv
+                # TO-DO: UPDATE DVDT, CURV, GAMMA, HIRES. 11/12/18
+                # pdb.set_trace()
                 self.fit_orbit()
+                # pdb.set_trace()
                 self.basebic = self.post.bic()
 
                 rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+'/orbit_plot{}.pdf'.format(self.num_planets))
