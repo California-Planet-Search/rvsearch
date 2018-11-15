@@ -158,24 +158,6 @@ class Search(object):
         new_post = utils.initialize_post(self.data, new_params, priors)
         self.post = new_post
 
-        '''
-        1. Get default values for new planet parameters !
-        2. Initialize new radvel Parameter object, new_param, with n+1 planets !
-        3. TO COMPLETE Set values of 1st - nth planet in new_param !
-        4. Set curvature fit parameters, check locked or unlocked !
-
-        5. Put some kinds of priors on the 1st-nth planet parameters (period, phase)
-            Allow phase, period to vary within ~5-10% of original value, ask Andrew.
-            Or allow *all* params (except curv, dvdt)to be totally free. This while making per_bics
-
-            Make 1 flag each for dvdt, curv at the start of the search. In search object
-                Force on, force off, or auto for 0-1 model. Off for Legacy
-
-        6. Set number of planets in new_param? Not already done? !
-        7. Add positive amp. & ecc. priors, set self.post to new posterior !
-        8. Save old posterior to list containing history of posterior
-        '''
-
     def sub_planet(self):
 
         current_num_planets = self.post.params.num_planets
@@ -210,11 +192,8 @@ class Search(object):
         new_post = utils.initialize_post(self.data, new_params, priors)
         self.post = new_post
 
-    def reset_priors(self):
-        pass
-
     def fit_orbit(self):
-        # REWRITE TO ITERATE OVER ALL PARAM KEYS? INCLUDING DVDT AND CURV? 10/26/18
+
         for planet in np.arange(1, self.num_planets+1):
             self.post.params['per{}'.format(planet)].vary = True
             self.post.params['k{}'.format(planet)].vary = True
@@ -231,7 +210,7 @@ class Search(object):
             self.post.params['secosw{}'.format(planet)].vary = False
             self.post.params['sesinw{}'.format(planet)].vary = False
         '''
-    def add_gp(self):
+    def add_gp(self, inst=None):
         pass
 
     def sub_gp(self, num_gps=1):
@@ -299,9 +278,17 @@ class Search(object):
                 for tel in self.tels:
                     self.post.params['gamma_'+tel].value = perioder.best_gamma[tel]
                     self.post.params['jit_'+tel].value = perioder.best_jit[tel]
+
                 self.fit_orbit()
                 self.basebic = self.post.bic()
-
+                '''
+                for planet in np.arange(1, self.num_planets+1):
+                    self.post.params['per{}'.format(planet)].vary = True
+                    self.post.params['k{}'.format(planet)].vary = True
+                    self.post.params['tc{}'.format(planet)].vary = True
+                    self.post.params['secosw{}'.format(planet)].vary = True
+                    self.post.params['sesinw{}'.format(planet)].vary = True
+                '''
                 rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+
                                                     '/orbit_plot{}.pdf'.format(self.num_planets))
                 multiplot_fig, ax_list = rvplot.plot_multipanel()

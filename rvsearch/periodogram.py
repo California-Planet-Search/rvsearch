@@ -23,7 +23,7 @@ class Periodogram:
     """
 
     def __init__(self, post, basebic=None, num_known_planets=0, minsearchp=100, maxsearchp=10000,
-                 baseline=True, basefactor=4., num_pers=None, search_pars=['per'],
+                 baseline=True, basefactor=4., num_pers=None, eccentric=False, search_pars=['per'],
                  valid_types = ['bic', 'aic', 'ls'], verbose=True):
         self.post = copy.deepcopy(post)
         self.default_pdict = {}
@@ -48,6 +48,8 @@ class Periodogram:
         self.baseline = baseline
         self.basefactor = basefactor
         self.num_pers = num_pers
+
+        self.ecc = ecc
 
         if self.baseline == True:
             self.maxsearchP = self.basefactor * self.timelen
@@ -138,8 +140,10 @@ class Periodogram:
         self.default_pdict['k{}'.format(self.post.params.num_planets)] = rms
 
         # Allow amplitude and time offset to vary, fix eccentricity and period.
-        self.post.params['secosw{}'.format(self.num_known_planets+1)].vary = False
-        self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary = False
+        self.post.params['per{}'.format(self.num_known_planets+1)].vary = False
+        if self.eccentric == False:
+            self.post.params['secosw{}'.format(self.num_known_planets+1)].vary = False
+            self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary = False
 
         self.post.params['k{}'.format(self.num_known_planets+1)].vary = True
         self.post.params['tc{}'.format(self.num_known_planets+1)].vary = True
@@ -162,7 +166,7 @@ class Periodogram:
             #Set new period, fix period, and fit a circular orbit.
             perkey = 'per{}'.format(self.num_known_planets+1)
             self.post.params[perkey].value = per
-            self.post.params[perkey].vary = False
+            #self.post.params[perkey].vary = False
 
             fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
             power[i] = baseline_bic - fit.likelihood.bic()
@@ -171,8 +175,8 @@ class Periodogram:
             dvdts[i] = fit.params['dvdt'].value
             curvs[i] = fit.params['curv'].value
             for tel in self.tels:
-                jits[tel].append(fit.params['k{}'.format(self.num_known_planets+1)].value)
-                gammas[tel].append(fit.params['tc{}'.format(self.num_known_planets+1)].value)
+                gammas[tel].append(fit.params['gamma_'+tel].value)
+                jits[tel].append(fit.params['jit_'+tel].value)
 
         fit_index = np.argmax(power)
         self.best_per = self.pers[fit_index]
@@ -181,8 +185,8 @@ class Periodogram:
         self.best_dvdt = dvdts[fit_index]
         self.best_curv = curvs[fit_index]
         self.best_bic = power[fit_index]
-        self.best_gamma = {tel:jits[tel][fit_index] for tel in self.tels}
-        self.best_jit = {tel:gammas[tel][fit_index] for tel in self.tels}
+        self.best_gamma = {tel:gammas[tel][fit_index] for tel in self.tels}
+        self.best_jit = {tel:jits[tel][fit_index] for tel in self.tels}
 
         self.power['bic'] = power
 
@@ -192,8 +196,7 @@ class Periodogram:
         #FOR TESTING
         print("Calculating Lomb-Scargle periodogram")
         periodogram = astropy.stats.LombScargle(self.times, self.vel, self.errvel)
-        power = periodogram.power(self.freq_array)
-        #freqs = periodogram
+        power = periodogram.power(self.freqs)
         self.power['ls'] = power
 
     def eFAP_thresh(self, fap=0.01):
@@ -243,7 +246,7 @@ class Periodogram:
         # If DBIC threshold has been calculated, plot.
         if self.bic_thresh is not None:
             ax.axhline(self.bic_thresh, ls=':', c='y', label=r'$\Delta$BIC threshold')
-            upper = 1.05*max(np.amax(self.power['bic']), self.bic_thresh)
+            upper = 1.1*max(np.amax(self.power['bic']), self.bic_thresh)
             ax.set_ylim([np.amin(self.power['bic']), upper])
         else:
             ax.set_ylim([np.amin(self.power['bic']), 1.05*np.amax(self.power['bic'])])
@@ -254,8 +257,8 @@ class Periodogram:
             colors = ['r', 'b', 'g']
             alias = [0.997, 29.531, 365.256]
             for i in np.arange(3):
-                f_ap = f_real + 1./alias[i]
-                f_am = f_real - 1./alias[i]
+                f_ap = 1./alias[i] + f_real
+                f_am = 1./alias[i] - f_real
                 ax.axvline(1./f_am, linestyle='--', c=colors[i], alpha=0.75,
                            label='{} day alias'.format(np.round(alias[i], decimals=1)))
                 ax.axvline(1./f_ap, linestyle='--', c=colors[i], alpha=0.75)
