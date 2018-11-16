@@ -268,33 +268,17 @@ class Search(object):
             self.all_posts.append(copy.deepcopy(self.post))
             if perioder.best_bic > perioder.bic_thresh:
                 self.num_planets += 1
-                perkey = 'per{}'.format(self.num_planets)
-                self.post.params[perkey].vary = False
-                self.post.params[perkey].value = perioder.best_per
-                self.post.params['k{}'.format(self.num_planets)].value = perioder.best_k
-                self.post.params['tc{}'.format(self.num_planets)].value = perioder.best_tc
-                self.post.params['dvdt'].value = perioder.best_dvdt
-                self.post.params['curv'].value = perioder.best_curv
-                for tel in self.tels:
-                    self.post.params['gamma_'+tel].value = perioder.best_gamma[tel]
-                    self.post.params['jit_'+tel].value = perioder.best_jit[tel]
+                for k in self.post.params.keys():
+                    self.post.params[k].value = perioder.bestfit_params[k]
 
                 self.fit_orbit()
                 self.basebic = self.post.bic()
-                '''
-                for planet in np.arange(1, self.num_planets+1):
-                    self.post.params['per{}'.format(planet)].vary = True
-                    self.post.params['k{}'.format(planet)].vary = True
-                    self.post.params['tc{}'.format(planet)].vary = True
-                    self.post.params['secosw{}'.format(planet)].vary = True
-                    self.post.params['sesinw{}'.format(planet)].vary = True
-                '''
                 rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+
                                                     '/orbit_plot{}.pdf'.format(self.num_planets))
                 multiplot_fig, ax_list = rvplot.plot_multipanel()
                 multiplot_fig.savefig(outdir+'/orbit_plot{}.pdf'.format(self.num_planets))
             else:
-                self.sub_planet()  # FINISH SUB_PLANET() 10/24/18
+                self.sub_planet()
                 run = False
             if self.num_planets >= self.max_planets:
                 run = False

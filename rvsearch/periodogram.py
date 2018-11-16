@@ -49,7 +49,7 @@ class Periodogram:
         self.basefactor = basefactor
         self.num_pers = num_pers
 
-        self.ecc = ecc
+        self.eccentric = eccentric
 
         if self.baseline == True:
             self.maxsearchP = self.basefactor * self.timelen
@@ -149,12 +149,7 @@ class Periodogram:
         self.post.params['tc{}'.format(self.num_known_planets+1)].vary = True
 
         power = np.zeros_like(self.pers)
-        ks = np.zeros_like(self.pers)
-        tcs = np.zeros_like(self.pers)
-        dvdts = np.zeros_like(self.pers)
-        curvs = np.zeros_like(self.pers)
-        jits = {tel:[] for tel in self.tels}
-        gammas = {tel:[] for tel in self.tels}
+        self.fit_params = []
 
         for i, per in enumerate(self.pers):
             if self.verbose:
@@ -163,31 +158,27 @@ class Periodogram:
             for k in self.default_pdict.keys():
                 self.post.params[k].value = self.default_pdict[k]
 
-            #Set new period, fix period, and fit a circular orbit.
+            #Set new period, and fit a circular orbit.
             perkey = 'per{}'.format(self.num_known_planets+1)
             self.post.params[perkey].value = per
-            #self.post.params[perkey].vary = False
 
             fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
+            #fit = utils.basin_fitting(self.post, verbose=False)
             power[i] = baseline_bic - fit.likelihood.bic()
-            ks[i] = fit.params['k{}'.format(self.num_known_planets+1)].value
-            tcs[i] = fit.params['tc{}'.format(self.num_known_planets+1)].value
-            dvdts[i] = fit.params['dvdt'].value
-            curvs[i] = fit.params['curv'].value
-            for tel in self.tels:
-                gammas[tel].append(fit.params['gamma_'+tel].value)
-                jits[tel].append(fit.params['jit_'+tel].value)
+
+            best_params = {}
+            for k in fit.params.keys():
+                best_params[k] = fit.params[k].value
+            self.fit_params.append(best_params)
+
+            if power[i] > 175:
+                pdb.set_trace()
+            elif power[i-1] > 175:
+                pdb.set_trace()
 
         fit_index = np.argmax(power)
-        self.best_per = self.pers[fit_index]
-        self.best_k = ks[fit_index]
-        self.best_tc = tcs[fit_index]
-        self.best_dvdt = dvdts[fit_index]
-        self.best_curv = curvs[fit_index]
+        self.bestfit_params = self.fit_params[fit_index]
         self.best_bic = power[fit_index]
-        self.best_gamma = {tel:gammas[tel][fit_index] for tel in self.tels}
-        self.best_jit = {tel:jits[tel][fit_index] for tel in self.tels}
-
         self.power['bic'] = power
 
     def ls(self):
