@@ -5,6 +5,11 @@ import numpy as np
 import scipy
 import pandas as pd
 import radvel
+try:
+	import cpsutils
+	from cpsutils import io
+except:
+	RuntimeError()
 
 
 """Functions for posterior modification (resetting parameters, intializing, etc.)
@@ -70,6 +75,10 @@ def initialize_post(data, params=None, priors=None):
 	if params == None:
 		params = radvel.Parameters(1, basis='per tc secosw sesinw logk')
 	iparams = radvel.basis._copy_params(params)
+
+	# Allow for time to be listed as 'time' or 'jd' (Julian Date).
+	if {'jd'}.issubset(data.columns):
+		data['time'] = data['jd']
 
 	#initialize RVModel
 	time_base = np.mean([data['time'].max(), data['time'].min()])
@@ -140,9 +149,8 @@ def read_from_csv(filename, verbose=True):
     data = pd.read_csv(filename)
     if 'tel' not in data.columns:
         if verbose:
-            print('Telescope type not given, defaulting to HIRES.')
-        data['tel'] = 'HIRES'
-        #Question: DO WE NEED TO CONFIRM VALID TELESCOPE TYPE?
+            print('Instrument types not given.')
+        data['tel'] = 'Inst.'
     return data
 
 def read_from_arrs(t, mnvel, errvel, tel=None, verbose=True):
@@ -150,8 +158,8 @@ def read_from_arrs(t, mnvel, errvel, tel=None, verbose=True):
     data['time'], data['mnvel'], data['errvel'] = t, mnvel, errvel
     if tel == None:
         if verbose:
-            print('Telescope type not given, defaulting to HIRES.')
-        data['tel'] = 'HIRES'
+            print('Instrument type not given.')
+        data['tel'] = 'Inst.'
     else:
         data['tel'] = tel
     return data

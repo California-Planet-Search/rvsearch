@@ -27,9 +27,12 @@ class Search(object):
     """
 
     def __init__(self, data, starname=None, max_planets=4, priors=None, crit='bic', fap=0.01,
-                 dvdt=True, curv=True, verbose=True):
+                 dvdt=True, curv=True, polish=False, mcmc=False, verbose=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
+            self.data = data
+            self.tels = np.unique(self.data['tel'].values)
+        elif {'jd', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
             self.tels = np.unique(self.data['tel'].values)
         else:
@@ -62,6 +65,9 @@ class Search(object):
         self.fap = fap
         self.dvdt = dvdt
         self.curv = curv
+
+        self.polish = polish
+        self.mcmc = mcmc
 
         self.verbose = verbose
 
@@ -201,15 +207,37 @@ class Search(object):
             self.post.params['secosw{}'.format(planet)].vary = True
             self.post.params['sesinw{}'.format(planet)].vary = True
 
+        if self.polish:
+            # Make a finer, narrow period grid.
+            polish_posts = []
+            polish_bics = []
+
+            perkey = 'per{}'.format(self.num_planets)
+            per = self.post.params[perkey].value
+            self.post.params[perkey].vary = False
+
+            mid_post = copy.deepcopy(self.post)
+            mid_post = radvel.fitting.maxlike_fitting(mid_post, verbose=False)
+            polish_posts.append(mid_post)
+            polish_bics.append(mid_post.likelihood.bic())
+
+            plus_post = copy.deepcopy(self.post)
+            plus_post.params[perkey].value += 0.001*per
+            plus_post = radvel.fitting.maxlike_fitting(plus_post, verbose=False)
+            polish_posts.append(plus_post)
+            polish_bics.append(plus_post.likelihood.bic())
+
+            minus_post = copy.deepcopy(self.post)
+            minus_post.params[perkey].value -= 0.001*per
+            minus_post = radvel.fitting.maxlike_fitting(minus_post, verbose=False)
+            polish_posts.append(minus_post)
+            polish_bics.append(minus_post.likelihood.bic())
+
+            self.post = polish_posts[np.argmin(polish_bics)]
+            self.post.params[perkey].vary = True
+
         self.post = radvel.fitting.maxlike_fitting(self.post, verbose=False)
-        '''
-        for planet in np.arange(1, self.num_planets+1):
-            self.post.params['per{}'.format(planet)].vary = False
-            self.post.params['k{}'.format(planet)].vary = False
-            self.post.params['tc{}'.format(planet)].vary = False
-            self.post.params['secosw{}'.format(planet)].vary = False
-            self.post.params['sesinw{}'.format(planet)].vary = False
-        '''
+
     def add_gp(self, inst=None):
         pass
 
@@ -252,6 +280,9 @@ class Search(object):
 
             perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
                                                num_known_planets=self.num_planets)
+            if self.num_planets == 0:
+                self.per_grid = perioder.pers
+
             t1 = time.process_time()
             perioder.per_bic()
             t2 = time.process_time()
@@ -266,6 +297,7 @@ class Search(object):
             perioder.plot_per()
             perioder.fig.savefig(outdir+'/dbic{}.pdf'.format(self.num_planets+1))
             self.all_posts.append(copy.deepcopy(self.post))
+
             if perioder.best_bic > perioder.bic_thresh:
                 self.num_planets += 1
                 for k in self.post.params.keys():

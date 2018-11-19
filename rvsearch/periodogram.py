@@ -81,7 +81,7 @@ class Periodogram:
         post = utils.initialize_post(data, params=params)
         return cls(post)
 
-    def per_spacing(self, oversampling=1, verbose=True):
+    def per_spacing(self, oversampling=1.5, verbose=True):
         """Get the number of sampled frequencies and return a period grid
 
         Condition for spacing: delta nu such that during the
@@ -161,20 +161,13 @@ class Periodogram:
             #Set new period, and fit a circular orbit.
             perkey = 'per{}'.format(self.num_known_planets+1)
             self.post.params[perkey].value = per
-
             fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
-            #fit = utils.basin_fitting(self.post, verbose=False)
             power[i] = baseline_bic - fit.likelihood.bic()
 
             best_params = {}
             for k in fit.params.keys():
                 best_params[k] = fit.params[k].value
             self.fit_params.append(best_params)
-
-            if power[i] > 175:
-                pdb.set_trace()
-            elif power[i-1] > 175:
-                pdb.set_trace()
 
         fit_index = np.argmax(power)
         self.bestfit_params = self.fit_params[fit_index]
