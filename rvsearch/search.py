@@ -200,42 +200,48 @@ class Search(object):
 
     def fit_orbit(self):
 
-        for planet in np.arange(1, self.num_planets+1):
-            self.post.params['per{}'.format(planet)].vary = True
-            self.post.params['k{}'.format(planet)].vary = True
-            self.post.params['tc{}'.format(planet)].vary = True
-            self.post.params['secosw{}'.format(planet)].vary = True
-            self.post.params['sesinw{}'.format(planet)].vary = True
+        #for planet in np.arange(1, self.num_planets+1):
+        #self.post.params['per{}'.format(planet)].vary = True
+        #self.post.params['k{}'.format(self.num_planets)].vary = True
+        #self.post.params['tc{}'.format(self.num_planets)].vary = True
+        self.post.params['secosw{}'.format(self.num_planets)].vary = True
+        self.post.params['sesinw{}'.format(self.num_planets)].vary = True
 
         if self.polish:
             # Make a finer, narrow period grid.
-            polish_posts = []
+            default_pdict = {}
+            for k in self.post.params.keys():
+                default_pdict[k] = self.post.params[k].value
+
+            polish_params = []
             polish_bics = []
+            peak = np.argmax(self.periodograms[-1])
+            subgrid = np.linspace((self.pers[peak]+self.pers[peak-1])/2.,
+                                (self.pers[peak]+self.pers[peak+1])/2., 5)
+            fit_params = []
+            power = []
 
-            perkey = 'per{}'.format(self.num_planets)
-            per = self.post.params[perkey].value
-            self.post.params[perkey].vary = False
+            for i, per in enumerate(subgrid):
+                for k in self.default_pdict.keys():
+                    self.post.params[k].value = default_pdict[k]
+                perkey = 'per{}'.format(self.num_planets)
+                self.post.params[perkey].value = per
 
-            mid_post = copy.deepcopy(self.post)
-            mid_post = radvel.fitting.maxlike_fitting(mid_post, verbose=False)
-            polish_posts.append(mid_post)
-            polish_bics.append(mid_post.likelihood.bic())
+                fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
+                power.append(-fit.likelihood.bic())
 
-            plus_post = copy.deepcopy(self.post)
-            plus_post.params[perkey].value += 0.001*per
-            plus_post = radvel.fitting.maxlike_fitting(plus_post, verbose=False)
-            polish_posts.append(plus_post)
-            polish_bics.append(plus_post.likelihood.bic())
+                best_params = {}
+                for k in fit.params.keys():
+                    best_params[k] = fit.params[k].value
+                fit_params.append(best_params)
 
-            minus_post = copy.deepcopy(self.post)
-            minus_post.params[perkey].value -= 0.001*per
-            minus_post = radvel.fitting.maxlike_fitting(minus_post, verbose=False)
-            polish_posts.append(minus_post)
-            polish_bics.append(minus_post.likelihood.bic())
+            fit_index = np.argmax(power)
+            bestfit_params = fit_params[fit_index]
 
-            self.post = polish_posts[np.argmin(polish_bics)]
-            self.post.params[perkey].vary = True
+            for k in self.post.params.keys():
+                self.post.params[k].value = bestfit_params[k]
 
+        self.post.params['per{}'.format(self.num_planets)].vary = True
         self.post = radvel.fitting.maxlike_fitting(self.post, verbose=False)
 
     def add_gp(self, inst=None):
@@ -291,7 +297,7 @@ class Search(object):
             self.periodograms.append(perioder.power[self.crit])
             self.bic_threshes.append(perioder.bic_thresh)
             if self.num_planets == 0:
-                self.per_grid = perioder.pers
+                self.pers = perioder.pers
 
             perioder.eFAP_thresh(fap=self.fap)
             perioder.plot_per()

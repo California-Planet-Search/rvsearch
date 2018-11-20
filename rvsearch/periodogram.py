@@ -18,13 +18,13 @@ class Periodogram:
         minsearchp (float): minimum search period
         maxsearchp (float): maximum search period
         num_known_planets (int): Assume this many known planets in the system and search for one more
-        num_pers (int): (optional) number of frequencies to test
-            [default = calculated via rvsearch.periodograms.freq_spacing]
+        num_pers (int): (optional) number of frequencies to test, calculated by default by freq_spacing.
+        m
     """
 
-    def __init__(self, post, basebic=None, num_known_planets=0, minsearchp=100, maxsearchp=10000,
-                 baseline=True, basefactor=4., num_pers=None, eccentric=False, search_pars=['per'],
-                 valid_types = ['bic', 'aic', 'ls'], verbose=True):
+    def __init__(self, post, basebic=None, num_known_planets=0, minsearchp=10, maxsearchp=10000,
+                 baseline=True, basefactor=4., oversampling=1, fap=0.01, num_pers=None, eccentric=False,
+                 search_pars=['per'], valid_types = ['bic', 'aic', 'ls'], verbose=True):
         self.post = copy.deepcopy(post)
         self.default_pdict = {}
         for k in post.params.keys():
@@ -47,6 +47,8 @@ class Periodogram:
         self.maxsearchP = maxsearchp
         self.baseline = baseline
         self.basefactor = basefactor
+        self.oversampling = oversampling
+        self.fap = fap
         self.num_pers = num_pers
 
         self.eccentric = eccentric
@@ -81,7 +83,7 @@ class Periodogram:
         post = utils.initialize_post(data, params=params)
         return cls(post)
 
-    def per_spacing(self, oversampling=1.5, verbose=True):
+    def per_spacing(self, verbose=True):
         """Get the number of sampled frequencies and return a period grid
 
         Condition for spacing: delta nu such that during the
@@ -100,7 +102,7 @@ class Periodogram:
 
         dnu       = 1. / (4. * self.timelen)
         num_freq  = int((fmax - fmin) / dnu + 1)
-        num_freq *= oversampling
+        num_freq *= self.oversampling
         num_freq  = int(num_freq)
 
         if verbose:
@@ -183,7 +185,7 @@ class Periodogram:
         power = periodogram.power(self.freqs)
         self.power['ls'] = power
 
-    def eFAP_thresh(self, fap=0.01):
+    def eFAP_thresh(self):
         """Calculate the threshold for significance based on BJ's eFAP algorithm
         From Lea's code. LOMB-S OPTION?
         """
@@ -201,7 +203,8 @@ class Periodogram:
         xmod = np.linspace(np.min(sBIC[np.isfinite(sBIC)]), 10.*np.max(sBIC), 10000)
         lfit = 10.**func(xmod)
         fap_min = 10.**func(sBIC[-1])*self.num_pers
-        thresh = xmod[np.where(np.abs(lfit-fap/self.num_pers) == np.min(np.abs(lfit-fap/self.num_pers)))]
+        thresh = xmod[np.where(np.abs(lfit-self.fap/self.num_pers) ==
+                        np.min(np.abs(lfit-self.fap/self.num_pers)))]
         self.bic_thresh = thresh
 
     def save_per(self, ls=False):
@@ -229,11 +232,11 @@ class Periodogram:
 
         # If DBIC threshold has been calculated, plot.
         if self.bic_thresh is not None:
-            ax.axhline(self.bic_thresh, ls=':', c='y', label=r'$\Delta$BIC threshold')
+            ax.axhline(self.bic_thresh, ls=':', c='y', label='{} FAP'.format(self.fap))
             upper = 1.1*max(np.amax(self.power['bic']), self.bic_thresh)
             ax.set_ylim([np.amin(self.power['bic']), upper])
         else:
-            ax.set_ylim([np.amin(self.power['bic']), 1.05*np.amax(self.power['bic'])])
+            ax.set_ylim([np.amin(self.power['bic']), 1.1*np.amax(self.power['bic'])])
         ax.set_xlim([self.pers[0], self.pers[-1]])
 
         if alias:
@@ -243,9 +246,9 @@ class Periodogram:
             for i in np.arange(3):
                 f_ap = 1./alias[i] + f_real
                 f_am = 1./alias[i] - f_real
-                ax.axvline(1./f_am, linestyle='--', c=colors[i], alpha=0.75,
+                ax.axvline(1./f_am, linestyle='--', c=colors[i], alpha=0.5,
                            label='{} day alias'.format(np.round(alias[i], decimals=1)))
-                ax.axvline(1./f_ap, linestyle='--', c=colors[i], alpha=0.75)
+                ax.axvline(1./f_ap, linestyle='--', c=colors[i], alpha=0.5)
 
         ax.legend(loc=0)
         ax.set_xscale('log')
@@ -258,33 +261,3 @@ class Periodogram:
         if save:
             # FINISH THIS, WRITE NAMING PROCEDURE
             fig.savefig('dbic{}.pdf'.format(self.num_known_planets+1))
-
-
-# TO-DO: MOVE THIS INTO CLASS STRUCTURE, OR REMOVE IF UNNECESSARY
-def setup_posterior(post, num_known_planets):
-    """Setup radvel.posterior.Posterior object
-
-    Prepare posterior object for periodogram calculations. Fix values for previously-known planets.
-
-    Args:
-        post (radvel.posterior.Posterior): RadVel posterior object. Can be initialized from setup file or loaded
-            from a RadVel fit.
-        num_known_planets (int): Number of previously known planets. Parameters for these planets will be fixed.
-
-    Returns:
-        tuple: (radvel.posterior object used as baseline fit, radvel.posterior used in search)
-    """
-    basis_pars = post.likelihood.params.basis.name.split()
-
-    for i in range(1, post.params.num_planets + 1):
-        for par in basis_pars:
-            parname = "{}{}".format(par, i)
-            post.params[parname].vary = False
-
-            if par == 'k':
-                post.params[parname].value = 0.0
-            elif par == 'logk':
-                post.params[parname].value = -9
-
-    # return (base_post, search_post)
-    return search_post
