@@ -199,29 +199,28 @@ class Search(object):
         self.post = new_post
 
     def fit_orbit(self):
-
-        #for planet in np.arange(1, self.num_planets+1):
-        #self.post.params['per{}'.format(planet)].vary = True
-        #self.post.params['k{}'.format(self.num_planets)].vary = True
-        #self.post.params['tc{}'.format(self.num_planets)].vary = True
-        self.post.params['secosw{}'.format(self.num_planets)].vary = True
-        self.post.params['sesinw{}'.format(self.num_planets)].vary = True
+        for planet in np.arange(1, self.num_planets+1):
+            self.post.params['per{}'.format(planet)].vary = True
+            self.post.params['k{}'.format(self.num_planets)].vary = True
+            self.post.params['tc{}'.format(self.num_planets)].vary = True
+            self.post.params['secosw{}'.format(self.num_planets)].vary = True
+            self.post.params['sesinw{}'.format(self.num_planets)].vary = True
 
         if self.polish:
             # Make a finer, narrow period grid.
+            self.post.params['per{}'.format(self.num_planets)].vary = False
             default_pdict = {}
             for k in self.post.params.keys():
                 default_pdict[k] = self.post.params[k].value
-
             polish_params = []
             polish_bics = []
             peak = np.argmax(self.periodograms[-1])
             subgrid = np.linspace((self.pers[peak]+self.pers[peak-1])/2.,
-                                (self.pers[peak]+self.pers[peak+1])/2., 5)
+                                (self.pers[peak]+self.pers[peak+1])/2., 7) # Justify 7
             fit_params = []
             power = []
 
-            for i, per in enumerate(subgrid):
+            for per in subgrid:
                 for k in self.default_pdict.keys():
                     self.post.params[k].value = default_pdict[k]
                 perkey = 'per{}'.format(self.num_planets)
@@ -237,11 +236,10 @@ class Search(object):
 
             fit_index = np.argmax(power)
             bestfit_params = fit_params[fit_index]
-
             for k in self.post.params.keys():
                 self.post.params[k].value = bestfit_params[k]
+            self.post.params['per{}'.format(self.num_planets)].vary = True
 
-        self.post.params['per{}'.format(self.num_planets)].vary = True
         self.post = radvel.fitting.maxlike_fitting(self.post, verbose=False)
 
     def add_gp(self, inst=None):
@@ -264,7 +262,7 @@ class Search(object):
         pass
 
     def save_all_posts(self):
-        # Pickle the list of posteriors for each nth planet model
+        # Pickle the list of posteriors fogr each nth planet model
         pass
 
     def run_search(self):

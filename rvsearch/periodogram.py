@@ -259,5 +259,4 @@ class Periodogram:
         # Store figure as object attribute, make separate saving functionality?
         self.fig = fig
         if save:
-            # FINISH THIS, WRITE NAMING PROCEDURE
             fig.savefig('dbic{}.pdf'.format(self.num_known_planets+1))

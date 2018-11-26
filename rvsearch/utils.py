@@ -54,8 +54,8 @@ def initialize_default_pars(instnames=['HIRES'], fitting_basis='per tc secosw se
 
     params['secosw1'].vary = False
     params['sesinw1'].vary = False
-    # params['k1'].vary = False
     params['per1'].vary = False
+    # params['k1'].vary = False
     # params['tc1'].vary = False
 
     return params
