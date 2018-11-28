@@ -10,9 +10,8 @@ import radvel
 import radvel.fitting
 from radvel.plot import orbit_plots
 
-import periodogram, utils
-# import rvsearch.periodogram as periodogram
-# import rvsearch.utils as utils
+import rvsearch.periodogram as periodogram
+import rvsearch.utils as utils
 
 
 class Search(object):
@@ -27,7 +26,7 @@ class Search(object):
     """
 
     def __init__(self, data, starname=None, max_planets=4, priors=None, crit='bic', fap=0.01,
-                 dvdt=True, curv=True, polish=False, mcmc=False, verbose=True):
+                 dvdt=True, curv=True, fix=False, polish=True, mcmc=False, verbose=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
@@ -66,6 +65,7 @@ class Search(object):
         self.dvdt = dvdt
         self.curv = curv
 
+        self.fix = fix
         self.polish = polish
         self.mcmc = mcmc
 
@@ -207,7 +207,7 @@ class Search(object):
             self.post.params['sesinw{}'.format(self.num_planets)].vary = True
 
         if self.polish:
-            # Make a finer, narrow period grid.
+            # Make a finer, narrow period grid, and search with eccentricity free.
             self.post.params['per{}'.format(self.num_planets)].vary = False
             default_pdict = {}
             for k in self.post.params.keys():
@@ -216,12 +216,12 @@ class Search(object):
             polish_bics = []
             peak = np.argmax(self.periodograms[-1])
             subgrid = np.linspace((self.pers[peak]+self.pers[peak-1])/2.,
-                                (self.pers[peak]+self.pers[peak+1])/2., 7) # Justify 7
+                                (self.pers[peak]+self.pers[peak+1])/2., 5) # Justify 7
             fit_params = []
             power = []
 
             for per in subgrid:
-                for k in self.default_pdict.keys():
+                for k in default_pdict.keys():
                     self.post.params[k].value = default_pdict[k]
                 perkey = 'per{}'.format(self.num_planets)
                 self.post.params[perkey].value = per
@@ -241,6 +241,13 @@ class Search(object):
             self.post.params['per{}'.format(self.num_planets)].vary = True
 
         self.post = radvel.fitting.maxlike_fitting(self.post, verbose=False)
+        if self.fix:
+            for planet in np.arange(1, self.num_planets+1):
+                self.post.params['per{}'.format(planet)].vary = False
+                self.post.params['k{}'.format(self.num_planets)].vary = False
+                self.post.params['tc{}'.format(self.num_planets)].vary = False
+                self.post.params['secosw{}'.format(self.num_planets)].vary = False
+                self.post.params['sesinw{}'.format(self.num_planets)].vary = False
 
     def add_gp(self, inst=None):
         pass
@@ -249,7 +256,8 @@ class Search(object):
         try:
             pass
         except:
-            raise RuntimeError('Model contains fewer than {} Gaussian processes.'.format(num_gps))
+            raise RuntimeError('Model contains fewer than {} Gaussian processes.'
+                                .format(num_gps))
 
     def save(self, filename=None):
         if filename is not None:
@@ -283,24 +291,21 @@ class Search(object):
                 self.add_planet()
 
             perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
-                                               num_known_planets=self.num_planets)
-            if self.num_planets == 0:
-                self.per_grid = perioder.pers
-
+                                               num_known_planets=self.num_planets,
+                                               fap=self.fap)
             t1 = time.process_time()
             perioder.per_bic()
             t2 = time.process_time()
             print('Time = {} seconds'.format(t2 - t1))
 
             self.periodograms.append(perioder.power[self.crit])
-            self.bic_threshes.append(perioder.bic_thresh)
             if self.num_planets == 0:
                 self.pers = perioder.pers
 
-            perioder.eFAP_thresh(fap=self.fap)
+            perioder.eFAP_thresh()
+            self.bic_threshes.append(perioder.bic_thresh)
             perioder.plot_per()
             perioder.fig.savefig(outdir+'/dbic{}.pdf'.format(self.num_planets+1))
-            self.all_posts.append(copy.deepcopy(self.post))
 
             if perioder.best_bic > perioder.bic_thresh:
                 self.num_planets += 1
@@ -308,6 +313,7 @@ class Search(object):
                     self.post.params[k].value = perioder.bestfit_params[k]
 
                 self.fit_orbit()
+                self.all_posts.append(copy.deepcopy(self.post))
                 self.basebic = self.post.bic()
                 rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+
                                                     '/orbit_plot{}.pdf'.format(self.num_planets))
@@ -315,6 +321,48 @@ class Search(object):
                 multiplot_fig.savefig(outdir+'/orbit_plot{}.pdf'.format(self.num_planets))
             else:
                 self.sub_planet()
+                run = False
+            if self.num_planets >= self.max_planets:
+                run = False
+
+        self.save(filename=outdir+'/post_final.pkl')
+
+
+    def run_search_ls(self):
+        outdir = os.path.join(os.getcwd(), self.starname)
+        if not os.path.exists(outdir):
+            os.mkdir(outdir)
+
+        run = True
+        while run:
+            if self.num_planets != 0:
+                self.add_planet(ls=True) # Subtract fit from data, add_planet() equivalent.
+
+            perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
+                                               num_known_planets=self.num_planets,
+                                               fap=self.fap)
+            perioder.ls()
+            self.periodograms.append(perioder.power['ls'])
+            if self.num_planets == 0:
+                self.pers = perioder.pers
+
+            perioder.eFAP_thresh(ls=True)
+            perioder.plot_per(ls=True)
+            perioder.fig.savefig(outdir+'/lombs{}.pdf'.format(self.num_planets+1))
+
+            if np.amax(perioder.power['ls']) > perioder.ls_thresh:
+                self.num_planets += 1
+                for k in self.post.params.keys():
+                    self.post.params[k].value = perioder.bestfit_params[k]
+
+                self.fit_orbit()
+                self.all_posts.append(copy.deepcopy(self.post))
+                rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+
+                                                    '/orbit_plot{}.pdf'.format(self.num_planets))
+                multiplot_fig, ax_list = rvplot.plot_multipanel()
+                multiplot_fig.savefig(outdir+'/orbit_plot{}.pdf'.format(self.num_planets))
+            else:
+                self.sub_planet(ls=True)
                 run = False
             if self.num_planets >= self.max_planets:
                 run = False

@@ -6,8 +6,8 @@ import astropy.stats
 import radvel
 import radvel.fitting
 
-import utils
-# import rvsearch.utils
+# import utils
+import rvsearch.utils as utils
 
 
 class Periodogram:
@@ -23,15 +23,16 @@ class Periodogram:
     """
 
     def __init__(self, post, basebic=None, num_known_planets=0, minsearchp=10, maxsearchp=10000,
-                 baseline=True, basefactor=4., oversampling=1, fap=0.01, num_pers=None, eccentric=False,
-                 search_pars=['per'], valid_types = ['bic', 'aic', 'ls'], verbose=True):
+                 baseline=True, basefactor=4., oversampling=1, fap=0.01, num_pers=None,
+                 eccentric=False, valid_types = ['bic', 'aic', 'ls'], verbose=True):
         self.post = copy.deepcopy(post)
         self.default_pdict = {}
         for k in post.params.keys():
             self.default_pdict[k] = self.post.params[k].value
 
         self.basebic = basebic
-        self.num_known_planets = num_known_planets
+        # self.num_known_planets = num_known_planets
+        self.num_known_planets = self.post.params.num_planets - 1
 
         self.times = self.post.likelihood.x
         self.vel = self.post.likelihood.y
@@ -56,7 +57,7 @@ class Periodogram:
         if self.baseline == True:
             self.maxsearchP = self.basefactor * self.timelen
 
-        self.search_pars = search_pars
+        # self.search_pars = search_pars
         self.valid_types = valid_types
         self.power = {key: None for key in self.valid_types}
 
@@ -122,13 +123,11 @@ class Periodogram:
         self.freqs = 1/self.pers
 
     def per_bic(self):
-        #BJ's method. Remove once final BIC/AIC method is established.
         """Compute delta-BIC periodogram. ADD: crit is BIC or AIC.
         """
 
         print("Calculating BIC periodogram")
-        # This assumes nth planet parameters, and all periods, were locked in.
-        # SET ALL PARS TO BE FIXED, EXCEPT gamma, jitter, dvdt, curv
+        # This assumes nth planet parameters, and all periods, are fixed.
         if self.basebic is None:
             self.post.params['per1'].vary = False
             self.post.params['tc1'].vary = False
@@ -141,12 +140,12 @@ class Periodogram:
         rms = np.std(self.post.likelihood.residuals())
         self.default_pdict['k{}'.format(self.post.params.num_planets)] = rms
 
-        # Allow amplitude and time offset to vary, fix eccentricity and period.
+        # Allow amplitude and time offset to vary, fix eccentricity (if set) and period.
         self.post.params['per{}'.format(self.num_known_planets+1)].vary = False
         if self.eccentric == False:
             self.post.params['secosw{}'.format(self.num_known_planets+1)].vary = False
             self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary = False
-
+            
         self.post.params['k{}'.format(self.num_known_planets+1)].vary = True
         self.post.params['tc{}'.format(self.num_known_planets+1)].vary = True
 
@@ -166,6 +165,7 @@ class Periodogram:
             fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
             power[i] = baseline_bic - fit.likelihood.bic()
 
+            # Append the best-fit parameters to the period-iterated list.
             best_params = {}
             for k in fit.params.keys():
                 best_params[k] = fit.params[k].value
@@ -182,7 +182,7 @@ class Periodogram:
         #FOR TESTING
         print("Calculating Lomb-Scargle periodogram")
         periodogram = astropy.stats.LombScargle(self.times, self.vel, self.errvel)
-        power = periodogram.power(self.freqs)
+        power = periodogram.power(np.flip(self.freqs))
         self.power['ls'] = power
 
     def eFAP_thresh(self):
@@ -210,7 +210,7 @@ class Periodogram:
     def save_per(self, ls=False):
         if ls==False:
             try:
-                # FIX THIS; SPECIFY DIRECTORY/NAME, NUMBER OF PLANETS IN FILENAME, AND ARRAY ORDERING
+                # TO-DO: SPECIFY DIRECTORY/NAME, NUMBER OF PLANETS IN FILENAME, AND ARRAY ORDERING
                 np.savetxt((self.pers, self.power['bic']), filename='BIC_periodogram.csv')
             except:
                 print('Have not generated a delta-BIC periodogram.')
