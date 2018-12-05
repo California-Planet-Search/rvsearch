@@ -4,6 +4,7 @@ import os
 import copy
 import time
 import pdb
+import pickle
 
 import numpy as np
 import radvel
@@ -15,14 +16,14 @@ import rvsearch.utils as utils
 
 
 class Search(object):
-    """Class to initialize and modify posteriors as planet search runs,
-    send to Periodogram class for periodogram and IC-threshold calculations.
+    """Class to initialize and modify posteriors as planet search runs.
 
     Args:
         data: pandas dataframe containing times, velocities,  errors, and instrument names.
         params: List of radvel parameter objects.
         priors: List of radvel prior objects.
         aic: if True, use Akaike information criterion instead of BIC. STILL WORKING ON THIS
+
     """
 
     def __init__(self, data, starname=None, max_planets=4, priors=None, crit='bic', fap=0.01,
@@ -73,7 +74,7 @@ class Search(object):
 
         self.basebic = None
 
-        self.per_grid = None
+        self.pers = None
         self.periodograms = []
         self.bic_threshes = []
 
@@ -157,11 +158,14 @@ class Search(object):
         new_params.num_planets = new_num_planets
 
         # priors = [radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0) for inst in self.tels]
-        priors = []
-        priors.append(radvel.prior.PositiveKPrior(new_num_planets))
-        priors.append(radvel.prior.EccentricityPrior(new_num_planets))
-
-        new_post = utils.initialize_post(self.data, new_params, priors)
+        # TO-DO: Figure out how to handle jitter prior, whether needed
+        if self.priors is not None:
+            new_post = utils.initialize_post(self.data, new_params, self.priors)
+        else:
+            priors = []
+            priors.append(radvel.prior.PositiveKPrior(new_num_planets))
+            priors.append(radvel.prior.EccentricityPrior(new_num_planets))
+            new_post = utils.initialize_post(self.data, new_params, priors)
         self.post = new_post
 
     def sub_planet(self):
@@ -180,8 +184,9 @@ class Search(object):
                 parkey = par + str(planet)
                 new_params[parkey] = self.post.params[parkey]
 
+        # Add gamma and jitter params to the dictionary.
         for par in self.post.likelihood.extra_params:
-            new_params[par] = self.post.params[par]  # For gamma and jitter
+            new_params[par] = self.post.params[par]
 
         new_params['dvdt'] = self.post.params['dvdt']
         new_params['curv'] = self.post.params['curv']
@@ -216,7 +221,7 @@ class Search(object):
             polish_bics = []
             peak = np.argmax(self.periodograms[-1])
             subgrid = np.linspace((self.pers[peak]+self.pers[peak-1])/2.,
-                                (self.pers[peak]+self.pers[peak+1])/2., 5) # Justify 7
+                                (self.pers[peak]+self.pers[peak+1])/2., 5) # Justify 5
             fit_params = []
             power = []
 
@@ -291,12 +296,13 @@ class Search(object):
                 self.add_planet()
 
             perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
-                                               num_known_planets=self.num_planets,
-                                               fap=self.fap)
+                                               fap=self.fap, verbose=self.verbose)
+                                               #num_known_planets=self.num_planets,
             t1 = time.process_time()
             perioder.per_bic()
             t2 = time.process_time()
-            print('Time = {} seconds'.format(t2 - t1))
+            if self.verbose:
+                print('Time = {} seconds'.format(t2 - t1))
 
             self.periodograms.append(perioder.power[self.crit])
             if self.num_planets == 0:
@@ -316,7 +322,7 @@ class Search(object):
                 self.all_posts.append(copy.deepcopy(self.post))
                 self.basebic = self.post.bic()
                 rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+
-                                                    '/orbit_plot{}.pdf'.format(self.num_planets))
+                                    '/orbit_plot{}.pdf'.format(self.num_planets))
                 multiplot_fig, ax_list = rvplot.plot_multipanel()
                 multiplot_fig.savefig(outdir+'/orbit_plot{}.pdf'.format(self.num_planets))
             else:
@@ -326,7 +332,12 @@ class Search(object):
                 run = False
 
         self.save(filename=outdir+'/post_final.pkl')
+        pickle_out = open(outdir+'/all_posts.pkl','wb')
+        pickle.dump(self.all_posts, pickle_out)
+        pickle_out.close()
 
+        periodograms_plus_pers = np.append([self.pers], self.periodograms, axis=0)
+        np.savetxt(outdir+'/pers_and_periodograms.csv', periodograms_plus_pers)
 
     def run_search_ls(self):
         outdir = os.path.join(os.getcwd(), self.starname)
@@ -340,7 +351,7 @@ class Search(object):
 
             perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
                                                num_known_planets=self.num_planets,
-                                               fap=self.fap)
+                                               fap=self.fap, verbose=self.verbose)
             perioder.ls()
             self.periodograms.append(perioder.power['ls'])
             if self.num_planets == 0:

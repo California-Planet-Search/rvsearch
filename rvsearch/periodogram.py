@@ -17,12 +17,14 @@ class Periodogram:
         posterior (radvel.Posterior): radvel.Posterior object
         minsearchp (float): minimum search period
         maxsearchp (float): maximum search period
-        num_known_planets (int): Assume this many known planets in the system and search for one more
-        num_pers (int): (optional) number of frequencies to test, calculated by default by freq_spacing.
-        m
+        num_known_planets (int): Assume this many known planets in the system
+            and search for one more
+        num_pers (int): (optional) number of frequencies to test, calculated by
+            default by freq_spacing.
+
     """
 
-    def __init__(self, post, basebic=None, num_known_planets=0, minsearchp=10, maxsearchp=10000,
+    def __init__(self, post, basebic=None, minsearchp=10, maxsearchp=10000,
                  baseline=True, basefactor=4., oversampling=1, fap=0.01, num_pers=None,
                  eccentric=False, valid_types = ['bic', 'aic', 'ls'], verbose=True):
         self.post = copy.deepcopy(post)
@@ -31,7 +33,6 @@ class Periodogram:
             self.default_pdict[k] = self.post.params[k].value
 
         self.basebic = basebic
-        # self.num_known_planets = num_known_planets
         self.num_known_planets = self.post.params.num_planets - 1
 
         self.times = self.post.likelihood.x
@@ -85,7 +86,7 @@ class Periodogram:
         return cls(post)
 
     def per_spacing(self, verbose=True):
-        """Get the number of sampled frequencies and return a period grid
+        """Get the number of sampled frequencies and return a period grid.
 
         Condition for spacing: delta nu such that during the
         entire duration of observations, phase slip is no more than P/4
@@ -96,6 +97,7 @@ class Periodogram:
 
         Returns:
             array: Array of test periods
+
         """
 
         fmin = 1. / self.maxsearchP
@@ -124,9 +126,10 @@ class Periodogram:
 
     def per_bic(self):
         """Compute delta-BIC periodogram. ADD: crit is BIC or AIC.
-        """
 
-        print("Calculating BIC periodogram")
+        """
+        if self.verbose:
+            print("Calculating BIC periodogram")
         # This assumes nth planet parameters, and all periods, are fixed.
         if self.basebic is None:
             self.post.params['per1'].vary = False
@@ -145,7 +148,7 @@ class Periodogram:
         if self.eccentric == False:
             self.post.params['secosw{}'.format(self.num_known_planets+1)].vary = False
             self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary = False
-            
+
         self.post.params['k{}'.format(self.num_known_planets+1)].vary = True
         self.post.params['tc{}'.format(self.num_known_planets+1)].vary = True
 
@@ -178,6 +181,7 @@ class Periodogram:
 
     def ls(self):
         """Astropy Lomb-Scargle periodogram.
+
         """
         #FOR TESTING
         print("Calculating Lomb-Scargle periodogram")
@@ -186,8 +190,8 @@ class Periodogram:
         self.power['ls'] = power
 
     def eFAP_thresh(self):
-        """Calculate the threshold for significance based on BJ's eFAP algorithm
-        From Lea's code. LOMB-S OPTION?
+        """Calculate the threshold for significance based on BJ's eFAP algorithm.
+
         """
         # select out intermediate values of BIC, median - 95%
         sBIC = np.sort(self.power['bic'])
@@ -206,6 +210,7 @@ class Periodogram:
         thresh = xmod[np.where(np.abs(lfit-self.fap/self.num_pers) ==
                         np.min(np.abs(lfit-self.fap/self.num_pers)))]
         self.bic_thresh = thresh
+        #self.bic_thresh = np.amax(thresh, 30)
 
     def save_per(self, ls=False):
         if ls==False:

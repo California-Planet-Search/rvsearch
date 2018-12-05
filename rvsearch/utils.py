@@ -21,11 +21,11 @@ def reset_params(post, default_pdict):
 		post.params[k].value = default_pdict[k]
 	return post
 
-def initialize_default_pars(instnames=['HIRES'], fitting_basis='per tc secosw sesinw k'):
-    """Set up a default Parameters object. None of the basis values are free params,
-    for the initial 0-planet fit. Remember to reset .vary to True for all relevant params.
+def initialize_default_pars(instnames=['inst'], fitting_basis='per tc secosw sesinw k'):
+    """Set up a default Parameters object.
 
-    To be used when first starting planet search, with no known planets.
+	None of the basis values are free params, for the initial 0-planet fit.
+	Remember to reset .vary to True for all relevant params.
 
     Args:
         instnames (list): codes of instruments used
@@ -55,8 +55,6 @@ def initialize_default_pars(instnames=['HIRES'], fitting_basis='per tc secosw se
     params['secosw1'].vary = False
     params['sesinw1'].vary = False
     params['per1'].vary = False
-    # params['k1'].vary = False
-    # params['tc1'].vary = False
 
     return params
 
@@ -110,6 +108,17 @@ def initialize_post(data, params=None, priors=None):
 		post.priors = priors
 
 	return post
+
+def window(time, freqs, plot=False):
+	"""Function to generate, and possibly plot, the window function of observations.
+	Args:
+		time: times of observations in a dataset. FOR SEPARATE TELESCOPES?
+	"""
+	W = np.zeros(len(freqs))
+	for i, freq in enumerate(freqs):
+		W[i] = np.sum(np.exp(-2*np.pi*1j*time*freq))
+	W /= float(len(freq))
+	return W
 
 """Testing fitting options besides scipy.optimize.minimize. Just other methods
 and basinhopping for now, eventually partial/full linearization.
