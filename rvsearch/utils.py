@@ -2,8 +2,14 @@
 import pdb
 
 import numpy as np
+import scipy
 import pandas as pd
 import radvel
+try:
+	import cpsutils
+	from cpsutils import io
+except:
+	RuntimeError()
 
 
 """Functions for posterior modification (resetting parameters, intializing, etc.)
@@ -15,11 +21,11 @@ def reset_params(post, default_pdict):
 		post.params[k].value = default_pdict[k]
 	return post
 
-def initialize_default_pars(instnames=['HIRES'], fitting_basis='per tc secosw sesinw k'):
-    """Set up a default Parameters object. None of the basis values are free params,
-    for the initial 0-planet fit. Remember to reset .vary to True for all relevant params.
+def initialize_default_pars(instnames=['inst'], fitting_basis='per tc secosw sesinw k'):
+    """Set up a default Parameters object.
 
-    To be used when first starting planet search, with no known planets.
+	None of the basis values are free params, for the initial 0-planet fit.
+	Remember to reset .vary to True for all relevant params.
 
     Args:
         instnames (list): codes of instruments used
@@ -48,9 +54,7 @@ def initialize_default_pars(instnames=['HIRES'], fitting_basis='per tc secosw se
 
     params['secosw1'].vary = False
     params['sesinw1'].vary = False
-    # params['k1'].vary = False
     params['per1'].vary = False
-    # params['tc1'].vary = False
 
     return params
 
@@ -69,6 +73,10 @@ def initialize_post(data, params=None, priors=None):
 	if params == None:
 		params = radvel.Parameters(1, basis='per tc secosw sesinw logk')
 	iparams = radvel.basis._copy_params(params)
+
+	# Allow for time to be listed as 'time' or 'jd' (Julian Date).
+	if {'jd'}.issubset(data.columns):
+		data['time'] = data['jd']
 
 	#initialize RVModel
 	time_base = np.mean([data['time'].max(), data['time'].min()])
@@ -101,15 +109,57 @@ def initialize_post(data, params=None, priors=None):
 
 	return post
 
+def window(time, freqs, plot=False):
+	"""Function to generate, and possibly plot, the window function of observations.
+	Args:
+		time: times of observations in a dataset. FOR SEPARATE TELESCOPES?
+	"""
+	W = np.zeros(len(freqs))
+	for i, freq in enumerate(freqs):
+		W[i] = np.sum(np.exp(-2*np.pi*1j*time*freq))
+	W /= float(len(freq))
+	return W
+
+"""Testing fitting options besides scipy.optimize.minimize. Just other methods
+and basinhopping for now, eventually partial/full linearization.
+"""
+def basin_fitting(post, verbose=True, minimizer_kwargs={'method':'Powell', 'options':dict(xtol=1e-8,maxiter=200,maxfev=100000)}): #options=dict(xtol=1e-8,maxiter=200,maxfev=100000):
+	"""Maximum likelihood fitting, with an annealing method.
+
+	Args:
+        post (radvel.Posterior): Posterior object with initial guesses
+        verbose (bool [optional]): Print messages and fitted values?
+        method (string [optional]): Minimization method. See documentation for `scipy.optimize.minimize` for available
+            options.
+
+	Returns:
+		radvel.Posterior: Posterior object with parameters
+		updated to their maximum likelihood values.
+	"""
+	if verbose:
+		print('Initial loglikelihood = %f' % post.logprob())
+		print("Performing maximum likelihood fit...")
+
+	res = scipy.optimize.basinhopping(post.neglogprob_array, post.get_vary_params(),
+										minimizer_kwargs=minimizer_kwargs)
+	synthparams = post.params.basis.to_synth(post.params, noVary = True)
+	post.params.update(synthparams)
+
+	if verbose:
+		print("Final loglikelihood = %f" % post.logprob())
+		print("Best-fit parameters:")
+		print(post)
+
+	return post
+
 """Series of functions for reading data from various sources into pandas dataframes.
 """
 def read_from_csv(filename, verbose=True):
     data = pd.read_csv(filename)
     if 'tel' not in data.columns:
         if verbose:
-            print('Telescope type not given, defaulting to HIRES.')
-        data['tel'] = 'HIRES'
-        #Question: DO WE NEED TO CONFIRM VALID TELESCOPE TYPE?
+            print('Instrument types not given.')
+        data['tel'] = 'Inst.'
     return data
 
 def read_from_arrs(t, mnvel, errvel, tel=None, verbose=True):
@@ -117,8 +167,8 @@ def read_from_arrs(t, mnvel, errvel, tel=None, verbose=True):
     data['time'], data['mnvel'], data['errvel'] = t, mnvel, errvel
     if tel == None:
         if verbose:
-            print('Telescope type not given, defaulting to HIRES.')
-        data['tel'] = 'HIRES'
+            print('Instrument type not given.')
+        data['tel'] = 'Inst.'
     else:
         data['tel'] = tel
     return data

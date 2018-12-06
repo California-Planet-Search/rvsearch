@@ -4,32 +4,35 @@ import os
 import copy
 import time
 import pdb
+import pickle
 
 import numpy as np
 import radvel
 import radvel.fitting
 from radvel.plot import orbit_plots
 
-import periodogram, utils
-# import rvsearch.periodogram as periodogram
-# import rvsearch.utils as utils
+import rvsearch.periodogram as periodogram
+import rvsearch.utils as utils
 
 
 class Search(object):
-    """Class to initialize and modify posteriors as planet search runs,
-    send to Periodogram class for periodogram and IC-threshold calculations.
+    """Class to initialize and modify posteriors as planet search runs.
 
     Args:
         data: pandas dataframe containing times, velocities,  errors, and instrument names.
         params: List of radvel parameter objects.
         priors: List of radvel prior objects.
         aic: if True, use Akaike information criterion instead of BIC. STILL WORKING ON THIS
+
     """
 
     def __init__(self, data, starname=None, max_planets=4, priors=None, crit='bic', fap=0.01,
-                 dvdt=True, curv=True, verbose=True):
+                 dvdt=True, curv=True, fix=False, polish=True, mcmc=False, verbose=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
+            self.data = data
+            self.tels = np.unique(self.data['tel'].values)
+        elif {'jd', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
             self.tels = np.unique(self.data['tel'].values)
         else:
@@ -63,11 +66,15 @@ class Search(object):
         self.dvdt = dvdt
         self.curv = curv
 
+        self.fix = fix
+        self.polish = polish
+        self.mcmc = mcmc
+
         self.verbose = verbose
 
         self.basebic = None
 
-        self.per_grid = None
+        self.pers = None
         self.periodograms = []
         self.bic_threshes = []
 
@@ -151,30 +158,15 @@ class Search(object):
         new_params.num_planets = new_num_planets
 
         # priors = [radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0) for inst in self.tels]
-        priors = []
-        priors.append(radvel.prior.PositiveKPrior(new_num_planets))
-        priors.append(radvel.prior.EccentricityPrior(new_num_planets))
-
-        new_post = utils.initialize_post(self.data, new_params, priors)
+        # TO-DO: Figure out how to handle jitter prior, whether needed
+        if self.priors is not None:
+            new_post = utils.initialize_post(self.data, new_params, self.priors)
+        else:
+            priors = []
+            priors.append(radvel.prior.PositiveKPrior(new_num_planets))
+            priors.append(radvel.prior.EccentricityPrior(new_num_planets))
+            new_post = utils.initialize_post(self.data, new_params, priors)
         self.post = new_post
-
-        '''
-        1. Get default values for new planet parameters !
-        2. Initialize new radvel Parameter object, new_param, with n+1 planets !
-        3. TO COMPLETE Set values of 1st - nth planet in new_param !
-        4. Set curvature fit parameters, check locked or unlocked !
-
-        5. Put some kinds of priors on the 1st-nth planet parameters (period, phase)
-            Allow phase, period to vary within ~5-10% of original value, ask Andrew.
-            Or allow *all* params (except curv, dvdt)to be totally free. This while making per_bics
-
-            Make 1 flag each for dvdt, curv at the start of the search. In search object
-                Force on, force off, or auto for 0-1 model. Off for Legacy
-
-        6. Set number of planets in new_param? Not already done? !
-        7. Add positive amp. & ecc. priors, set self.post to new posterior !
-        8. Save old posterior to list containing history of posterior
-        '''
 
     def sub_planet(self):
 
@@ -192,8 +184,9 @@ class Search(object):
                 parkey = par + str(planet)
                 new_params[parkey] = self.post.params[parkey]
 
+        # Add gamma and jitter params to the dictionary.
         for par in self.post.likelihood.extra_params:
-            new_params[par] = self.post.params[par]  # For gamma and jitter
+            new_params[par] = self.post.params[par]
 
         new_params['dvdt'] = self.post.params['dvdt']
         new_params['curv'] = self.post.params['curv']
@@ -210,35 +203,66 @@ class Search(object):
         new_post = utils.initialize_post(self.data, new_params, priors)
         self.post = new_post
 
-    def reset_priors(self):
-        pass
-
     def fit_orbit(self):
-        # REWRITE TO ITERATE OVER ALL PARAM KEYS? INCLUDING DVDT AND CURV? 10/26/18
         for planet in np.arange(1, self.num_planets+1):
             self.post.params['per{}'.format(planet)].vary = True
-            self.post.params['k{}'.format(planet)].vary = True
-            self.post.params['tc{}'.format(planet)].vary = True
-            self.post.params['secosw{}'.format(planet)].vary = True
-            self.post.params['sesinw{}'.format(planet)].vary = True
+            self.post.params['k{}'.format(self.num_planets)].vary = True
+            self.post.params['tc{}'.format(self.num_planets)].vary = True
+            self.post.params['secosw{}'.format(self.num_planets)].vary = True
+            self.post.params['sesinw{}'.format(self.num_planets)].vary = True
+
+        if self.polish:
+            # Make a finer, narrow period grid, and search with eccentricity free.
+            self.post.params['per{}'.format(self.num_planets)].vary = False
+            default_pdict = {}
+            for k in self.post.params.keys():
+                default_pdict[k] = self.post.params[k].value
+            polish_params = []
+            polish_bics = []
+            peak = np.argmax(self.periodograms[-1])
+            subgrid = np.linspace((self.pers[peak]+self.pers[peak-1])/2.,
+                                (self.pers[peak]+self.pers[peak+1])/2., 5) # Justify 5
+            fit_params = []
+            power = []
+
+            for per in subgrid:
+                for k in default_pdict.keys():
+                    self.post.params[k].value = default_pdict[k]
+                perkey = 'per{}'.format(self.num_planets)
+                self.post.params[perkey].value = per
+
+                fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
+                power.append(-fit.likelihood.bic())
+
+                best_params = {}
+                for k in fit.params.keys():
+                    best_params[k] = fit.params[k].value
+                fit_params.append(best_params)
+
+            fit_index = np.argmax(power)
+            bestfit_params = fit_params[fit_index]
+            for k in self.post.params.keys():
+                self.post.params[k].value = bestfit_params[k]
+            self.post.params['per{}'.format(self.num_planets)].vary = True
 
         self.post = radvel.fitting.maxlike_fitting(self.post, verbose=False)
-        '''
-        for planet in np.arange(1, self.num_planets+1):
-            self.post.params['per{}'.format(planet)].vary = False
-            self.post.params['k{}'.format(planet)].vary = False
-            self.post.params['tc{}'.format(planet)].vary = False
-            self.post.params['secosw{}'.format(planet)].vary = False
-            self.post.params['sesinw{}'.format(planet)].vary = False
-        '''
-    def add_gp(self):
+        if self.fix:
+            for planet in np.arange(1, self.num_planets+1):
+                self.post.params['per{}'.format(planet)].vary = False
+                self.post.params['k{}'.format(self.num_planets)].vary = False
+                self.post.params['tc{}'.format(self.num_planets)].vary = False
+                self.post.params['secosw{}'.format(self.num_planets)].vary = False
+                self.post.params['sesinw{}'.format(self.num_planets)].vary = False
+
+    def add_gp(self, inst=None):
         pass
 
     def sub_gp(self, num_gps=1):
         try:
             pass
         except:
-            raise RuntimeError('Model contains fewer than {} Gaussian processes.'.format(num_gps))
+            raise RuntimeError('Model contains fewer than {} Gaussian processes.'
+                                .format(num_gps))
 
     def save(self, filename=None):
         if filename is not None:
@@ -251,7 +275,7 @@ class Search(object):
         pass
 
     def save_all_posts(self):
-        # Pickle the list of posteriors for each nth planet model
+        # Pickle the list of posteriors fogr each nth planet model
         pass
 
     def run_search(self):
@@ -272,44 +296,45 @@ class Search(object):
                 self.add_planet()
 
             perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
-                                               num_known_planets=self.num_planets)
+                                               fap=self.fap, verbose=self.verbose)
+                                               #num_known_planets=self.num_planets,
             t1 = time.process_time()
             perioder.per_bic()
             t2 = time.process_time()
-            print('Time = {} seconds'.format(t2 - t1))
+            if self.verbose:
+                print('Time = {} seconds'.format(t2 - t1))
 
             self.periodograms.append(perioder.power[self.crit])
-            self.bic_threshes.append(perioder.bic_thresh)
             if self.num_planets == 0:
-                self.per_grid = perioder.pers
+                self.pers = perioder.pers
 
-            perioder.eFAP_thresh(fap=self.fap)
+            perioder.eFAP_thresh()
+            self.bic_threshes.append(perioder.bic_thresh)
             perioder.plot_per()
             perioder.fig.savefig(outdir+'/dbic{}.pdf'.format(self.num_planets+1))
-            self.all_posts.append(copy.deepcopy(self.post))
+
             if perioder.best_bic > perioder.bic_thresh:
                 self.num_planets += 1
-                perkey = 'per{}'.format(self.num_planets)
-                self.post.params[perkey].vary = False
-                self.post.params[perkey].value = perioder.best_per
-                self.post.params['k{}'.format(self.num_planets)].value = perioder.best_k
-                self.post.params['tc{}'.format(self.num_planets)].value = perioder.best_tc
-                self.post.params['dvdt'].value = perioder.best_dvdt
-                self.post.params['curv'].value = perioder.best_curv
-                for tel in self.tels:
-                    self.post.params['gamma_'+tel].value = perioder.best_gamma[tel]
-                    self.post.params['jit_'+tel].value = perioder.best_jit[tel]
-                self.fit_orbit()
-                self.basebic = self.post.bic()
+                for k in self.post.params.keys():
+                    self.post.params[k].value = perioder.bestfit_params[k]
 
+                self.fit_orbit()
+                self.all_posts.append(copy.deepcopy(self.post))
+                self.basebic = self.post.bic()
                 rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+
-                                                    '/orbit_plot{}.pdf'.format(self.num_planets))
+                                    '/orbit_plot{}.pdf'.format(self.num_planets))
                 multiplot_fig, ax_list = rvplot.plot_multipanel()
                 multiplot_fig.savefig(outdir+'/orbit_plot{}.pdf'.format(self.num_planets))
             else:
-                self.sub_planet()  # FINISH SUB_PLANET() 10/24/18
+                self.sub_planet()
                 run = False
             if self.num_planets >= self.max_planets:
                 run = False
 
         self.save(filename=outdir+'/post_final.pkl')
+        pickle_out = open(outdir+'/all_posts.pkl','wb')
+        pickle.dump(self.all_posts, pickle_out)
+        pickle_out.close()
+
+        periodograms_plus_pers = np.append([self.pers], self.periodograms, axis=0)
+        np.savetxt(outdir+'/pers_and_periodograms.csv', periodograms_plus_pers)
