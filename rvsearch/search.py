@@ -26,8 +26,8 @@ class Search(object):
 
     """
 
-    def __init__(self, data, starname=None, max_planets=4, priors=None, crit='bic', fap=0.01,
-                 dvdt=True, curv=True, fix=False, polish=True, mcmc=False, verbose=True):
+    def __init__(self, data, starname=None, max_planets=7, priors=None, crit='bic', fap=0.01,
+                 dvdt=True, curv=True, fix=True, polish=True, mcmc=False, verbose=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
@@ -269,13 +269,8 @@ class Search(object):
             self.post.writeto(filename)
         else:
             self.post.writeto('post_final.pkl')
-        # Write this so that it can be iteratively applied with each planet addition.
 
     def plot_model(self, post):
-        pass
-
-    def save_all_posts(self):
-        # Pickle the list of posteriors fogr each nth planet model
         pass
 
     def run_search(self):
@@ -297,7 +292,6 @@ class Search(object):
 
             perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
                                                fap=self.fap, verbose=self.verbose)
-                                               #num_known_planets=self.num_planets,
             t1 = time.process_time()
             perioder.per_bic()
             t2 = time.process_time()
