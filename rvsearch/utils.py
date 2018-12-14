@@ -189,26 +189,26 @@ def read_from_vst(filename, verbose=True):
 
 # Function for collecting results of searches in current directory.
 def scrape(starlist, save=True):
-    all_params = []
-    for star in starlist:
-        params = {}
-        params['star'] = star
-        post = radvel.posterior.load(star+'/post_final.pkl')
-        if post.params.num_planets == 1:
-            if post.params['k1'].value == 0.:
-                num_planets = 0
-            else:
-                num_planets = 1
-        else:
-            num_planets = post.params.num_planets
-        params['num_planets'] = num_planets
-        for k in post.params.keys():
+	all_params = []
+	for star in starlist:
+		params = {}
+		params['star'] = star
+		post = radvel.posterior.load(star+'/post_final.pkl')
+		if post.params.num_planets == 1:
+			if post.params['k1'].value == 0.:
+				num_planets = 0
+			else:
+				num_planets = 1
+		else:
+			num_planets = post.params.num_planets
+		params['num_planets'] = num_planets
+		for k in post.params.keys():
             params[k] = post.params[k].value
         all_params.append(params)
 	dataframe = pd.DataFrame(d)
 	if save:
 		dataframe.to_csv('system_props.csv')
-    return dataframe
+	return dataframe
 
 # Test search-specific priors
 '''
