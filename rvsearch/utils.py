@@ -203,8 +203,8 @@ def scrape(starlist, save=True):
 			num_planets = post.params.num_planets
 		params['num_planets'] = num_planets
 		for k in post.params.keys():
-            params[k] = post.params[k].value
-        all_params.append(params)
+			params[k] = post.params[k].value
+		all_params.append(params)
 	dataframe = pd.DataFrame(d)
 	if save:
 		dataframe.to_csv('system_props.csv')
