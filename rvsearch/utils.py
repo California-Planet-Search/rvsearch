@@ -205,7 +205,7 @@ def scrape(starlist, save=True):
 		for k in post.params.keys():
 			params[k] = post.params[k].value
 		all_params.append(params)
-	dataframe = pd.DataFrame(d)
+	dataframe = pd.DataFrame(all_params)
 	if save:
 		dataframe.to_csv('system_props.csv')
 	return dataframe
