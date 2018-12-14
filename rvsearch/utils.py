@@ -186,3 +186,63 @@ def read_from_vst(filename, verbose=True):
 
     data.to_csv(filename[:-3]+'csv')
     return data
+
+# Function for collecting results of searches in current directory.
+def scrape(starlist, save=True):
+    all_params = []
+    for star in starlist:
+        params = {}
+        params['star'] = star
+        post = radvel.posterior.load(star+'/post_final.pkl')
+        if post.params.num_planets == 1:
+            if post.params['k1'].value == 0.:
+                num_planets = 0
+            else:
+                num_planets = 1
+        else:
+            num_planets = post.params.num_planets
+        params['num_planets'] = num_planets
+        for k in post.params.keys():
+            params[k] = post.params[k].value
+        all_params.append(params)
+	dataframe = pd.DataFrame(d)
+	if save:
+		dataframe.to_csv('system_props.csv')
+    return dataframe
+
+# Test search-specific priors
+'''
+class Beta(Prior):
+    """Beta prior
+    Beta prior on a given parameter. Default is Kipping eccentricity prior.
+    Args:
+        param (string): parameter label
+        mu (float): center of Gaussian prior
+        sigma (float): width of Gaussian prior
+    """
+
+    def __init__(self, alpha=0.867, beta=3.03, param):
+        self.alpha = alpha
+        self.beta = beta
+        self.param = param
+
+    def __call__(self, params):
+        x = params[self.param].value
+        return -0.5 * ((x - self.mu) / self.sigma)**2 - 0.5*np.log((self.sigma**2)*2.*np.pi)
+
+    def __repr__(self):
+        s = "Beta prior on {}, alpha={}, beta={}".format(
+            self.param, self.alpha, self.beta
+            )
+        return s
+
+    def __str__(self):
+        try:
+            tex = model.Parameters(9).tex_labels(param_list=[self.param])[self.param]
+
+            s = "Beta prior on {}: $\\alpha={}, \\beta={}$ \\\\".format(tex, self.alpha, self.beta)
+        except KeyError:
+            s = self.__repr__()
+
+        return s
+'''

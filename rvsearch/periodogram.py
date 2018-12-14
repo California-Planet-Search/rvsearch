@@ -6,7 +6,6 @@ import astropy.stats
 import radvel
 import radvel.fitting
 
-# import utils
 import rvsearch.utils as utils
 
 
@@ -24,7 +23,7 @@ class Periodogram:
 
     """
 
-    def __init__(self, post, basebic=None, minsearchp=10, maxsearchp=10000,
+    def __init__(self, post, basebic=None, minsearchp=1, maxsearchp=10000,
                  baseline=True, basefactor=4., oversampling=1, fap=0.01, num_pers=None,
                  eccentric=False, valid_types = ['bic', 'aic', 'ls'], verbose=True):
         self.post = copy.deepcopy(post)
