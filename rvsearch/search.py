@@ -26,8 +26,8 @@ class Search(object):
 
     """
 
-    def __init__(self, data, starname=None, max_planets=7, priors=None, crit='bic', fap=0.01,
-                 dvdt=True, curv=True, fix=True, polish=True, mcmc=False, verbose=True):
+    def __init__(self, data, starname=None, max_planets=8, priors=None, crit='bic', fap=0.01,
+                 dvdt=True, curv=True, fix=False, polish=True, mcmc=False, verbose=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
@@ -332,3 +332,4 @@ class Search(object):
 
         periodograms_plus_pers = np.append([self.pers], self.periodograms, axis=0)
         np.savetxt(outdir+'/pers_and_periodograms.csv', periodograms_plus_pers)
+        np.savetxt(outdir+'/bic_threshes.csv', self.bic_threshes)
