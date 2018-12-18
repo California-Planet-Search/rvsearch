@@ -13,7 +13,7 @@ class Periodogram:
     """Class to calculate and store periodograms.
 
     Args:
-        posterior (radvel.Posterior): radvel.Posterior object
+        post (radvel.Posterior): radvel.Posterior object
         minsearchp (float): minimum search period
         maxsearchp (float): maximum search period
         num_known_planets (int): Assume this many known planets in the system

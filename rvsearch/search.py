@@ -19,16 +19,24 @@ class Search(object):
     """Class to initialize and modify posteriors as planet search runs.
 
     Args:
-        data: pandas dataframe containing times, velocities,  errors, and instrument names.
-        params: List of radvel parameter objects.
-        priors: List of radvel prior objects.
-        aic: if True, use Akaike information criterion instead of BIC. STILL WORKING ON THIS
+        data (DataFrame): pandas dataframe containing times, vel, err, and insts.
+        starname (str): String, used to name the output directory.
+        max_planets (int): Integer, limit on iterative planet search.
+        priors (list): List of radvel prior objects to use.
+        crit (str): Either 'bic' or 'aic', depending on which criterion to use.
+        fap (float): False-alarm-probability to pass to the periodogram object.
+        min_per (float): Minimum search period, to pass to the periodogram object.
+        dvdt (Boolean): Whether to include a linear trend in the search.
+        curv (Boolean): Whether to include a quadratic trend in the search.
+        fix (Boolean): Whether to fix known planet parameters during search.
+        polish (Boolean): Whether to create finer period grid after planet is found.
+        verbose (Boolean):
 
     """
 
     def __init__(self, data, starname=None, max_planets=8, priors=None, crit='bic',
                 fap=0.01, min_per=3, dvdt=True, curv=True, fix=False, polish=True,
-                mcmc=False, verbose=True):
+                verbose=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
@@ -70,7 +78,6 @@ class Search(object):
 
         self.fix = fix
         self.polish = polish
-        self.mcmc = mcmc
 
         self.verbose = verbose
 
@@ -84,7 +91,7 @@ class Search(object):
     def trend_test(self):
         # Perform 0-planet baseline fit.
         post1 = copy.deepcopy(self.post)
-        post1.params['k1'].vary = False
+        #post1.params['k1'].vary = False
         post1 =radvel.fitting.maxlike_fitting(post1, verbose=False)
 
         trend_curve_bic = self.post.likelihood.bic()
@@ -221,8 +228,9 @@ class Search(object):
             polish_params = []
             polish_bics = []
             peak = np.argmax(self.periodograms[-1])
-            subgrid = np.linspace((self.pers[peak]+self.pers[peak-1])/2.,
-                                (self.pers[peak]+self.pers[peak+1])/2., 5) # Justify 5
+            #subgrid = np.linspace((self.pers[peak]+self.pers[peak-1])/2.,
+            #                    (self.pers[peak]+self.pers[peak+1])/2., 5) # Justify 5
+            subgrid = np.linspace(self.pers[peak-1], self.pers[peak+1], 9 ) # Justify 9
             fit_params = []
             power = []
 
@@ -325,12 +333,17 @@ class Search(object):
                 run = False
 
         self.save(filename=outdir+'/post_final.pkl')
+        pickle_out = open(outdir+'/search.pkl','wb')
+        pickle.dump(self, pickle_out)
+        pickle_out.close()
+        '''
         pickle_out = open(outdir+'/all_posts.pkl','wb')
         pickle.dump(self.all_posts, pickle_out)
         pickle_out.close()
+        '''
 
         periodograms_plus_pers = np.append([self.pers], self.periodograms, axis=0)
         threshs_and_pks = np.append([self.bic_threshes], [self.best_bics], axis=0).T
         np.savetxt(outdir+'/pers_and_periodograms.csv', periodograms_plus_pers)
-        np.savetxt(outdir+'/thresholds_and_peaks.csv', thresh_and_pks,
+        np.savetxt(outdir+'/thresholds_and_peaks.csv', threshs_and_pks,
                                         header='threshold  best_bic')
