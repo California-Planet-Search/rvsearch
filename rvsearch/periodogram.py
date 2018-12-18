@@ -23,7 +23,7 @@ class Periodogram:
 
     """
 
-    def __init__(self, post, basebic=None, minsearchp=3, maxsearchp=10000,
+    def __init__(self, post, basebic=None, minsearchp=200, maxsearchp=10000,
                  baseline=True, basefactor=4., oversampling=1, fap=0.01, num_pers=None,
                  eccentric=False, valid_types = ['bic', 'aic', 'ls'], verbose=True):
         self.post = copy.deepcopy(post)
@@ -208,8 +208,8 @@ class Periodogram:
         fap_min = 10.**func(sBIC[-1])*self.num_pers
         thresh = xmod[np.where(np.abs(lfit-self.fap/self.num_pers) ==
                         np.min(np.abs(lfit-self.fap/self.num_pers)))]
-        self.bic_thresh = thresh
-        #self.bic_thresh = np.amax(thresh, 30)
+        self.bic_thresh = thresh[0]
+        #self.bic_thresh = np.amax(thresh[0], 30)
 
     def save_per(self, ls=False):
         if ls==False:
