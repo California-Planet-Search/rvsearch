@@ -26,8 +26,9 @@ class Search(object):
 
     """
 
-    def __init__(self, data, starname=None, max_planets=8, priors=None, crit='bic', fap=0.01,
-                 dvdt=True, curv=True, fix=False, polish=True, mcmc=False, verbose=True):
+    def __init__(self, data, starname=None, max_planets=8, priors=None, crit='bic',
+                fap=0.01, min_per=3, dvdt=True, curv=True, fix=False, polish=True,
+                mcmc=False, verbose=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
@@ -63,6 +64,7 @@ class Search(object):
             raise ValueError('Invalid information criterion.')
         '''
         self.fap = fap
+        self.min_per = min_per
         self.dvdt = dvdt
         self.curv = curv
 
@@ -287,6 +289,7 @@ class Search(object):
                 self.add_planet()
 
             perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
+                                               minsearchp = self.min_per,
                                                fap=self.fap, verbose=self.verbose)
             t1 = time.process_time()
             perioder.per_bic()
