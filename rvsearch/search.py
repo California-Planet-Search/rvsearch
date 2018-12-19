@@ -228,9 +228,11 @@ class Search(object):
             polish_params = []
             polish_bics = []
             peak = np.argmax(self.periodograms[-1])
-            #subgrid = np.linspace((self.pers[peak]+self.pers[peak-1])/2.,
-            #                    (self.pers[peak]+self.pers[peak+1])/2., 5) # Justify 5
-            subgrid = np.linspace(self.pers[peak-1], self.pers[peak+1], 9 ) # Justify 9
+            if peak == len(self.periodograms[-1]) - 1:
+                subgrid = np.linspace(self.pers[peak-1], 2*self.pers[peak] -
+                                                        self.pers[peak-1], 9 )
+            else: #TO-DO: JUSTIFY 9 GRID POINTS, OR TAKE AS ARGUMENT
+                subgrid = np.linspace(self.pers[peak-1], self.pers[peak+1], 9 )
             fit_params = []
             power = []
 
