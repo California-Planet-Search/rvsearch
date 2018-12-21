@@ -35,7 +35,7 @@ class Search(object):
     """
 
     def __init__(self, data, starname=None, max_planets=8, priors=None, crit='bic',
-                fap=0.01, min_per=3, dvdt=True, curv=True, fix=False, polish=True,
+                fap=0.01, min_per=3, trend=False, fix=False, polish=True,
                 verbose=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
@@ -54,7 +54,7 @@ class Search(object):
         self.params = utils.initialize_default_pars(instnames=self.tels)
         self.priors = priors
 
-        self.all_posts = []
+        self.all_params = []
         self.post = utils.initialize_post(self.data, self.params, self.priors)
 
         self.max_planets = max_planets
@@ -91,7 +91,8 @@ class Search(object):
     def trend_test(self):
         # Perform 0-planet baseline fit.
         post1 = copy.deepcopy(self.post)
-        #post1.params['k1'].vary = False
+        post1.params['per1'].vary = False
+        post1.params['k1'].vary = False
         post1 =radvel.fitting.maxlike_fitting(post1, verbose=False)
 
         trend_curve_bic = self.post.likelihood.bic()
@@ -116,13 +117,19 @@ class Search(object):
 
         if trend_bic < flat_bic - 10.:
             if trend_curve_bic < trend_bic - 10.:
-                pass # Quadratic
+                # Quadratic
+                pass
             else:
-                self.post = post1  # Linear
-                self.post.params['k1'].vary = True
+                # Linear
+                self.post.params['dvdt'].value = post1.params['dvdt'].value
+                self.post.params['curv'].value = 0
+                self.post.params['curv'].vary = False
         else:
-            self.post = post2  # Flat
-            self.post.params['k1'].vary = True
+            # Flat
+            self.post.params['dvdt'].value = 0
+            self.post.params['dvdt'].vary = False
+            self.post.params['curv'].value = 0
+            self.post.params['curv'].vary = False
 
 
     def add_planet(self):
@@ -287,11 +294,11 @@ class Search(object):
         if not os.path.exists(outdir):
             os.mkdir(outdir)
 
-        if self.dvdt == False:
+        if trend:
+            self.trend_test()
+        else:
             self.post.params['dvdt'].vary = False
-        if self.curv == False:
             self.post.params['curv'].vary = False
-        #self.trend_test()
 
         run = True
         while run:
@@ -322,7 +329,7 @@ class Search(object):
                 for k in self.post.params.keys():
                     self.post.params[k].value = perioder.bestfit_params[k]
                 self.fit_orbit()
-                self.all_posts.append(copy.deepcopy(self.post))
+                self.all_params.append(self.post.params)
                 self.basebic = self.post.bic()
                 rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+
                                     '/orbit_plot{}.pdf'.format(self.num_planets))
@@ -338,14 +345,10 @@ class Search(object):
         pickle_out = open(outdir+'/search.pkl','wb')
         pickle.dump(self, pickle_out)
         pickle_out.close()
-        '''
-        pickle_out = open(outdir+'/all_posts.pkl','wb')
-        pickle.dump(self.all_posts, pickle_out)
-        pickle_out.close()
-        '''
 
-        periodograms_plus_pers = np.append([self.pers], self.periodograms, axis=0)
+        periodograms_plus_pers = np.append([self.pers], self.periodograms, axis=0).T
         threshs_and_pks = np.append([self.bic_threshes], [self.best_bics], axis=0).T
-        np.savetxt(outdir+'/pers_and_periodograms.csv', periodograms_plus_pers)
+        np.savetxt(outdir+'/pers_and_periodograms.csv', periodograms_plus_pers,
+                                        header='period  BIC_array')
         np.savetxt(outdir+'/thresholds_and_peaks.csv', threshs_and_pks,
                                         header='threshold  best_bic')
