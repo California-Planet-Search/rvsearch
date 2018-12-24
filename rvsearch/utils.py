@@ -254,7 +254,7 @@ def scrape(starlist, mass_db_name=None, save=True):
                     props.loc[star_index, 'a{}'.format(n)] = radvel.utils.semi_major_axis(P, Mtot)
 
     if save:
-        props.to_csv('system_props_mass.csv')
+        props.to_csv('system_props.csv')
     return props
 
 # Test search-specific priors
