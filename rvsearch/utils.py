@@ -236,13 +236,13 @@ def scrape(starlist, mass_db_name=None, save=True):
             props['a{}'.format(n)] = np.nan
 
         # Save median star mass, uncertainties
-        for star in starlist:
-        	try:
-        		star_index = props.index[props['name'] == str(star)][0]
+		for star in starlist:
+			try:
+				star_index = props.index[props['name'] == str(star)][0]
 				mass_index = mass_db.index[mass_db['name'] == str(star)][0]
-        	except IndexError:
-            	continue
-            # Save star mass, to be used in planet mass & semi-major axis calculations.
+			except IndexError:
+				continue
+			# Save star mass, to be used in planet mass & semi-major axis calculations.
             Mtot = mass_db.loc[mass_index, 'mstar']
             props.loc[star_index, 'Mstar'] = Mtot
 
