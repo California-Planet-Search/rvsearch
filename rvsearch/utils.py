@@ -188,9 +188,10 @@ def read_from_vst(filename, verbose=True):
     return data
 
 # Function for collecting results of searches in current directory.
-def scrape_mass(starlist, mass_db_name=None, save=True):
-    """Take data from completed searches and compile into one database.
-    """
+def scrape(starlist, mass_db_name=None, save=True):
+    """Take data from completed searches and compile into one databases.
+	If specified, compute planet masses and semi-major axes.
+	"""
     all_params = []
     nplanets = []
 
