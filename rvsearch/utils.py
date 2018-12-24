@@ -188,27 +188,74 @@ def read_from_vst(filename, verbose=True):
     return data
 
 # Function for collecting results of searches in current directory.
-def scrape(starlist, save=True):
-	all_params = []
-	for star in starlist:
-		params = {}
-		params['star'] = star
-		post = radvel.posterior.load(star+'/post_final.pkl')
-		if post.params.num_planets == 1:
-			if post.params['k1'].value == 0.:
-				num_planets = 0
-			else:
-				num_planets = 1
-		else:
-			num_planets = post.params.num_planets
-		params['num_planets'] = num_planets
-		for k in post.params.keys():
-			params[k] = post.params[k].value
-		all_params.append(params)
-	dataframe = pd.DataFrame(all_params)
-	if save:
-		dataframe.to_csv('system_props.csv')
-	return dataframe
+def scrape(starlist, mass_db_name=None, save=True):
+    """Take data from completed searches and compile into one databases.
+	If specified, compute planet masses and semi-major axes.
+	"""
+    all_params = []
+    nplanets = []
+
+    for star in starlist:
+        params = {}
+        params['name'] = star
+        try:
+            post = radvel.posterior.load(star+'/post_final.pkl')
+        except RuntimeError:
+            print('I am not done looking for planets around {} yet, \
+                                try again later.'.format(star))
+            continue
+
+        if post.params.num_planets == 1:
+            if post.params['k1'].value == 0.:
+                num_planets = 0
+            else:
+                num_planets = 1
+            nplanets.append(num_planets)
+        else:
+            num_planets = post.params.num_planets
+            nplanets.append(num_planets)
+        params['num_planets'] = num_planets
+
+        for k in post.params.keys():
+            params[k] = post.params[k].value
+        all_params.append(params)
+
+    # Save radvel parameters as a pandas dataframe.
+    props = pd.DataFrame(all_params)
+
+    if mass_db_name is not None:
+        try:
+            mass_db = pd.read_csv(mass_db_name)
+        except RuntimeError:
+            print('That is not a pandas dataframe. Try again.')
+
+        # Add enough columns to compute masses & semi-major axes for system with most planets.
+        max_num_planets = np.amax(nplanets)
+        for n in np.arange(1, max_num_planets+1):
+            props['Mstar'] = np.nan
+            props['M{}'.format(n)] = np.nan
+            props['a{}'.format(n)] = np.nan
+
+        # Save median star mass, uncertainties
+        for star in starlist:
+            star_index = props.index[props['name'] == str(star)][0]
+            mass_index = mass_db.index[mass_db['name'] == str(star)][0]
+            # Save star mass, to be used in planet mass & semi-major axis calculations.
+            Mtot = mass_db.loc[mass_index, 'mstar']
+            props.loc[star_index, 'Mstar'] = Mtot
+
+            # For each found planet, compute mass and semi-major axis
+            if props.loc[star_index, 'num_planets'] != 0:
+                for n in np.arange(1, props.loc[star_index, 'num_planets']+1):
+                    K = props.loc[star_index, 'k{}'.format(n)]
+                    P = props.loc[star_index, 'per{}'.format(n)]
+                    e = props.loc[star_index, 'secosw{}'.format(n)]**2 + props.loc[star_index, 'sesinw{}'.format(n)]**2
+                    props.loc[star_index, 'M{}'.format(n)] = radvel.utils.Msini(K, P, Mtot, e, Msini_units='jupiter')
+                    props.loc[star_index, 'a{}'.format(n)] = radvel.utils.semi_major_axis(P, Mtot)
+
+    if save:
+        props.to_csv('system_props.csv')
+    return props
 
 # Test search-specific priors
 '''

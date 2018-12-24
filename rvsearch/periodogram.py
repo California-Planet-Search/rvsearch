@@ -225,7 +225,7 @@ class Periodogram:
             except:
                 print('Have not generated a Lomb-Scargle periodogram.')
 
-    def plot_per(self, ls=False, alias=True, save=False):
+    def plot_per(self, ls=False, alias=True, floor=True, save=False):
         # TO-DO: WORK IN AIC/BIC OPTION, INCLUDE IN PLOT TITLE
         peak = np.argmax(self.power['bic'])
         f_real = self.freqs[peak]
@@ -239,9 +239,13 @@ class Periodogram:
         if self.bic_thresh is not None:
             ax.axhline(self.bic_thresh, ls=':', c='y', label='{} FAP'.format(self.fap))
             upper = 1.1*max(np.amax(self.power['bic']), self.bic_thresh)
-            ax.set_ylim([np.amin(self.power['bic']), upper])
         else:
-            ax.set_ylim([np.amin(self.power['bic']), 1.1*np.amax(self.power['bic'])])
+            upper = 1.1*np.amax(self.power['bic'])
+        if floor: # Set periodogram plot floor according to circular-fit BIC min.
+            lower = -2*np.log(len(self.time))
+        else:
+            lower = np.amin(self.power['bic'])
+        ax.set_ylim([lower, upper])
         ax.set_xlim([self.pers[0], self.pers[-1]])
 
         if alias:
