@@ -201,8 +201,7 @@ def scrape(starlist, mass_db_name=None, save=True):
         try:
             post = radvel.posterior.load(star+'/post_final.pkl')
         except (RuntimeError, FileNotFoundError):
-            print('I am not done looking for planets around {} yet, \
-                                try again later.'.format(star))
+            print('I am not done looking for planets around {} yet, try again later.'.format(star))
             continue
 
         if post.params.num_planets == 1:
@@ -226,7 +225,7 @@ def scrape(starlist, mass_db_name=None, save=True):
     if mass_db_name is not None:
         try:
             mass_db = pd.read_csv(mass_db_name)
-        except RuntimeError:
+        except (RuntimeError, FileNotFoundError):
             print('That is not a pandas dataframe. Try again.')
 
         # Add enough columns to compute masses & semi-major axes for system with most planets.
@@ -238,8 +237,11 @@ def scrape(starlist, mass_db_name=None, save=True):
 
         # Save median star mass, uncertainties
         for star in starlist:
-            star_index = props.index[props['name'] == str(star)][0]
-            mass_index = mass_db.index[mass_db['name'] == str(star)][0]
+        	try:
+        		star_index = props.index[props['name'] == str(star)][0]
+				mass_index = mass_db.index[mass_db['name'] == str(star)][0]
+        	except IndexError:
+            	continue
             # Save star mass, to be used in planet mass & semi-major axis calculations.
             Mtot = mass_db.loc[mass_index, 'mstar']
             props.loc[star_index, 'Mstar'] = Mtot
