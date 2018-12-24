@@ -200,7 +200,7 @@ def scrape(starlist, mass_db_name=None, save=True):
         params['name'] = star
         try:
             post = radvel.posterior.load(star+'/post_final.pkl')
-        except RuntimeError:
+        except (RuntimeError, FileNotFoundError):
             print('I am not done looking for planets around {} yet, \
                                 try again later.'.format(star))
             continue
