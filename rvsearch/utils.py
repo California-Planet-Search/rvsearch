@@ -243,21 +243,21 @@ def scrape(starlist, mass_db_name=None, save=True):
 			except IndexError:
 				continue
 			# Save star mass, to be used in planet mass & semi-major axis calculations.
-            Mtot = mass_db.loc[mass_index, 'mstar']
-            props.loc[star_index, 'Mstar'] = Mtot
+			Mtot = mass_db.loc[mass_index, 'mstar']
+			props.loc[star_index, 'Mstar'] = Mtot
 
-            # For each found planet, compute mass and semi-major axis
-            if props.loc[star_index, 'num_planets'] != 0:
-                for n in np.arange(1, props.loc[star_index, 'num_planets']+1):
-                    K = props.loc[star_index, 'k{}'.format(n)]
-                    P = props.loc[star_index, 'per{}'.format(n)]
-                    e = props.loc[star_index, 'secosw{}'.format(n)]**2 + props.loc[star_index, 'sesinw{}'.format(n)]**2
-                    props.loc[star_index, 'M{}'.format(n)] = radvel.utils.Msini(K, P, Mtot, e, Msini_units='jupiter')
-                    props.loc[star_index, 'a{}'.format(n)] = radvel.utils.semi_major_axis(P, Mtot)
+			# For each found planet, compute mass and semi-major axis
+			if props.loc[star_index, 'num_planets'] != 0:
+				for n in np.arange(1, props.loc[star_index, 'num_planets']+1):
+					K = props.loc[star_index, 'k{}'.format(n)]
+					P = props.loc[star_index, 'per{}'.format(n)]
+					e = props.loc[star_index, 'secosw{}'.format(n)]**2 + props.loc[star_index, 'sesinw{}'.format(n)]**2
+					props.loc[star_index, 'M{}'.format(n)] = radvel.utils.Msini(K, P, Mtot, e, Msini_units='jupiter')
+					props.loc[star_index, 'a{}'.format(n)] = radvel.utils.semi_major_axis(P, Mtot)
 
-    if save:
-        props.to_csv('system_props.csv')
-    return props
+	if save:
+		props.to_csv('system_props.csv')
+	return props
 
 # Test search-specific priors
 '''
