@@ -73,9 +73,8 @@ class Search(object):
         '''
         self.fap = fap
         self.min_per = min_per
-        self.dvdt = dvdt
-        self.curv = curv
 
+        self.trend = trend
         self.fix = fix
         self.polish = polish
 

@@ -120,38 +120,6 @@ def window(time, freqs, plot=False):
 	W /= float(len(freq))
 	return W
 
-"""Testing fitting options besides scipy.optimize.minimize. Just other methods
-and basinhopping for now, eventually partial/full linearization.
-"""
-def basin_fitting(post, verbose=True, minimizer_kwargs={'method':'Powell', 'options':dict(xtol=1e-8,maxiter=200,maxfev=100000)}): #options=dict(xtol=1e-8,maxiter=200,maxfev=100000):
-	"""Maximum likelihood fitting, with an annealing method.
-
-	Args:
-        post (radvel.Posterior): Posterior object with initial guesses
-        verbose (bool [optional]): Print messages and fitted values?
-        method (string [optional]): Minimization method. See documentation for `scipy.optimize.minimize` for available
-            options.
-
-	Returns:
-		radvel.Posterior: Posterior object with parameters
-		updated to their maximum likelihood values.
-	"""
-	if verbose:
-		print('Initial loglikelihood = %f' % post.logprob())
-		print("Performing maximum likelihood fit...")
-
-	res = scipy.optimize.basinhopping(post.neglogprob_array, post.get_vary_params(),
-										minimizer_kwargs=minimizer_kwargs)
-	synthparams = post.params.basis.to_synth(post.params, noVary = True)
-	post.params.update(synthparams)
-
-	if verbose:
-		print("Final loglikelihood = %f" % post.logprob())
-		print("Best-fit parameters:")
-		print(post)
-
-	return post
-
 """Series of functions for reading data from various sources into pandas dataframes.
 """
 def read_from_csv(filename, verbose=True):
