@@ -293,7 +293,7 @@ class Search(object):
         if not os.path.exists(outdir):
             os.mkdir(outdir)
 
-        if trend:
+        if self.trend:
             self.trend_test()
         else:
             self.post.params['dvdt'].vary = False
