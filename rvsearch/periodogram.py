@@ -65,6 +65,7 @@ class Periodogram:
         self.valid_types = valid_types
         self.power = {key: None for key in self.valid_types}
 
+        self.workers = workers
         self.verbose = verbose
 
         self.best_per = None
@@ -158,24 +159,48 @@ class Periodogram:
         power = np.zeros_like(self.pers)
         self.fit_params = []
 
-        for i, per in enumerate(self.pers):
-            if self.verbose:
-                print(' {}'.format(i), '/', self.num_pers, end='\r')
-            # Reset posterior parameters to default values.
-            for k in self.default_pdict.keys():
-                self.post.params[k].value = self.default_pdict[k]
+        if self.workers == 1:
+            for i, per in enumerate(self.pers):
+                if self.verbose:
+                    print(' {}'.format(i), '/', self.num_pers, end='\r')
+                # Reset posterior parameters to default values.
+                for k in self.default_pdict.keys():
+                    self.post.params[k].value = self.default_pdict[k]
 
-            #Set new period, and fit a circular orbit.
-            perkey = 'per{}'.format(self.num_known_planets+1)
-            self.post.params[perkey].value = per
-            fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
-            power[i] = baseline_bic - fit.likelihood.bic()
+                #Set new period, and fit a circular orbit.
+                perkey = 'per{}'.format(self.num_known_planets+1)
+                self.post.params[perkey].value = per
+                fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
+                power[i] = baseline_bic - fit.likelihood.bic()
 
-            # Append the best-fit parameters to the period-iterated list.
-            best_params = {}
-            for k in fit.params.keys():
-                best_params[k] = fit.params[k].value
-            self.fit_params.append(best_params)
+                # Append the best-fit parameters to the period-iterated list.
+                best_params = {}
+                for k in fit.params.keys():
+                    best_params[k] = fit.params[k].value
+                self.fit_params.append(best_params)
+
+        else:
+            def fit_period(i):
+                # Reset posterior parameters to default values.
+                post = copy.deepcopy(self.post)
+                for k in self.default_pdict.keys():
+                    post.params[k].value = self.default_pdict[k]
+
+                #Set new period, and fit a circular orbit.
+                perkey = 'per{}'.format(self.num_known_planets+1)
+                post.params[perkey].value = self.pers[i]
+                post = radvel.fitting.maxlike_fitting(post, verbose=False)
+                power[i] = baseline_bic - post.likelihood.bic()
+
+                # Append the best-fit parameters to the period-iterated list.
+                best_params = {}
+                for k in post.params.keys():
+                    best_params[k] = post.params[k].value
+                self.fit_params[i] = best_params
+
+            # Parallelize the loop over the period grid.
+            p = multiprocessing.Pool(processes=self.workers)
+            p.map(fit_period, np.arange(self.num_pers))
 
         fit_index = np.argmax(power)
         self.bestfit_params = self.fit_params[fit_index]
