@@ -242,7 +242,7 @@ class Periodogram:
         else:
             upper = 1.1*np.amax(self.power['bic'])
         if floor: # Set periodogram plot floor according to circular-fit BIC min.
-            lower = -2*np.log(len(self.time))
+            lower = -2*np.log(len(self.times))
         else:
             lower = np.amin(self.power['bic'])
         ax.set_ylim([lower, upper])
