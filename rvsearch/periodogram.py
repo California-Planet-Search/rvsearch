@@ -1,4 +1,6 @@
 import copy
+import multiprocessing
+from multiprocessing import Pool
 import pdb
 
 import numpy as np
@@ -25,8 +27,9 @@ class Periodogram:
     """
 
     def __init__(self, post, basebic=None, minsearchp=3, maxsearchp=10000,
-                 baseline=True, basefactor=5., oversampling=1, fap=0.01, num_pers=None,
-                 eccentric=False, valid_types = ['bic', 'aic', 'ls'], verbose=True):
+                 baseline=True, basefactor=5., oversampling=1, fap=0.01,
+                 num_pers=None, eccentric=False, valid_types = ['bic', 'aic', 'ls'],
+                 workers=1, verbose=True):
         self.post = copy.deepcopy(post)
         self.default_pdict = {}
         for k in post.params.keys():
@@ -62,6 +65,7 @@ class Periodogram:
         self.valid_types = valid_types
         self.power = {key: None for key in self.valid_types}
 
+        self.workers = workers
         self.verbose = verbose
 
         self.best_per = None
@@ -153,7 +157,7 @@ class Periodogram:
         self.post.params['tc{}'.format(self.num_known_planets+1)].vary = True
 
         power = np.zeros_like(self.pers)
-        self.fit_params = []
+        self.fit_params = self.num_pers*[None]
 
         for i, per in enumerate(self.pers):
             if self.verbose:
@@ -172,7 +176,8 @@ class Periodogram:
             best_params = {}
             for k in fit.params.keys():
                 best_params[k] = fit.params[k].value
-            self.fit_params.append(best_params)
+            self.fit_params[i] = best_params
+            #self.fit_params.append(best_params)
 
         fit_index = np.argmax(power)
         self.bestfit_params = self.fit_params[fit_index]
