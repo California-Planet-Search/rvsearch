@@ -25,8 +25,9 @@ class Periodogram:
     """
 
     def __init__(self, post, basebic=None, minsearchp=3, maxsearchp=10000,
-                 baseline=True, basefactor=5., oversampling=1, fap=0.01, num_pers=None,
-                 eccentric=False, valid_types = ['bic', 'aic', 'ls'], verbose=True):
+                 baseline=True, basefactor=5., oversampling=1, fap=0.01,
+                 num_pers=None, eccentric=False, valid_types = ['bic', 'aic', 'ls'],
+                 workers=1, verbose=True):
         self.post = copy.deepcopy(post)
         self.default_pdict = {}
         for k in post.params.keys():
