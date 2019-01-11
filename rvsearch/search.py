@@ -36,7 +36,7 @@ class Search(object):
 
     def __init__(self, data, starname=None, max_planets=8, priors=None, crit='bic',
                 fap=0.01, min_per=3, trend=False, fix=False, polish=True,
-                verbose=True):
+                workers=1, verbose=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
@@ -78,6 +78,7 @@ class Search(object):
         self.fix = fix
         self.polish = polish
 
+        self.workers = workers
         self.verbose = verbose
 
         self.basebic = None
@@ -306,7 +307,8 @@ class Search(object):
 
             perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
                                                minsearchp = self.min_per,
-                                               fap=self.fap, verbose=self.verbose)
+                                               fap=self.fap, workers=self.workers,
+                                               verbose=self.verbose)
             t1 = time.process_time()
             perioder.per_bic()
             t2 = time.process_time()

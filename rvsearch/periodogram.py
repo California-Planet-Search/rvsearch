@@ -1,7 +1,8 @@
 import copy
 import pdb
-import multiprocessing
-from multiprocessing import Pool
+#import multiprocessing
+#from multiprocessing import Pool
+import pathos.multiprocessing as mp
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -156,8 +157,8 @@ class Periodogram:
         self.post.params['k{}'.format(self.num_known_planets+1)].vary = True
         self.post.params['tc{}'.format(self.num_known_planets+1)].vary = True
 
-        power = np.zeros_like(self.pers)
-        self.fit_params = []
+        self.bic = np.zeros_like(self.pers)
+        self.fit_params = [{} for x in range(len(self.pers))]
 
         if self.workers == 1:
             for i, per in enumerate(self.pers):
@@ -171,7 +172,7 @@ class Periodogram:
                 perkey = 'per{}'.format(self.num_known_planets+1)
                 self.post.params[perkey].value = per
                 fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
-                power[i] = baseline_bic - fit.likelihood.bic()
+                self.bic[i] = baseline_bic - fit.likelihood.bic()
 
                 # Append the best-fit parameters to the period-iterated list.
                 best_params = {}
@@ -182,6 +183,7 @@ class Periodogram:
         else:
             def fit_period(i):
                 # Reset posterior parameters to default values.
+                print(i)
                 post = copy.deepcopy(self.post)
                 for k in self.default_pdict.keys():
                     post.params[k].value = self.default_pdict[k]
@@ -190,7 +192,7 @@ class Periodogram:
                 perkey = 'per{}'.format(self.num_known_planets+1)
                 post.params[perkey].value = self.pers[i]
                 post = radvel.fitting.maxlike_fitting(post, verbose=False)
-                power[i] = baseline_bic - post.likelihood.bic()
+                self.bic[i] = baseline_bic - post.likelihood.bic()
 
                 # Append the best-fit parameters to the period-iterated list.
                 best_params = {}
@@ -199,13 +201,15 @@ class Periodogram:
                 self.fit_params[i] = best_params
 
             # Parallelize the loop over the period grid.
-            p = multiprocessing.Pool(processes=self.workers)
+            #for i in np.arange(self.num_pers):
+            #    fit_period(i)
+            p = mp.Pool(processes=self.workers)
             p.map(fit_period, np.arange(self.num_pers))
 
-        fit_index = np.argmax(power)
+        fit_index = np.argmax(self.bic)
         self.bestfit_params = self.fit_params[fit_index]
-        self.best_bic = power[fit_index]
-        self.power['bic'] = power
+        self.best_bic = self.bic[fit_index]
+        self.power['bic'] = self.bic
 
     def ls(self):
         """Astropy Lomb-Scargle periodogram.
