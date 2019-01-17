@@ -3,6 +3,7 @@ import pdb
 #import multiprocessing
 #from multiprocessing import Pool
 import pathos.multiprocessing as mp
+import threading as threading
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -165,25 +166,28 @@ class Periodogram:
                 if self.verbose:
                     print(' {}'.format(i), '/', self.num_pers, end='\r')
                 # Reset posterior parameters to default values.
+                post = copy.deepcopy(self.post)
                 for k in self.default_pdict.keys():
-                    self.post.params[k].value = self.default_pdict[k]
+                    post.params[k].value = self.default_pdict[k]
 
                 #Set new period, and fit a circular orbit.
                 perkey = 'per{}'.format(self.num_known_planets+1)
-                self.post.params[perkey].value = per
-                fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
+                post.params[perkey].value = per
+                fit = radvel.fitting.maxlike_fitting(post, verbose=False)
                 self.bic[i] = baseline_bic - fit.likelihood.bic()
 
                 # Append the best-fit parameters to the period-iterated list.
                 best_params = {}
                 for k in fit.params.keys():
                     best_params[k] = fit.params[k].value
-                self.fit_params.append(best_params)
+                self.fit_params[i] = best_params
 
         else:
+            self.copy_posts = [copy.deepcopy(self.post) for x in range(self.workers)]
             def fit_period(i):
+                if self.verbose:
+                    print(' {}'.format(i), '/', self.num_pers, end='\r')
                 # Reset posterior parameters to default values.
-                print(i)
                 post = copy.deepcopy(self.post)
                 for k in self.default_pdict.keys():
                     post.params[k].value = self.default_pdict[k]
@@ -192,19 +196,27 @@ class Periodogram:
                 perkey = 'per{}'.format(self.num_known_planets+1)
                 post.params[perkey].value = self.pers[i]
                 post = radvel.fitting.maxlike_fitting(post, verbose=False)
-                self.bic[i] = baseline_bic - post.likelihood.bic()
+                bic = baseline_bic - post.likelihood.bic()
+                self.bic[i] = bic
 
                 # Append the best-fit parameters to the period-iterated list.
                 best_params = {}
                 for k in post.params.keys():
                     best_params[k] = post.params[k].value
                 self.fit_params[i] = best_params
+                return bic
 
             # Parallelize the loop over the period grid.
             #for i in np.arange(self.num_pers):
             #    fit_period(i)
             p = mp.Pool(processes=self.workers)
-            p.map(fit_period, np.arange(self.num_pers))
+            result = p.map(fit_period, np.arange(self.num_pers))
+            pdb.set_trace()
+            #sub_arrays = np.array_split(np.arange(self.num_pers), self.workers)
+            #ts = [threading.Thread(target=fit_period, args=sub_arrays[x]) for x in range(self.workers)]
+            #for t in ts:
+            #    t.start()
+            #    t.join()
 
         fit_index = np.argmax(self.bic)
         self.bestfit_params = self.fit_params[fit_index]
