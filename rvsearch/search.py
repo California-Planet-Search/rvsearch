@@ -310,11 +310,8 @@ class Search(object):
                                                fap=self.fap, workers=self.workers,
                                                verbose=self.verbose)
             t1 = time.process_time()
-            perioder.per_bic()
-            t2 = time.process_time()
-            if self.verbose:
-                print('Time = {} seconds'.format(t2 - t1))
 
+            perioder.per_bic()
             self.periodograms.append(perioder.power[self.crit])
             if self.num_planets == 0:
                 self.pers = perioder.pers
@@ -324,6 +321,10 @@ class Search(object):
             self.best_bics.append(perioder.best_bic)
             perioder.plot_per()
             perioder.fig.savefig(outdir+'/dbic{}.pdf'.format(self.num_planets+1))
+
+            t2 = time.process_time()
+            if self.verbose:
+                print('Time = {} seconds'.format(t2 - t1))
 
             if perioder.best_bic > perioder.bic_thresh:
                 self.num_planets += 1
