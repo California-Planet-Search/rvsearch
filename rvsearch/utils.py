@@ -120,38 +120,6 @@ def window(time, freqs, plot=False):
 	W /= float(len(freq))
 	return W
 
-"""Testing fitting options besides scipy.optimize.minimize. Just other methods
-and basinhopping for now, eventually partial/full linearization.
-"""
-def basin_fitting(post, verbose=True, minimizer_kwargs={'method':'Powell', 'options':dict(xtol=1e-8,maxiter=200,maxfev=100000)}): #options=dict(xtol=1e-8,maxiter=200,maxfev=100000):
-	"""Maximum likelihood fitting, with an annealing method.
-
-	Args:
-        post (radvel.Posterior): Posterior object with initial guesses
-        verbose (bool [optional]): Print messages and fitted values?
-        method (string [optional]): Minimization method. See documentation for `scipy.optimize.minimize` for available
-            options.
-
-	Returns:
-		radvel.Posterior: Posterior object with parameters
-		updated to their maximum likelihood values.
-	"""
-	if verbose:
-		print('Initial loglikelihood = %f' % post.logprob())
-		print("Performing maximum likelihood fit...")
-
-	res = scipy.optimize.basinhopping(post.neglogprob_array, post.get_vary_params(),
-										minimizer_kwargs=minimizer_kwargs)
-	synthparams = post.params.basis.to_synth(post.params, noVary = True)
-	post.params.update(synthparams)
-
-	if verbose:
-		print("Final loglikelihood = %f" % post.logprob())
-		print("Best-fit parameters:")
-		print(post)
-
-	return post
-
 """Series of functions for reading data from various sources into pandas dataframes.
 """
 def read_from_csv(filename, verbose=True):
@@ -188,27 +156,76 @@ def read_from_vst(filename, verbose=True):
     return data
 
 # Function for collecting results of searches in current directory.
-def scrape(starlist, save=True):
+def scrape(starlist, mass_db_name=None, save=True):
+	"""Take data from completed searches and compile into one databases.
+	If specified, compute planet masses and semi-major axes.
+	"""
 	all_params = []
+	nplanets = []
+
 	for star in starlist:
 		params = {}
-		params['star'] = star
-		post = radvel.posterior.load(star+'/post_final.pkl')
+		params['name'] = star
+		try:
+			post = radvel.posterior.load(star+'/post_final.pkl')
+		except (RuntimeError, FileNotFoundError):
+			print('I am not done looking for planets around {} yet, try again later.'.format(star))
+			continue
+
 		if post.params.num_planets == 1:
 			if post.params['k1'].value == 0.:
 				num_planets = 0
 			else:
 				num_planets = 1
+			nplanets.append(num_planets)
 		else:
 			num_planets = post.params.num_planets
+			nplanets.append(num_planets)
 		params['num_planets'] = num_planets
+
 		for k in post.params.keys():
 			params[k] = post.params[k].value
 		all_params.append(params)
-	dataframe = pd.DataFrame(all_params)
+
+	# Save radvel parameters as a pandas dataframe.
+	props = pd.DataFrame(all_params)
+
+	if mass_db_name is not None:
+		try:
+			mass_db = pd.read_csv(mass_db_name)
+		except (RuntimeError, FileNotFoundError):
+			print('That is not a pandas dataframe. Try again.')
+
+        # Add enough columns to compute masses & semi-major axes for system with most planets.
+		max_num_planets = np.amax(nplanets)
+		for n in np.arange(1, max_num_planets+1):
+			props['Mstar'] = np.nan
+			props['M{}'.format(n)] = np.nan
+			props['a{}'.format(n)] = np.nan
+
+		# Save median star mass, uncertainties
+		for star in starlist:
+			try:
+				star_index = props.index[props['name'] == str(star)][0]
+				mass_index = mass_db.index[mass_db['name'] == str(star)][0]
+			except IndexError:
+				continue
+			# Save star mass, to be used in planet mass & semi-major axis calculations.
+			Mtot = mass_db.loc[mass_index, 'mstar']
+			props.loc[star_index, 'Mstar'] = Mtot
+
+			# For each found planet, compute mass and semi-major axis
+			if props.loc[star_index, 'num_planets'] != 0:
+				for n in np.arange(1, props.loc[star_index, 'num_planets']+1):
+					K = props.loc[star_index, 'k{}'.format(n)]
+					P = props.loc[star_index, 'per{}'.format(n)]
+					e = props.loc[star_index, 'secosw{}'.format(n)]**2 + props.loc[star_index, 'sesinw{}'.format(n)]**2
+					props.loc[star_index, 'M{}'.format(n)] = radvel.utils.Msini(K, P, Mtot, e, Msini_units='jupiter')
+					props.loc[star_index, 'a{}'.format(n)] = radvel.utils.semi_major_axis(P, Mtot)
+
 	if save:
-		dataframe.to_csv('system_props.csv')
-	return dataframe
+		props.to_csv('system_props.csv')
+	return props
 
 # Test search-specific priors
 '''

@@ -1,9 +1,10 @@
 import copy
+import multiprocessing
+from multiprocessing import Pool
+import pdb
 
 import numpy as np
 import matplotlib.pyplot as plt
-import copy
-import pdb
 import astropy.stats
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -18,7 +19,7 @@ class Periodogram:
     """Class to calculate and store periodograms.
 
     Args:
-        posterior (radvel.Posterior): radvel.Posterior object
+        post (radvel.Posterior): radvel.Posterior object
         minsearchp (float): minimum search period
         maxsearchp (float): maximum search period
         num_known_planets (int): Assume this many known planets in the system
@@ -29,8 +30,9 @@ class Periodogram:
     """
 
     def __init__(self, post, basebic=None, minsearchp=3, maxsearchp=10000,
-                 baseline=True, basefactor=4., oversampling=1, fap=0.01, num_pers=None,
-                 eccentric=False, valid_types = ['bic', 'aic', 'ls'], verbose=True):
+                 baseline=True, basefactor=5., oversampling=1, fap=0.01,
+                 num_pers=None, eccentric=False, valid_types = ['bic', 'aic', 'ls'],
+                 workers=1, verbose=True):
         self.post = copy.deepcopy(post)
         self.default_pdict = {}
         for k in post.params.keys():
@@ -66,6 +68,7 @@ class Periodogram:
         self.valid_types = valid_types
         self.power = {key: None for key in self.valid_types}
 
+        self.workers = workers
         self.verbose = verbose
 
         self.best_per = None
@@ -157,7 +160,7 @@ class Periodogram:
         self.post.params['tc{}'.format(self.num_known_planets+1)].vary = True
 
         power = np.zeros_like(self.pers)
-        self.fit_params = []
+        self.fit_params = self.num_pers*[None]
 
         for i, per in enumerate(self.pers):
             if self.verbose:
@@ -176,7 +179,8 @@ class Periodogram:
             best_params = {}
             for k in fit.params.keys():
                 best_params[k] = fit.params[k].value
-            self.fit_params.append(best_params)
+            self.fit_params[i] = best_params
+            #self.fit_params.append(best_params)
 
         fit_index = np.argmax(power)
         self.bestfit_params = self.fit_params[fit_index]
@@ -231,7 +235,7 @@ class Periodogram:
             except KeyError:
                 print('Have not generated a Lomb-Scargle periodogram.')
 
-    def plot_per(self, ls=False, alias=True, save=False):
+    def plot_per(self, ls=False, alias=True, floor=True, save=False):
         # TO-DO: WORK IN AIC/BIC OPTION, INCLUDE IN PLOT TITLE
         peak = np.argmax(self.power['bic'])
         f_real = self.freqs[peak]
@@ -245,9 +249,13 @@ class Periodogram:
         if self.bic_thresh is not None:
             ax.axhline(self.bic_thresh, ls=':', c='y', label='{} FAP'.format(self.fap))
             upper = 1.1*max(np.amax(self.power['bic']), self.bic_thresh)
-            ax.set_ylim([np.amin(self.power['bic']), upper])
         else:
-            ax.set_ylim([np.amin(self.power['bic']), 1.1*np.amax(self.power['bic'])])
+            upper = 1.1*np.amax(self.power['bic'])
+        if floor: # Set periodogram plot floor according to circular-fit BIC min.
+            lower = -2*np.log(len(self.times))
+        else:
+            lower = np.amin(self.power['bic'])
+        ax.set_ylim([lower, upper])
         ax.set_xlim([self.pers[0], self.pers[-1]])
 
         if alias:
