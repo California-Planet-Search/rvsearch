@@ -1,7 +1,9 @@
 import copy
-import multiprocessing
-from multiprocessing import Pool
 import pdb
+#import multiprocessing
+#from multiprocessing import Pool
+import pathos.multiprocessing as mp
+import threading as threading
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -96,7 +98,6 @@ class Periodogram:
         entire duration of observations, phase slip is no more than P/4
 
         Args:
-            oversampling (float): (optional) oversampling factor
             verbose (bool): (optional) print extra messages
 
         Returns:
@@ -144,6 +145,7 @@ class Periodogram:
             baseline_bic = baseline_fit.likelihood.bic()
         else:
             baseline_bic = self.basebic
+
         rms = np.std(self.post.likelihood.residuals())
         self.default_pdict['k{}'.format(self.post.params.num_planets)] = rms
 
@@ -156,34 +158,75 @@ class Periodogram:
         self.post.params['k{}'.format(self.num_known_planets+1)].vary = True
         self.post.params['tc{}'.format(self.num_known_planets+1)].vary = True
 
-        power = np.zeros_like(self.pers)
-        self.fit_params = self.num_pers*[None]
+        def fit_period(per_array):
+            post = copy.deepcopy(self.post)
+            fit_params = [{} for x in range(len(per_array))]
+            bic = np.zeros_like(per_array)
 
-        for i, per in enumerate(self.pers):
+            for i, per in enumerate(per_array):
+                if self.verbose:
+                    print(' {}'.format(i), '/', self.num_pers, end='\r')
+                # Reset posterior parameters to default values.
+                for k in self.default_pdict.keys():
+                    post.params[k].value = self.default_pdict[k]
+
+                #Set new period, and fit a circular orbit.
+                perkey = 'per{}'.format(self.num_known_planets+1)
+                post.params[perkey].value = per
+                post = radvel.fitting.maxlike_fitting(post, verbose=False)
+                bic[i] = baseline_bic - post.likelihood.bic()
+
+                # Append the best-fit parameters to the period-iterated list.
+                best_params = {}
+                for k in post.params.keys():
+                    best_params[k] = post.params[k].value
+                fit_params[i] = best_params
+            return [bic, fit_params]
+
+        if self.workers == 1:
+            self.bic, self.fit_params = fit_period(self.pers)
+        else:
+            # Parallelize the loop over sections of the period grid.
+            sub_pers = np.array_split(self.pers, self.workers)
+            p = mp.Pool(processes=self.workers)
+            output = p.map(fit_period, sub_pers)
+            lock = mp.Lock()
+            # Sort output.
+            all_bics = []
+            all_params = []
+            for chunk in output:
+                all_bics.append(chunk[0])
+                all_params.append(chunk[1])
+            self.bic = [y for x in all_bics for y in x]
+            self.fit_params = [y for x in all_params for y in x]
+
+        fit_index = np.argmax(self.bic)
+        self.bestfit_params = self.fit_params[fit_index]
+        self.best_bic = self.bic[fit_index]
+        self.power['bic'] = self.bic
+        '''
+        def fit_period(i):
             if self.verbose:
                 print(' {}'.format(i), '/', self.num_pers, end='\r')
             # Reset posterior parameters to default values.
+            post = copy.deepcopy(self.post)
             for k in self.default_pdict.keys():
-                self.post.params[k].value = self.default_pdict[k]
+                post.params[k].value = self.default_pdict[k]
 
             #Set new period, and fit a circular orbit.
             perkey = 'per{}'.format(self.num_known_planets+1)
-            self.post.params[perkey].value = per
-            fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
-            power[i] = baseline_bic - fit.likelihood.bic()
+            post.params[perkey].value = self.pers[i]
+            post = radvel.fitting.maxlike_fitting(post, verbose=False)
+            bic = baseline_bic - post.likelihood.bic()
+            self.bic[i] = bic
 
             # Append the best-fit parameters to the period-iterated list.
             best_params = {}
-            for k in fit.params.keys():
-                best_params[k] = fit.params[k].value
+            for k in post.params.keys():
+                best_params[k] = post.params[k].value
             self.fit_params[i] = best_params
-            #self.fit_params.append(best_params)
-
-        fit_index = np.argmax(power)
-        self.bestfit_params = self.fit_params[fit_index]
-        self.best_bic = power[fit_index]
-        self.power['bic'] = power
-
+            return bic, best_params
+        '''
     def ls(self):
         """Astropy Lomb-Scargle periodogram.
 

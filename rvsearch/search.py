@@ -36,7 +36,7 @@ class Search(object):
 
     def __init__(self, data, starname=None, max_planets=8, priors=None, crit='bic',
                 fap=0.01, min_per=3, trend=False, fix=False, polish=True,
-                verbose=True):
+                workers=1, verbose=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
@@ -78,6 +78,7 @@ class Search(object):
         self.fix = fix
         self.polish = polish
 
+        self.workers = workers
         self.verbose = verbose
 
         self.basebic = None
@@ -306,13 +307,11 @@ class Search(object):
 
             perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
                                                minsearchp = self.min_per,
-                                               fap=self.fap, verbose=self.verbose)
+                                               fap=self.fap, workers=self.workers,
+                                               verbose=self.verbose)
             t1 = time.process_time()
-            perioder.per_bic()
-            t2 = time.process_time()
-            if self.verbose:
-                print('Time = {} seconds'.format(t2 - t1))
 
+            perioder.per_bic()
             self.periodograms.append(perioder.power[self.crit])
             if self.num_planets == 0:
                 self.pers = perioder.pers
@@ -322,6 +321,10 @@ class Search(object):
             self.best_bics.append(perioder.best_bic)
             perioder.plot_per()
             perioder.fig.savefig(outdir+'/dbic{}.pdf'.format(self.num_planets+1))
+
+            t2 = time.process_time()
+            if self.verbose:
+                print('Time = {} seconds'.format(t2 - t1))
 
             if perioder.best_bic > perioder.bic_thresh:
                 self.num_planets += 1
