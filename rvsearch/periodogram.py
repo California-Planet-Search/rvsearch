@@ -165,7 +165,8 @@ class Periodogram:
 
             for i, per in enumerate(per_array):
                 if self.verbose:
-                    print(' {}'.format(i), '/', self.num_pers, end='\r')
+                    limit = self.num_pers/float(self.workers)
+                    print(' {}'.format(i), '/', limit, end='\r')
                 # Reset posterior parameters to default values.
                 for k in self.default_pdict.keys():
                     post.params[k].value = self.default_pdict[k]
@@ -190,7 +191,7 @@ class Periodogram:
             sub_pers = np.array_split(self.pers, self.workers)
             p = mp.Pool(processes=self.workers)
             output = p.map(fit_period, sub_pers)
-            lock = mp.Lock()
+
             # Sort output.
             all_bics = []
             all_params = []
