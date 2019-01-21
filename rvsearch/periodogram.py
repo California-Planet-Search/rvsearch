@@ -273,7 +273,7 @@ class Periodogram:
             except:
                 print('Have not generated a Lomb-Scargle periodogram.')
 
-    def plot_per(self, ls=False, alias=True, floor=True, save=False):
+    def plot_per(self, ls=False, alias=True, floor=False, save=False):
         # TO-DO: WORK IN AIC/BIC OPTION, INCLUDE IN PLOT TITLE
         peak = np.argmax(self.power['bic'])
         f_real = self.freqs[peak]
