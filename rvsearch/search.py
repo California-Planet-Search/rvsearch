@@ -34,9 +34,9 @@ class Search(object):
 
     """
 
-    def __init__(self, data, starname=None, max_planets=8, priors=None, crit='bic',
-                fap=0.01, min_per=3, trend=False, fix=False, polish=True,
-                manual_grid=None, workers=1, verbose=True):
+    def __init__(self, data, starname=None, max_planets=8, priors=None,
+                crit='bic', fap=0.01, min_per=3, anual_grid=None, trend=False,
+                fix=False, polish=True, workers=1, verbose=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
