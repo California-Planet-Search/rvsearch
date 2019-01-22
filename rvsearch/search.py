@@ -15,7 +15,7 @@ import rvsearch.periodogram as periodogram
 import rvsearch.utils as utils
 
 
-class Search(object):
+class Search:
     """Class to initialize and modify posteriors as planet search runs.
 
     Args:
@@ -34,7 +34,7 @@ class Search(object):
 
     """
 
-    def __init__(self, data, starname=None, max_planets=8, priors=None,
+    def __init__(self, post, starname=None, max_planets=8, priors=None,
                 crit='bic', fap=0.01, min_per=3, anual_grid=None, trend=False,
                 fix=False, polish=True, workers=1, verbose=True):
 
@@ -51,14 +51,18 @@ class Search(object):
             self.starname = 'star'
         else:
             self.starname = starname
-        self.params = utils.initialize_default_pars(instnames=self.tels)
-        self.priors = priors
+
+        self.post = post
+        self.params = self.post.params
+        self.priors = self.post.priors
 
         self.all_params = []
-        self.post = utils.initialize_post(self.data, self.params, self.priors)
 
         self.max_planets = max_planets
-        self.num_planets = 0
+        if self.post.params.num_planets == 1 and self.post.params.k1 == 0.0:
+            self.num_planets = 0
+        else:
+            self.num_planets = self.post.params.num_planets
 
         self.crit = crit
         '''
@@ -88,6 +92,16 @@ class Search(object):
         self.periodograms = []
         self.bic_threshes = []
         self.best_bics = []
+
+    @classmethod
+    def from_pandas(cls, data, priors=None):
+        params = utils.initialize_default_pars(instnames=data.tel)
+        post = utils.initialize_post(data, params=params, priors=priors)
+        return cls(post)
+
+    @classmethod
+    def from_post(cls, filename):
+        return cls(post)
 
     def trend_test(self):
         # Perform 0-planet baseline fit.
@@ -184,6 +198,7 @@ class Search(object):
             new_post = utils.initialize_post(self.data, new_params, priors)
         self.post = new_post
 
+
     def sub_planet(self):
 
         current_num_planets = self.post.params.num_planets
@@ -218,6 +233,7 @@ class Search(object):
 
         new_post = utils.initialize_post(self.data, new_params, priors)
         self.post = new_post
+
 
     def fit_orbit(self):
         for planet in np.arange(1, self.num_planets+1):
@@ -280,8 +296,8 @@ class Search(object):
         try:
             pass
         except:
-            raise RuntimeError('Model contains fewer than {} Gaussian processes.'
-                                .format(num_gps))
+            raise RuntimeError('Model contains fewer than {} Gaussian \
+                                processes.'.format(num_gps))
 
     def save(self, filename=None):
         if filename is not None:

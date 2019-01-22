@@ -67,7 +67,6 @@ def initialize_post(data, params=None, priors=None):
 	Returns:
 		post (radvel Posterior object)
 
-	TO-DO: MAKE OPTION FOR KNOWN MULTI-PLANET POSTERIOR
 	"""
 
 	if params == None:
