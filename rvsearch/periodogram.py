@@ -29,9 +29,9 @@ class Periodogram:
     """
 
     def __init__(self, post, basebic=None, minsearchp=3, maxsearchp=10000,
-                 baseline=True, basefactor=5., oversampling=1, fap=0.01,
-                 num_pers=None, eccentric=False, valid_types = ['bic', 'aic', 'ls'],
-                 workers=1, verbose=True):
+                 baseline=True, basefactor=5., oversampling=1, manual_grid=None,
+                 fap=0.01, num_pers=None, eccentric=False, workers=1,
+                 valid_types = ['bic', 'aic', 'ls'], verbose=True):
         self.post = copy.deepcopy(post)
         self.default_pdict = {}
         for k in post.params.keys():
@@ -55,6 +55,7 @@ class Periodogram:
         self.baseline = baseline
         self.basefactor = basefactor
         self.oversampling = oversampling
+        self.manual_grid = manual_grid
         self.fap = fap
         self.num_pers = num_pers
 
@@ -123,10 +124,14 @@ class Periodogram:
         return pers
 
     def make_per_grid(self):
-        if self.num_pers == None:
-            self.pers = self.per_spacing()
+        if self.manual_grid != None:
+            self.pers = self.manual_grid
         else:
-            self.pers = 1/np.linspace(1/self.maxsearchP, 1/self.minsearchP, self.num_pers)
+            if self.num_pers == None:
+                self.pers = self.per_spacing()
+            else:
+                self.pers = 1/np.linspace(1/self.maxsearchP, 1/self.minsearchP,\
+                                                                self.num_pers)
         self.freqs = 1/self.pers
 
     def per_bic(self):
