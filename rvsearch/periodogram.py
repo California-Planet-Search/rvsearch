@@ -170,7 +170,7 @@ class Periodogram:
 
             for i, per in enumerate(per_array):
                 if self.verbose:
-                    limit = self.num_pers/float(self.workers)
+                    limit = int(self.num_pers/float(self.workers))
                     print(' {}'.format(i), '/', limit, end='\r')
                 # Reset posterior parameters to default values.
                 for k in self.default_pdict.keys():

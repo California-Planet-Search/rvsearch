@@ -52,7 +52,7 @@ class Search:
         if post == None:
             self.priors = priors
             self.params = utils.initialize_default_pars(instnames=self.tels)
-            self.post=utils.initialize_post(params=self.params,
+            self.post=utils.initialize_post(data, params=self.params,
                                             priors=self.priors)
         else:
             self.post = post
@@ -65,7 +65,7 @@ class Search:
         self.all_params = []
 
         self.max_planets = max_planets
-        if self.post.params.num_planets == 1 and self.post.params['k1'] == 0.:
+        if self.post.params.num_planets == 1 and self.post.params['k1'].value == 0.:
             self.num_planets = 0
         else:
             self.num_planets = self.post.params.num_planets
@@ -372,11 +372,7 @@ class Search:
             multiplot_fig.savefig(outdir+'/orbit_plot{}.pdf'.format(
                                                     self.num_planets))
 
-        self.save(filename=outdir+'/post_final.pkl')
-        pickle_out = open(outdir+'/search.pkl','wb')
-        pickle.dump(self, pickle_out)
-        pickle_out.close()
-
+        pdb.set_trace()
         periodograms_plus_pers = np.append([self.pers], self.periodograms,
                                                                 axis=0).T
         threshs_and_pks = np.append([self.bic_threshes], [self.best_bics],
@@ -385,3 +381,8 @@ class Search:
                                                 header='period  BIC_array')
         np.savetxt(outdir+'/thresholds_and_peaks.csv', threshs_and_pks,
                                         header='threshold  best_bic')
+
+        self.save(filename=outdir+'/post_final.pkl')
+        pickle_out = open(outdir+'/search.pkl','wb')
+        pickle.dump(self, pickle_out)
+        pickle_out.close()
