@@ -125,9 +125,20 @@ def read_from_csv(filename, binsize=0.0, verbose=True):
 			print('Instrument types not given.')
 		data['tel'] = 'Inst'
 	if binsize > 0.0:
-		time, mnvel, errvel, tel = radvel.utils.bintels(data['time'], \
-									data['mnvel'], data['errvel'], data['tel'])
-		data['time'], data['mnvel'], data['errvel'], data['tel'] = time, mnvel, errvel, tel
+		if 'time' in data.columns:
+			t = data['time'].values
+			tkey = 'time'
+		elif 'jd' in data.columns:
+			t = data['jd'].values
+			tkey = 'jd'
+		else:
+			raise ValueError('Incorrect data input.')
+		#pdb.set_trace()
+		time, mnvel, errvel, tel = radvel.utils.bintels(t, data['mnvel'].values,
+											data['errvel'].values,
+											data['tel'].values)
+		data[tkey], data['mnvel'], data['errvel'], data['tel'] = \
+											time, mnvel, errvel, tel
 	return data
 
 def read_from_arrs(t, mnvel, errvel, tel=None, verbose=True):
