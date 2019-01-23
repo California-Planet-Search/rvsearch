@@ -372,7 +372,11 @@ class Search:
             multiplot_fig.savefig(outdir+'/orbit_plot{}.pdf'.format(
                                                     self.num_planets))
 
-        pdb.set_trace()
+        self.save(filename=outdir+'/post_final.pkl')
+        pickle_out = open(outdir+'/search.pkl','wb')
+        pickle.dump(self, pickle_out)
+        pickle_out.close()
+
         periodograms_plus_pers = np.append([self.pers], self.periodograms,
                                                                 axis=0).T
         threshs_and_pks = np.append([self.bic_threshes], [self.best_bics],
@@ -381,8 +385,3 @@ class Search:
                                                 header='period  BIC_array')
         np.savetxt(outdir+'/thresholds_and_peaks.csv', threshs_and_pks,
                                         header='threshold  best_bic')
-
-        self.save(filename=outdir+'/post_final.pkl')
-        pickle_out = open(outdir+'/search.pkl','wb')
-        pickle.dump(self, pickle_out)
-        pickle_out.close()
