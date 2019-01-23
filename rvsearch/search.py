@@ -193,10 +193,10 @@ class Search:
 
         new_params.num_planets = new_num_planets
 
-        # priors = [radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0) for inst in self.tels]
         # TO-DO: Figure out how to handle jitter prior, whether needed
         if self.priors is not None:
-            new_post = utils.initialize_post(self.data, new_params, self.priors)
+            new_post = utils.initialize_post(self.data, new_params,
+                                                        self.priors)
         else:
             priors = []
             priors.append(radvel.prior.PositiveKPrior(new_num_planets))
@@ -250,7 +250,7 @@ class Search:
             self.post.params['sesinw{}'.format(self.num_planets)].vary = True
 
         if self.polish:
-            # Make a finer, narrow period grid, and search with eccentricity free.
+            # Make a finer, narrow period grid, and search with eccentricity.
             self.post.params['per{}'.format(self.num_planets)].vary = False
             default_pdict = {}
             for k in self.post.params.keys():
@@ -260,9 +260,9 @@ class Search:
             peak = np.argmax(self.periodograms[-1])
             if peak == len(self.periodograms[-1]) - 1:
                 subgrid = np.linspace(self.pers[peak-1], 2*self.pers[peak] -
-                                                        self.pers[peak-1], 9 )
+                                                        self.pers[peak-1], 9)
             else: #TO-DO: JUSTIFY 9 GRID POINTS, OR TAKE AS ARGUMENT
-                subgrid = np.linspace(self.pers[peak-1], self.pers[peak+1], 9 )
+                subgrid = np.linspace(self.pers[peak-1], self.pers[peak+1], 9)
             fit_params = []
             power = []
 
@@ -292,8 +292,10 @@ class Search:
                 self.post.params['per{}'.format(planet)].vary = False
                 self.post.params['k{}'.format(self.num_planets)].vary = False
                 self.post.params['tc{}'.format(self.num_planets)].vary = False
-                self.post.params['secosw{}'.format(self.num_planets)].vary = False
-                self.post.params['sesinw{}'.format(self.num_planets)].vary = False
+                self.post.params['secosw{}'.format(self.num_planets)].vary \
+                                                                    = False
+                self.post.params['sesinw{}'.format(self.num_planets)].vary \
+                                                                    = False
 
     def add_gp(self, inst=None):
         pass
@@ -329,7 +331,7 @@ class Search:
                 self.add_planet()
 
             perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
-                                        minsearchp = self.min_per, fap=self.fap,
+                                        minsearchp=self.min_per, fap=self.fap,
                                         manual_grid=self.manual_grid,
                                         workers=self.workers,
                                         verbose=self.verbose)
@@ -344,7 +346,8 @@ class Search:
             self.bic_threshes.append(perioder.bic_thresh)
             self.best_bics.append(perioder.best_bic)
             perioder.plot_per()
-            perioder.fig.savefig(outdir+'/dbic{}.pdf'.format(self.num_planets+1))
+            perioder.fig.savefig(outdir+'/dbic{}.pdf'.format(
+                                        self.num_planets+1))
 
             t2 = time.process_time()
             if self.verbose:
@@ -357,25 +360,28 @@ class Search:
                 self.fit_orbit()
                 self.all_params.append(self.post.params)
                 self.basebic = self.post.bic()
-
             else:
                 self.sub_planet()
                 run = False
             if self.num_planets >= self.max_planets:
                 run = False
+            # Generate an orbit plot.
             rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+
                                 '/orbit_plot{}.pdf'.format(self.num_planets))
             multiplot_fig, ax_list = rvplot.plot_multipanel()
-            multiplot_fig.savefig(outdir+'/orbit_plot{}.pdf'.format(self.num_planets))
+            multiplot_fig.savefig(outdir+'/orbit_plot{}.pdf'.format(
+                                                    self.num_planets))
 
         self.save(filename=outdir+'/post_final.pkl')
         pickle_out = open(outdir+'/search.pkl','wb')
         pickle.dump(self, pickle_out)
         pickle_out.close()
 
-        periodograms_plus_pers = np.append([self.pers], self.periodograms, axis=0).T
-        threshs_and_pks = np.append([self.bic_threshes], [self.best_bics], axis=0).T
-        np.savetxt(outdir+'/pers_and_periodograms.csv', periodograms_plus_pers,
-                                                    header='period  BIC_array')
+        periodograms_plus_pers = np.append([self.pers], self.periodograms,
+                                                                axis=0).T
+        threshs_and_pks = np.append([self.bic_threshes], [self.best_bics],
+                                                                axis=0).T
+        np.savetxt(outdir+'/pers_periodograms.csv', periodograms_plus_pers,
+                                                header='period  BIC_array')
         np.savetxt(outdir+'/thresholds_and_peaks.csv', threshs_and_pks,
                                         header='threshold  best_bic')
