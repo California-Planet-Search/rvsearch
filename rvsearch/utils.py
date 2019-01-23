@@ -97,15 +97,11 @@ def initialize_post(data, params=None, priors=None):
 	like = radvel.likelihood.CompositeLikelihood(list(likes.values()))
 
 	post = radvel.posterior.Posterior(like)
-	#FIX TO COMBINE GIVEN PRIORS AND NEEDED PRIORS
-	if priors is not None:
-		post.priors = priors
-	else:
-		priors = []
-		priors.append(radvel.prior.PositiveKPrior(post.params.num_planets))
-		priors.append(radvel.prior.EccentricityPrior(post.params.num_planets))
-		#priors.append([radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0) for inst in telgrps.keys()])
-		post.priors = priors
+	priors.append(radvel.prior.PositiveKPrior(post.params.num_planets))
+	priors.append(radvel.prior.EccentricityPrior(post.params.num_planets))
+	#priors.append([radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0)
+	#									for inst in telgrps.keys()])
+	post.priors = priors
 
 	return post
 

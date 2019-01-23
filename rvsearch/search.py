@@ -34,9 +34,9 @@ class Search:
 
     """
 
-    def __init__(self, data, known_post=None, starname=None, max_planets=8, priors=None,
-                crit='bic', fap=0.01, min_per=3, manual_grid=None, trend=False,
-                fix=False, polish=True, workers=1, verbose=True):
+    def __init__(self, data, post=None, starname='star', max_planets=8,
+                priors=[], crit='bic', fap=0.01, min_per=3, manual_grid=None,
+                trend=False, fix=False, polish=True, workers=1, verbose=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
@@ -47,14 +47,16 @@ class Search:
         else:
             raise ValueError('Incorrect data input.')
 
-        if starname is None:
-            self.starname = 'star'
-        else:
-            self.starname = starname
+        self.starname = starname
 
-        self.priors = priors
-        self.params = utils.initialize_default_pars(instnames=self.tels)
-        self.post=utils.initialize_post(params=self.params, priors=self.priors)
+        if post == None:
+            self.priors = priors
+            self.params = utils.initialize_default_pars(instnames=self.tels)
+            self.post=utils.initialize_post(params=self.params,
+                                            priors=self.priors)
+        else:
+            self.post = post
+            self.priors = post.priors
         '''
         self.post = post
         self.params = self.post.params
@@ -63,7 +65,7 @@ class Search:
         self.all_params = []
 
         self.max_planets = max_planets
-        if self.post.params.num_planets == 1 and self.post.params['k1'] == 0.0:
+        if self.post.params.num_planets == 1 and self.post.params['k1'] == 0.:
             self.num_planets = 0
         else:
             self.num_planets = self.post.params.num_planets
