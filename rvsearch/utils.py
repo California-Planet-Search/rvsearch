@@ -12,7 +12,7 @@ except:
 	RuntimeError()
 
 
-"""Functions for posterior modification (resetting parameters, intializing, etc.)
+"""Functions for posterior modification (resetting, intializing, etc.)
 """
 
 def reset_params(post, default_pdict):
@@ -21,7 +21,8 @@ def reset_params(post, default_pdict):
 		post.params[k].value = default_pdict[k]
 	return post
 
-def initialize_default_pars(instnames=['inst'], fitting_basis='per tc secosw sesinw k'):
+def initialize_default_pars(instnames=['inst'], fitting_basis= \
+										'per tc secosw sesinw k'):
     """Set up a default Parameters object.
 
 	None of the basis values are free params, for the initial 0-planet fit.
@@ -93,7 +94,7 @@ def initialize_post(data, params=None, priors=None):
 
 		likes[inst].params['gamma_'+inst] = iparams['gamma_'+inst]
 		likes[inst].params['jit_'+inst] = iparams['jit_'+inst]
-	#Can this be cleaner? like = radvel.likelihood.CompositeLikelihood(likes), if likes is array, not dic.
+	#Can this be cleaner? like = radvel.likelihood.CompositeLikelihood(likes)
 	like = radvel.likelihood.CompositeLikelihood(list(likes.values()))
 
 	post = radvel.posterior.Posterior(like)
@@ -106,7 +107,7 @@ def initialize_post(data, params=None, priors=None):
 	return post
 
 def window(time, freqs, plot=False):
-	"""Function to generate, and possibly plot, the window function of observations.
+	"""Function to generate, and plot, the window function of observations.
 	Args:
 		time: times of observations in a dataset. FOR SEPARATE TELESCOPES?
 	"""
@@ -116,7 +117,7 @@ def window(time, freqs, plot=False):
 	W /= float(len(freq))
 	return W
 
-"""Series of functions for reading data from various sources into pandas dataframes.
+"""Series of functions for reading rvs from various sources into dataframes.
 """
 def read_from_csv(filename, binsize=0.0, verbose=True):
 	data = pd.read_csv(filename)
@@ -133,13 +134,13 @@ def read_from_csv(filename, binsize=0.0, verbose=True):
 			tkey = 'jd'
 		else:
 			raise ValueError('Incorrect data input.')
-		#pdb.set_trace()
 		time, mnvel, errvel, tel = radvel.utils.bintels(t, data['mnvel'].values,
-											data['errvel'].values,
-											data['tel'].values)
-		data[tkey], data['mnvel'], data['errvel'], data['tel'] = \
-											time, mnvel, errvel, tel
-	return data
+														data['errvel'].values,
+														data['tel'].values,
+														binsize=binsize)
+		bin_dict = {tkey:time, 'mnvel':mnvel, 'errvel':errvel, 'tel':tel}
+		bin_data = pd.DataFrame(data=bin_dict)
+	return bin_data
 
 def read_from_arrs(t, mnvel, errvel, tel=None, verbose=True):
     data = pd.DataFrame()
@@ -180,7 +181,8 @@ def scrape(starlist, mass_db_name=None, save=True):
 		try:
 			post = radvel.posterior.load(star+'/post_final.pkl')
 		except (RuntimeError, FileNotFoundError):
-			print('I am not done looking for planets around {} yet, try again later.'.format(star))
+			print('Not done looking for planets around {} yet, \
+								try again later.'.format(star))
 			continue
 
 		if post.params.num_planets == 1:
@@ -207,7 +209,7 @@ def scrape(starlist, mass_db_name=None, save=True):
 		except (RuntimeError, FileNotFoundError):
 			print('That is not a pandas dataframe. Try again.')
 
-        # Add enough columns to compute masses & semi-major axes for system with most planets.
+        # Add enough columns to for searched system with most planets.
 		max_num_planets = np.amax(nplanets)
 		for n in np.arange(1, max_num_planets+1):
 			props['Mstar'] = np.nan
@@ -230,9 +232,12 @@ def scrape(starlist, mass_db_name=None, save=True):
 				for n in np.arange(1, props.loc[star_index, 'num_planets']+1):
 					K = props.loc[star_index, 'k{}'.format(n)]
 					P = props.loc[star_index, 'per{}'.format(n)]
-					e = props.loc[star_index, 'secosw{}'.format(n)]**2 + props.loc[star_index, 'sesinw{}'.format(n)]**2
-					props.loc[star_index, 'M{}'.format(n)] = radvel.utils.Msini(K, P, Mtot, e, Msini_units='jupiter')
-					props.loc[star_index, 'a{}'.format(n)] = radvel.utils.semi_major_axis(P, Mtot)
+					e = props.loc[star_index, 'secosw{}'.format(n)]**2 + \
+						props.loc[star_index, 'sesinw{}'.format(n)]**2
+					props.loc[star_index, 'M{}'.format(n)] = \
+						radvel.utils.Msini(K, P, Mtot, e, Msini_units='jupiter')
+					props.loc[star_index, 'a{}'.format(n)] = \
+						radvel.utils.semi_major_axis(P, Mtot)
 
 	if save:
 		props.to_csv('system_props.csv')
