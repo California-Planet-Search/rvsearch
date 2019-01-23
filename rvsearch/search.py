@@ -34,8 +34,8 @@ class Search:
 
     """
 
-    def __init__(self, post, starname=None, max_planets=8, priors=None,
-                crit='bic', fap=0.01, min_per=3, anual_grid=None, trend=False,
+    def __init__(self, data, known_post=None, starname=None, max_planets=8, priors=None,
+                crit='bic', fap=0.01, min_per=3, manual_grid=None, trend=False,
                 fix=False, polish=True, workers=1, verbose=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
@@ -52,14 +52,18 @@ class Search:
         else:
             self.starname = starname
 
+        self.priors = priors
+        self.params = utils.initialize_default_pars(instnames=self.tels)
+        self.post=utils.initialize_post(params=self.params, priors=self.priors)
+        '''
         self.post = post
         self.params = self.post.params
         self.priors = self.post.priors
-
+        '''
         self.all_params = []
 
         self.max_planets = max_planets
-        if self.post.params.num_planets == 1 and self.post.params.k1 == 0.0:
+        if self.post.params.num_planets == 1 and self.post.params['k1'] == 0.0:
             self.num_planets = 0
         else:
             self.num_planets = self.post.params.num_planets
@@ -92,7 +96,7 @@ class Search:
         self.periodograms = []
         self.bic_threshes = []
         self.best_bics = []
-
+    '''
     @classmethod
     def from_pandas(cls, data, priors=None):
         params = utils.initialize_default_pars(instnames=data.tel)
@@ -100,9 +104,9 @@ class Search:
         return cls(post)
 
     @classmethod
-    def from_post(cls, filename):
+    def from_post(cls, post):
         return cls(post)
-
+    '''
     def trend_test(self):
         # Perform 0-planet baseline fit.
         post1 = copy.deepcopy(self.post)
@@ -351,15 +355,16 @@ class Search:
                 self.fit_orbit()
                 self.all_params.append(self.post.params)
                 self.basebic = self.post.bic()
-                rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+
-                                    '/orbit_plot{}.pdf'.format(self.num_planets))
-                multiplot_fig, ax_list = rvplot.plot_multipanel()
-                multiplot_fig.savefig(outdir+'/orbit_plot{}.pdf'.format(self.num_planets))
+
             else:
                 self.sub_planet()
                 run = False
             if self.num_planets >= self.max_planets:
                 run = False
+            rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+
+                                '/orbit_plot{}.pdf'.format(self.num_planets))
+            multiplot_fig, ax_list = rvplot.plot_multipanel()
+            multiplot_fig.savefig(outdir+'/orbit_plot{}.pdf'.format(self.num_planets))
 
         self.save(filename=outdir+'/post_final.pkl')
         pickle_out = open(outdir+'/search.pkl','wb')
@@ -369,6 +374,6 @@ class Search:
         periodograms_plus_pers = np.append([self.pers], self.periodograms, axis=0).T
         threshs_and_pks = np.append([self.bic_threshes], [self.best_bics], axis=0).T
         np.savetxt(outdir+'/pers_and_periodograms.csv', periodograms_plus_pers,
-                                        header='period  BIC_array')
+                                                    header='period  BIC_array')
         np.savetxt(outdir+'/thresholds_and_peaks.csv', threshs_and_pks,
                                         header='threshold  best_bic')

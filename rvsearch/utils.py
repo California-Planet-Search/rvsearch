@@ -70,7 +70,8 @@ def initialize_post(data, params=None, priors=None):
 	"""
 
 	if params == None:
-		params = radvel.Parameters(1, basis='per tc secosw sesinw logk')
+		#params = radvel.Parameters(1, basis='per tc secosw sesinw logk')
+		params = initialize_default_pars(instnames=data.tel)
 	iparams = radvel.basis._copy_params(params)
 
 	# Allow for time to be listed as 'time' or 'jd' (Julian Date).
@@ -122,16 +123,16 @@ def window(time, freqs, plot=False):
 """Series of functions for reading data from various sources into pandas dataframes.
 """
 def read_from_csv(filename, binsize=0.0, verbose=True):
-    data = pd.read_csv(filename)
-    if 'tel' not in data.columns:
-        if verbose:
-            print('Instrument types not given.')
-        data['tel'] = 'Inst.'
+	data = pd.read_csv(filename)
+	if 'tel' not in data.columns:
+		if verbose:
+			print('Instrument types not given.')
+		data['tel'] = 'Inst'
 	if binsize > 0.0:
 		time, mnvel, errvel, tel = radvel.utils.bintels(data['time'], \
 									data['mnvel'], data['errvel'], data['tel'])
 		data['time'], data['mnvel'], data['errvel'], data['tel'] = time, mnvel, errvel, tel
-    return data
+	return data
 
 def read_from_arrs(t, mnvel, errvel, tel=None, verbose=True):
     data = pd.DataFrame()
@@ -139,7 +140,7 @@ def read_from_arrs(t, mnvel, errvel, tel=None, verbose=True):
     if tel == None:
         if verbose:
             print('Instrument type not given.')
-        data['tel'] = 'Inst.'
+        data['tel'] = 'Inst'
     else:
         data['tel'] = tel
     return data
