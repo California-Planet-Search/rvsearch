@@ -15,7 +15,7 @@ import rvsearch.periodogram as periodogram
 import rvsearch.utils as utils
 
 
-class Search:
+class Search(object):
     """Class to initialize and modify posteriors as planet search runs.
 
     Args:
@@ -26,11 +26,11 @@ class Search:
         crit (str): Either 'bic' or 'aic', depending on which criterion to use.
         fap (float): False-alarm-probability to pass to the periodogram object.
         min_per (float): Minimum search period, to pass to the periodogram object.
-        dvdt (Boolean): Whether to include a linear trend in the search.
-        curv (Boolean): Whether to include a quadratic trend in the search.
-        fix (Boolean): Whether to fix known planet parameters during search.
-        polish (Boolean): Whether to create finer period grid after planet is found.
-        verbose (Boolean):
+        dvdt (bool): Whether to include a linear trend in the search.
+        curv (bool): Whether to include a quadratic trend in the search.
+        fix (bool): Whether to fix known planet parameters during search.
+        polish (bool): Whether to create finer period grid after planet is found.
+        verbose (bool):
 
     """
 
@@ -110,7 +110,9 @@ class Search:
         return cls(post)
     '''
     def trend_test(self):
-        # Perform 0-planet baseline fit.
+        """Perform zero-planet baseline fit, test for significant trend.
+        """
+
         post1 = copy.deepcopy(self.post)
         post1.params['per1'].vary = False
         post1.params['k1'].vary = False
@@ -154,7 +156,9 @@ class Search:
 
 
     def add_planet(self):
+        """Add parameters for one more planet to posterior.
 
+        """
         current_num_planets = self.post.params.num_planets
         fitting_basis = self.post.params.basis.name
         param_list = fitting_basis.split()
@@ -206,7 +210,9 @@ class Search:
 
 
     def sub_planet(self):
+        """Remove parameters for one  planet from posterior.
 
+        """
         current_num_planets = self.post.params.num_planets
         fitting_basis = self.post.params.basis.name
         param_list = fitting_basis.split()
@@ -242,6 +248,9 @@ class Search:
 
 
     def fit_orbit(self):
+        """Perform a max-likelihood fit with all parameters free.
+
+        """
         for planet in np.arange(1, self.num_planets+1):
             self.post.params['per{}'.format(planet)].vary = True
             self.post.params['k{}'.format(self.num_planets)].vary = True
@@ -298,23 +307,31 @@ class Search:
                                                                     = False
 
     def add_gp(self, inst=None):
+        """Add a gaussian process to the posterior (NOT IN USE).
+
+        """
         pass
 
     def sub_gp(self, num_gps=1):
+        """Remove a gaussian process from the posterior (NOT IN USE).
+
+        """
         try:
             pass
         except:
             raise RuntimeError('Model contains fewer than {} Gaussian \
                                 processes.'.format(num_gps))
 
-    def save(self, filename=None):
-        if filename is not None:
-            self.post.writeto(filename)
-        else:
-            self.post.writeto('post_final.pkl')
+    def save(self, filename='post_final.pkl'):
+        """Pickle current posterior.
+
+        """
+        self.post.writeto(filename)
 
     def run_search(self):
-        # Use all of the above routines to run a search.
+        """Run an iterative search for planets not given in posterior.
+
+        """
         outdir = os.path.join(os.getcwd(), self.starname)
         if not os.path.exists(outdir):
             os.mkdir(outdir)
