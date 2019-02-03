@@ -36,7 +36,8 @@ class Search(object):
 
     def __init__(self, data, post=None, starname='star', max_planets=8,
                 priors=[], crit='bic', fap=0.01, min_per=3, manual_grid=None,
-                trend=False, fix=False, polish=True, workers=1, verbose=True):
+                trend=False, fix=False, polish=True, mcmc=False, workers=1,
+                verbose=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
@@ -52,13 +53,13 @@ class Search(object):
         if post == None:
             self.priors = priors
             self.params = utils.initialize_default_pars(instnames=self.tels)
-            self.post=utils.initialize_post(data, params=self.params,
-                                            priors=self.priors)
+            self.post   = utils.initialize_post(data, params=self.params,
+                                                priors=self.priors)
         else:
-            self.post = post
+            self.post   = post
             self.priors = post.priors
         '''
-        self.post = post
+        self.post   = post
         self.params = self.post.params
         self.priors = self.post.priors
         '''
@@ -87,6 +88,7 @@ class Search(object):
         self.trend = trend
         self.fix = fix
         self.polish = polish
+        self.mcmc = mcmc
 
         self.manual_grid = manual_grid
         self.workers = workers
@@ -98,19 +100,10 @@ class Search(object):
         self.periodograms = []
         self.bic_threshes = []
         self.best_bics = []
-    '''
-    @classmethod
-    def from_pandas(cls, data, priors=None):
-        params = utils.initialize_default_pars(instnames=data.tel)
-        post = utils.initialize_post(data, params=params, priors=priors)
-        return cls(post)
 
-    @classmethod
-    def from_post(cls, post):
-        return cls(post)
-    '''
     def trend_test(self):
         """Perform zero-planet baseline fit, test for significant trend.
+
         """
 
         post1 = copy.deepcopy(self.post)
@@ -146,13 +139,13 @@ class Search(object):
                 # Linear
                 self.post.params['dvdt'].value = post1.params['dvdt'].value
                 self.post.params['curv'].value = 0
-                self.post.params['curv'].vary = False
+                self.post.params['curv'].vary  = False
         else:
             # Flat
             self.post.params['dvdt'].value = 0
-            self.post.params['dvdt'].vary = False
+            self.post.params['dvdt'].vary  = False
             self.post.params['curv'].value = 0
-            self.post.params['curv'].vary = False
+            self.post.params['curv'].vary  = False
 
 
     def add_planet(self):
@@ -387,6 +380,60 @@ class Search(object):
                                 '/orbit_plot{}.pdf'.format(self.num_planets))
             multiplot_fig, ax_list = rvplot.plot_multipanel()
             multiplot_fig.savefig(outdir+'/orbit_plot{}.pdf'.format(
+                                                    self.num_planets))
+
+        # Run MCMC on final posterior, save new parameters and uncertainties.
+        if self.mcmc:
+            self.post.uparams = {}
+            # Use minimal recommended parameters
+            chains = radvel.mcmc(self.post,nwalkers=50,nrun=1000)
+            quants = synthchains.quantile([0.159, 0.5, 0.841])
+            # Convert chains to e, w basis.
+            synthchains = self.post.params.basis.to_synth(chains)
+            synthquants = synthchains.quantile([0.159, 0.5, 0.841])
+
+            # Retrieve e and w medians & uncertainties from the synthetic chains.
+            for n in np.arange(1, self.num_planets+1):
+                e_key = 'e{}'.format(n)
+                w_key = 'w{}'.format(n)
+
+                med_e  = synthquants[e_key][0.5]
+                high_e = synthquants[e_key][0.841] - med_e
+                low_e  = med_e - synthquants[e_key][0.159]
+                err_e  = np.mean([high_e,low_e])
+                err_e  = radvel.utils.round_sig(err_e)
+                med_e, err_e, errhigh_e = radvel.utils.sigfig(med_e, err_e)
+
+                med_w  = synthquants[w_key][0.5]
+                high_w = synthquants[w_key][0.841] - med_w
+                low_w  = med_w - synthquants[w_key][0.159]
+                err_w  = np.mean([high_w,low_w])
+                err_w  = radvel.utils.round_sig(err_w)
+                med_w, err_w, errhigh_w = radvel.utils.sigfig(med_w, err_w)
+
+                self.post.params[e_key].value = med_e
+                self.post.params[w_key].value = med_w
+                self.post.uparams[e_key]      = err_e
+                self.post.uparams[w_key]      = err_w
+
+            # Retrieve medians & uncertainties for the fitting basis parameters.
+            for par in self.post.params.keys():
+                if self.post.params[par].vary:
+                    med  = quants[par][0.5]
+                    high = quants[par][0.841] - med
+                    low  = med - quants[par][0.159]
+                    err  = np.mean([high,low])
+                    err  = radvel.utils.round_sig(err)
+                    med, err, errhigh = radvel.utils.sigfig(med, err)
+
+                    self.post.params[par].value = med
+                    self.post.uparams[par]      = err
+
+            rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+
+                                '/orbit_plot_mc{}.pdf'.format(self.num_planets),
+                                uparams=self.post.uparams)
+            multiplot_fig, ax_list = rvplot.plot_multipanel()
+            multiplot_fig.savefig(outdir+'/orbit_plot_mc{}.pdf'.format(
                                                     self.num_planets))
 
         self.save(filename=outdir+'/post_final.pkl')

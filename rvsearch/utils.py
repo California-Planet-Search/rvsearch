@@ -59,7 +59,7 @@ def initialize_default_pars(instnames=['inst'], fitting_basis= \
 
     return params
 
-def initialize_post(data, params=None, priors=None):
+def initialize_post(data, params=None, priors=[]):
 	"""Initialize a posterior object with data, params, and priors.
 	Args:
 		data: a pandas dataframe.
@@ -98,8 +98,9 @@ def initialize_post(data, params=None, priors=None):
 	like = radvel.likelihood.CompositeLikelihood(list(likes.values()))
 
 	post = radvel.posterior.Posterior(like)
-	priors.append(radvel.prior.PositiveKPrior(post.params.num_planets))
-	priors.append(radvel.prior.EccentricityPrior(post.params.num_planets))
+	if priors == []:
+		priors.append(radvel.prior.PositiveKPrior(post.params.num_planets))
+		priors.append(radvel.prior.EccentricityPrior(post.params.num_planets))
 	#priors.append([radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0)
 	#									for inst in telgrps.keys()])
 	post.priors = priors
@@ -147,8 +148,8 @@ def read_from_csv(filename, binsize=0.0, verbose=True):
 														data['tel'].values,
 														binsize=binsize)
 		bin_dict = {tkey:time, 'mnvel':mnvel, 'errvel':errvel, 'tel':tel}
-		bin_data = pd.DataFrame(data=bin_dict)
-	return bin_data
+		data = pd.DataFrame(data=bin_dict)
+	return data
 
 def read_from_arrs(t, mnvel, errvel, tel=None, verbose=True):
     data = pd.DataFrame()
@@ -172,15 +173,15 @@ def read_from_vst(filename, verbose=True):
 		Only relevant for HIRES users.
 
 	"""
-    b = io.read_vst(filename)
-    data = pd.DataFrame()
-    data['time'] = b.jd
-    data['mnvel'] = b.mnvel
-    data['errvel'] = b.errvel
-    data['tel'] = 'HIRES'
+	b = io.read_vst(filename)
+	data = pd.DataFrame()
+	data['time'] = b.jd
+	data['mnvel'] = b.mnvel
+	data['errvel'] = b.errvel
+	data['tel'] = 'HIRES'
 
-    data.to_csv(filename[:-3]+'csv')
-    return data
+	data.to_csv(filename[:-3]+'csv')
+	return data
 
 # Function for collecting results of searches in current directory.
 def scrape(starlist, mass_db_name=None, filename='system_props.csv'):
@@ -193,7 +194,7 @@ def scrape(starlist, mass_db_name=None, filename='system_props.csv'):
 
 	Note:
 		If specified, compute planet masses and semi-major axes.
-		
+
 	"""
 	all_params = []
 	nplanets = []

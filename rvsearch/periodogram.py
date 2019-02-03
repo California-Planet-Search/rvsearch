@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import astropy.stats
 import radvel
 import radvel.fitting
+from radvel.plot import orbit_plots
 
 import rvsearch.utils as utils
 
@@ -69,7 +70,6 @@ class Periodogram(object):
         if self.baseline == True:
             self.maxsearchP = self.basefactor * self.timelen
 
-        # self.search_pars = search_pars
         self.valid_types = ['bic', 'aic', 'ls']
         self.power = {key: None for key in self.valid_types}
 
@@ -80,6 +80,8 @@ class Periodogram(object):
         self.best_bic = None
 
         self.bic_thresh = None
+        # Pre-compute good-fit floor of the BIC periodogram.
+        self.floor = -2*np.log(len(self.times))
 
         # Automatically generate a period grid upon initialization.
         self.make_per_grid()
@@ -137,8 +139,8 @@ class Periodogram(object):
             if self.num_pers == None:
                 self.pers = self.per_spacing()
             else:
-                self.pers = 1/np.linspace(1/self.maxsearchP, 1/self.minsearchP,\
-                                                                self.num_pers)
+                self.pers = 1/np.linspace(1/self.maxsearchP, 1/self.minsearchP,
+                                            self.num_pers)
         self.freqs = 1/self.pers
 
     def per_bic(self):
@@ -161,7 +163,7 @@ class Periodogram(object):
         rms = np.std(self.post.likelihood.residuals())
         self.default_pdict['k{}'.format(self.post.params.num_planets)] = rms
 
-        # Allow amplitude and time offset to vary, fix period.
+        # Allow amplitude and time offset to vary, fix period (and ecc. if asked.)
         self.post.params['per{}'.format(self.num_known_planets+1)].vary = False
         if self.eccentric == False:
             # If eccentric set to False, fix eccentricity to zero.
@@ -192,6 +194,21 @@ class Periodogram(object):
                 post.params[perkey].value = per
                 post = radvel.fitting.maxlike_fitting(post, verbose=False)
                 bic[i] = baseline_bic - post.likelihood.bic()
+
+                #Debug a bad fit. Try to fix.
+                if bic[i] < self.floor - 0.5:
+                    '''
+                    rvplot = orbit_plots.MultipanelPlot(post, saveplot=
+                                                'bad_plot{}.pdf'.format(i))
+                    multiplot_fig, ax_list = rvplot.plot_multipanel()
+                    multiplot_fig.savefig('bad_plot{}.pdf'.format(i))
+                    '''
+                    for k in self.default_pdict.keys():
+                        post.params[k].value = self.default_pdict[k]
+                    post.params[perkey].value = per
+                    post.params['k{}'.format(post.params.num_planets)].value = 0
+                    post = radvel.fitting.maxlike_fitting(post, verbose=False)
+                    bic[i] = baseline_bic - post.likelihood.bic()
 
                 # Append the best-fit parameters to the period-iterated list.
                 best_params = {}
