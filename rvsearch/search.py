@@ -417,12 +417,12 @@ class Search(object):
 
                 #self.post.params[e_key].value = med_e
                 #self.post.params[w_key].value = med_w
-                self.post.uparams[e_key]      = err_e
-                self.post.uparams[w_key]      = err_w
-                self.post.medparams[e_key]    = med_e
-                self.post.medparams[w_key]    = med_w
-                self.post.maxparams[e_key]    = max_e
-                self.post.maxparams[w_key]    = max_w
+                self.post.uparams[e_key]   = err_e
+                self.post.uparams[w_key]   = err_w
+                self.post.medparams[e_key] = med_e
+                self.post.medparams[w_key] = med_w
+                self.post.maxparams[e_key] = max_e
+                self.post.maxparams[w_key] = max_w
 
             # Retrieve medians & uncertainties for the fitting basis parameters.
             for par in self.post.params.keys():
@@ -437,9 +437,9 @@ class Search(object):
                                         self.post.params[par].value, err)
 
                     #self.post.params[par].value = med
-                    self.post.uparams[par]      = err
-                    self.post.medparams[par]    = med
-                    self.post.maxparams[par]    = max
+                    self.post.uparams[par]   = err
+                    self.post.medparams[par] = med
+                    self.post.maxparams[par] = max
 
             rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+
                                 '/orbit_plot_mc{}.pdf'.format(self.num_planets),
