@@ -381,8 +381,10 @@ class Search(object):
                                                     self.num_planets))
 
         # Run MCMC on final posterior, save new parameters and uncertainties.
-        if self.mcmc:
-            self.post.uparams = {}
+        if self.mcmc==True and self.num_planets!=0:
+            self.post.uparams   = {}
+            self.post.medparams = {}
+            self.post.maxparams = {}
             # Use minimal recommended parameters for mcmc.
             self.chains = radvel.mcmc(self.post, nwalkers=50, nrun=10000)
             quants      = self.chains.quantile([0.159, 0.5, 0.841])
