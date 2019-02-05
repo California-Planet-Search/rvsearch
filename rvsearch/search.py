@@ -411,7 +411,8 @@ class Search(object):
                 low_w  = med_w - synthquants[w_key][0.159]
                 err_w  = np.mean([high_w,low_w])
                 err_w  = radvel.utils.round_sig(err_w)
-                med_w, err_w, errhigh_w = radvel.utils.sigfig(
+                med_w, err_w, errhigh_w = radvel.utils.sigfig(med_w, err_w)
+                max_w, err_w, errhigh_w = radvel.utils.sigfig(
                                           self.post.params[w_key].value, err_w)
 
                 #self.post.params[e_key].value = med_e
