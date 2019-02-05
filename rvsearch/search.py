@@ -190,8 +190,8 @@ class Search(object):
 
         new_params.num_planets = new_num_planets
 
-        # TO-DO: Figure out how to handle jitter prior, whether needed
-        if self.priors is not None:
+        # TO-DO: Clean. Figure out how to handle jitter prior, whether needed
+        if self.priors != []:
             new_post = utils.initialize_post(self.data, new_params,
                                                         self.priors)
         else:
@@ -245,11 +245,11 @@ class Search(object):
 
         """
         for planet in np.arange(1, self.num_planets+1):
-            self.post.params['per{}'.format(planet)].vary = True
-            self.post.params['k{}'.format(self.num_planets)].vary = True
-            self.post.params['tc{}'.format(self.num_planets)].vary = True
-            self.post.params['secosw{}'.format(self.num_planets)].vary = True
-            self.post.params['sesinw{}'.format(self.num_planets)].vary = True
+            self.post.params['per{}'.format(planet)].vary    = True
+            self.post.params['k{}'.format(planet)].vary      = True
+            self.post.params['tc{}'.format(planet)].vary     = True
+            self.post.params['secosw{}'.format(planet)].vary = True
+            self.post.params['sesinw{}'.format(planet)].vary = True
 
         if self.polish:
             # Make a finer, narrow period grid, and search with eccentricity.
@@ -291,13 +291,11 @@ class Search(object):
         self.post = radvel.fitting.maxlike_fitting(self.post, verbose=False)
         if self.fix:
             for planet in np.arange(1, self.num_planets+1):
-                self.post.params['per{}'.format(planet)].vary = False
-                self.post.params['k{}'.format(self.num_planets)].vary = False
-                self.post.params['tc{}'.format(self.num_planets)].vary = False
-                self.post.params['secosw{}'.format(self.num_planets)].vary \
-                                                                    = False
-                self.post.params['sesinw{}'.format(self.num_planets)].vary \
-                                                                    = False
+                self.post.params['per{}'.format(planet)].vary    = False
+                self.post.params['k{}'.format(planet)].vary      = False
+                self.post.params['tc{}'.format(planet)].vary     = False
+                self.post.params['secosw{}'.format(planet)].vary = False
+                self.post.params['sesinw{}'.format(planet)].vary = False
 
     def add_gp(self, inst=None):
         """Add a gaussian process to the posterior (NOT IN USE).
@@ -385,14 +383,14 @@ class Search(object):
         # Run MCMC on final posterior, save new parameters and uncertainties.
         if self.mcmc:
             self.post.uparams = {}
-            # Use minimal recommended parameters
+            # Use minimal recommended parameters for mcmc.
             chains = radvel.mcmc(self.post,nwalkers=50,nrun=1000)
             quants = synthchains.quantile([0.159, 0.5, 0.841])
             # Convert chains to e, w basis.
             synthchains = self.post.params.basis.to_synth(chains)
             synthquants = synthchains.quantile([0.159, 0.5, 0.841])
 
-            # Retrieve e and w medians & uncertainties from the synthetic chains.
+            # Retrieve e and w medians & uncertainties from synthetic chains.
             for n in np.arange(1, self.num_planets+1):
                 e_key = 'e{}'.format(n)
                 w_key = 'w{}'.format(n)
