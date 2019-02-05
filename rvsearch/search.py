@@ -385,7 +385,7 @@ class Search(object):
             self.post.uparams = {}
             # Use minimal recommended parameters for mcmc.
             chains = radvel.mcmc(self.post,nwalkers=50,nrun=1000)
-            quants = synthchains.quantile([0.159, 0.5, 0.841])
+            quants = chains.quantile([0.159, 0.5, 0.841])
             # Convert chains to e, w basis.
             synthchains = self.post.params.basis.to_synth(chains)
             synthquants = synthchains.quantile([0.159, 0.5, 0.841])
