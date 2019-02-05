@@ -384,11 +384,11 @@ class Search(object):
         if self.mcmc:
             self.post.uparams = {}
             # Use minimal recommended parameters for mcmc.
-            chains = radvel.mcmc(self.post,nwalkers=50,nrun=1000)
-            quants = chains.quantile([0.159, 0.5, 0.841])
+            self.chains = radvel.mcmc(self.post, nwalkers=50, nrun=10000)
+            quants      = self.chains.quantile([0.159, 0.5, 0.841])
             # Convert chains to e, w basis.
-            synthchains = self.post.params.basis.to_synth(chains)
-            synthquants = synthchains.quantile([0.159, 0.5, 0.841])
+            self.synthchains = self.post.params.basis.to_synth(self.chains)
+            synthquants      = self.synthchains.quantile([0.159, 0.5, 0.841])
 
             # Retrieve e and w medians & uncertainties from synthetic chains.
             for n in np.arange(1, self.num_planets+1):
