@@ -401,18 +401,25 @@ class Search(object):
                 err_e  = np.mean([high_e,low_e])
                 err_e  = radvel.utils.round_sig(err_e)
                 med_e, err_e, errhigh_e = radvel.utils.sigfig(med_e, err_e)
+                max_e, err_e, errhigh_e = radvel.utils.sigfig(
+                                          self.post.params[e_key].value, err_e)
 
                 med_w  = synthquants[w_key][0.5]
                 high_w = synthquants[w_key][0.841] - med_w
                 low_w  = med_w - synthquants[w_key][0.159]
                 err_w  = np.mean([high_w,low_w])
                 err_w  = radvel.utils.round_sig(err_w)
-                med_w, err_w, errhigh_w = radvel.utils.sigfig(med_w, err_w)
+                med_w, err_w, errhigh_w = radvel.utils.sigfig(
+                                          self.post.params[w_key].value, err_w)
 
-                self.post.params[e_key].value = med_e
-                self.post.params[w_key].value = med_w
+                #self.post.params[e_key].value = med_e
+                #self.post.params[w_key].value = med_w
                 self.post.uparams[e_key]      = err_e
                 self.post.uparams[w_key]      = err_w
+                self.post.medparams[e_key]    = med_e
+                self.post.medparams[w_key]    = med_w
+                self.post.maxparams[e_key]    = max_e
+                self.post.maxparams[w_key]    = max_w
 
             # Retrieve medians & uncertainties for the fitting basis parameters.
             for par in self.post.params.keys():
@@ -423,9 +430,13 @@ class Search(object):
                     err  = np.mean([high,low])
                     err  = radvel.utils.round_sig(err)
                     med, err, errhigh = radvel.utils.sigfig(med, err)
+                    max, err, errhigh = radvel.utils.sigfig(
+                                        self.post.params[par].value, err)
 
-                    self.post.params[par].value = med
+                    #self.post.params[par].value = med
                     self.post.uparams[par]      = err
+                    self.post.medparams[par]    = med
+                    self.post.maxparams[par]    = max
 
             rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+
                                 '/orbit_plot_mc{}.pdf'.format(self.num_planets),
