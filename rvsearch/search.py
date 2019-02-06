@@ -57,7 +57,7 @@ class Search(object):
                                                 priors=self.priors)
         else:
             self.post   = post
-            self.priors = post.priors
+            # self.priors = post.priors
         '''
         self.post   = post
         self.params = self.post.params
@@ -192,8 +192,8 @@ class Search(object):
 
         # TO-DO: Clean. Figure out how to handle jitter prior, whether needed
         if self.priors != []:
-            new_post = utils.initialize_post(self.data, new_params,
-                                                        self.priors)
+            new_post = utils.initialize_post(self.data, new_params, self.priors)
+
         else:
             priors = []
             priors.append(radvel.prior.PositiveKPrior(new_num_planets))
@@ -239,17 +239,40 @@ class Search(object):
         new_post = utils.initialize_post(self.data, new_params, priors)
         self.post = new_post
 
+    '''
+    def trend_swap(self):
+        """Perform a BIC test for trend versus long-period Keplerian fit.
+
+        """
+        kpost = copy.deepcopy(self.post)
+
+        times    = self.post.likelihood.x
+        baseline = times[-1] - times[0]
+
+        # THIS CAN BE USED ONCE SUB_PLANET() GENERALIZED TO ANY N
+        #for n in np.arange(1, self.num_planets+1):
+        #    if self.post.params['per{}'.format(n)].value > 1.5*baseline:
+        #        self.sub_planet()
+
+        per = self.post.params['per{}'.format(self.num_planets)].value
+        if per > 1.5*baseline:
+            k = kpost.params['k{}'.format(self.num_planets)].value
+            self.sub_planet()
+            self.post.params['dvdt'] = True
+            self.post.params['dvdt'].value = 2*np.pi*k/per
+    '''
+
 
     def fit_orbit(self):
         """Perform a max-likelihood fit with all parameters free.
 
         """
-        for planet in np.arange(1, self.num_planets+1):
-            self.post.params['per{}'.format(planet)].vary    = True
-            self.post.params['k{}'.format(planet)].vary      = True
-            self.post.params['tc{}'.format(planet)].vary     = True
-            self.post.params['secosw{}'.format(planet)].vary = True
-            self.post.params['sesinw{}'.format(planet)].vary = True
+        for n in np.arange(1, self.num_planets+1):
+            self.post.params['per{}'.format(n)].vary    = True
+            self.post.params['k{}'.format(n)].vary      = True
+            self.post.params['tc{}'.format(n)].vary     = True
+            self.post.params['secosw{}'.format(n)].vary = True
+            self.post.params['sesinw{}'.format(n)].vary = True
 
         if self.polish:
             # Make a finer, narrow period grid, and search with eccentricity.
@@ -290,12 +313,12 @@ class Search(object):
 
         self.post = radvel.fitting.maxlike_fitting(self.post, verbose=False)
         if self.fix:
-            for planet in np.arange(1, self.num_planets+1):
-                self.post.params['per{}'.format(planet)].vary    = False
-                self.post.params['k{}'.format(planet)].vary      = False
-                self.post.params['tc{}'.format(planet)].vary     = False
-                self.post.params['secosw{}'.format(planet)].vary = False
-                self.post.params['sesinw{}'.format(planet)].vary = False
+            for n in np.arange(1, self.num_planets+1):
+                self.post.params['per{}'.format(n)].vary    = False
+                self.post.params['k{}'.format(n)].vary      = False
+                self.post.params['tc{}'.format(n)].vary     = False
+                self.post.params['secosw{}'.format(n)].vary = False
+                self.post.params['sesinw{}'.format(n)].vary = False
 
     def add_gp(self, inst=None):
         """Add a gaussian process to the posterior (NOT IN USE).
