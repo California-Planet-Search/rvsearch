@@ -184,12 +184,12 @@ def read_from_vst(filename, verbose=True):
 	return data
 
 # Function for collecting results of searches in current directory.
-def scrape(starlist, mass_db_name=None, filename='system_props.csv'):
+def scrape(starlist, star_db_name=None, filename='system_props.csv'):
 	"""Take data from completed searches and compile into one dataframe.
 
 	Args:
 		starlist (list): List of starnames to access in current directory
-		mass_db_name (string [optional]): Filename of star mass dataframe
+		star_db_name (string [optional]): Filename of star properties dataframe
 		filename (string): Path to which to save dataframe
 
 	Note:
@@ -227,9 +227,9 @@ def scrape(starlist, mass_db_name=None, filename='system_props.csv'):
 	# Save radvel parameters as a pandas dataframe.
 	props = pd.DataFrame(all_params)
 
-	if mass_db_name is not None:
+	if star_db_name is not None:
 		try:
-			mass_db = pd.read_csv(mass_db_name)
+			star_db = pd.read_csv(star_db_name)
 		except (RuntimeError, FileNotFoundError):
 			print('That is not a pandas dataframe. Try again.')
 
@@ -243,13 +243,13 @@ def scrape(starlist, mass_db_name=None, filename='system_props.csv'):
 		# Save median star mass, uncertainties
 		for star in starlist:
 			try:
-				star_index = props.index[props['name'] == str(star)][0]
-				mass_index = mass_db.index[mass_db['name'] == str(star)][0]
+				props_index = props.index[props['name'] == str(star)][0]
+				star_index = star_db.index[star_db['name'] == str(star)][0]
 			except IndexError:
 				continue
 			# Save star mass, to be used in planet mass & semi-major axis calculations.
-			Mtot = mass_db.loc[mass_index, 'mstar']
-			props.loc[star_index, 'Mstar'] = Mtot
+			Mtot = star_db.loc[star_index, 'mstar']
+			props.loc[props_index, 'Mstar'] = Mtot
 
 			# For each found planet, compute mass and semi-major axis
 			if props.loc[star_index, 'num_planets'] != 0:
