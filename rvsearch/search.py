@@ -431,7 +431,7 @@ class Search(object):
             quants = chains.quantile([0.159, 0.5, 0.841])
             # Convert chains to e, w basis.
             synthchains = self.post.params.basis.to_synth(chains)
-            synthquants = self.synthchains.quantile([0.159, 0.5, 0.841])
+            synthquants = synthchains.quantile([0.159, 0.5, 0.841])
 
             # Compress, thin, and save chain, in fitting basis.
             csvfn = starname+'/chains.csv.tar.bz2'
