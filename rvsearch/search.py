@@ -317,7 +317,6 @@ class Search(object):
         kkey = 'k{}'.format(self.post.params.num_planets)
         if self.post.params[kkey] < 0:
             self.post.params = self.post.params.basis.to_synth(self.post.params)
-            kkey  = 'k{}'.format(self.post.params.num_planets)
             tpkey = 'tp{}'.format(self.post.params.num_planets)
             wkey  = 'w{}'.format(self.post.params.num_planets)
 
