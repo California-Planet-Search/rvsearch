@@ -9,6 +9,8 @@ Welcome to rvsearch's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+   intro
+   tutorial
 
 
 

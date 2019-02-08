@@ -427,11 +427,15 @@ class Search(object):
             self.post.medparams = {}
             self.post.maxparams = {}
             # Use minimal recommended parameters for mcmc.
-            self.chains = radvel.mcmc(self.post, nwalkers=50, nrun=10000)
-            quants      = self.chains.quantile([0.159, 0.5, 0.841])
+            chains = radvel.mcmc(self.post, thin=5, nwalkers=50, nrun=10000)
+            quants = chains.quantile([0.159, 0.5, 0.841])
             # Convert chains to e, w basis.
-            self.synthchains = self.post.params.basis.to_synth(self.chains)
-            synthquants      = self.synthchains.quantile([0.159, 0.5, 0.841])
+            synthchains = self.post.params.basis.to_synth(chains)
+            synthquants = self.synthchains.quantile([0.159, 0.5, 0.841])
+
+            # Compress, thin, and save chain, in fitting basis.
+            csvfn = starname+'/chains.csv.tar.bz2'
+            chains.to_csv(csvfn, compression='bz2')
 
             # Retrieve e and w medians & uncertainties from synthetic chains.
             for n in np.arange(1, self.num_planets+1):
@@ -483,11 +487,11 @@ class Search(object):
                     self.post.maxparams[par] = max
 
             rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+
-                                '/orbit_plot_mc{}.pdf'.format(self.num_planets),
-                                uparams=self.post.uparams)
+                                  '/orbit_plot_mc_{}.pdf'.format(starname),
+                                  uparams=self.post.uparams)
             multiplot_fig, ax_list = rvplot.plot_multipanel()
-            multiplot_fig.savefig(outdir+'/orbit_plot_mc{}.pdf'.format(
-                                                    self.num_planets))
+            multiplot_fig.savefig(outdir+'/orbit_plot_mc_{}.pdf'.format(
+                                  starname))
 
         self.save(filename=outdir+'/post_final.pkl')
         pickle_out = open(outdir+'/search.pkl','wb')
