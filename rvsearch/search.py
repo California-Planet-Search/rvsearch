@@ -31,13 +31,14 @@ class Search(object):
         fix (bool): Whether to fix known planet parameters during search.
         polish (bool): Whether to create finer period grid after planet is found.
         verbose (bool):
+        save_outputs (bool): Save output plots and files? [default = True]
 
     """
 
     def __init__(self, data, post=None, starname='star', max_planets=8,
                 priors=[], crit='bic', fap=0.01, min_per=3, manual_grid=None,
                 trend=False, fix=False, polish=True, mcmc=True, workers=1,
-                verbose=True):
+                verbose=True, save_outputs=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
@@ -360,8 +361,11 @@ class Search(object):
         """
         self.post.writeto(filename)
 
-    def run_search(self):
+    def run_search(self, fixed_threshold=None):
         """Run an iterative search for planets not given in posterior.
+
+        Args:
+            fixed_threshold (float): (optional) use a fixed delta BIC threshold
 
         """
         outdir = os.path.join(os.getcwd(), self.starname)
@@ -391,12 +395,16 @@ class Search(object):
             if self.num_planets == 0:
                 self.pers = perioder.pers
 
-            perioder.eFAP_thresh()
+            if fixed_threshold is None:
+                perioder.eFAP_thresh()
+            else:
+                perioder.bic_thresh = fixed_threshold
             self.bic_threshes.append(perioder.bic_thresh)
             self.best_bics.append(perioder.best_bic)
             perioder.plot_per()
-            perioder.fig.savefig(outdir+'/dbic{}.pdf'.format(
-                                        self.num_planets+1))
+            if self.save_outputs:
+                perioder.fig.savefig(outdir+'/dbic{}.pdf'.format(
+                                     self.num_planets+1))
 
             t2 = time.process_time()
             if self.verbose:
@@ -418,8 +426,9 @@ class Search(object):
             rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+
                                 '/orbit_plot{}.pdf'.format(self.num_planets))
             multiplot_fig, ax_list = rvplot.plot_multipanel()
-            multiplot_fig.savefig(outdir+'/orbit_plot{}.pdf'.format(
-                                                    self.num_planets))
+            if self.save_outputs:
+                multiplot_fig.savefig(outdir+'/orbit_plot{}.pdf'.format(
+                                                        self.num_planets))
 
         # Run MCMC on final posterior, save new parameters and uncertainties.
         if self.mcmc==True and self.num_planets!=0:
@@ -435,7 +444,8 @@ class Search(object):
 
             # Compress, thin, and save chain, in fitting basis.
             csvfn = self.starname+'/chains.csv.tar.bz2'
-            chains.to_csv(csvfn, compression='bz2')
+            if self.save_outputs:
+                chains.to_csv(csvfn, compression='bz2')
 
             # Retrieve e and w medians & uncertainties from synthetic chains.
             for n in np.arange(1, self.num_planets+1):
@@ -472,40 +482,39 @@ class Search(object):
             # Retrieve medians & uncertainties for the fitting basis parameters.
             for par in self.post.params.keys():
                 if self.post.params[par].vary:
-                    med  = quants[par][0.5]
+                    med = quants[par][0.5]
                     high = quants[par][0.841] - med
-                    low  = med - quants[par][0.159]
-                    err  = np.mean([high,low])
-                    err  = radvel.utils.round_sig(err)
+                    low = med - quants[par][0.159]
+                    err = np.mean([high,low])
+                    err = radvel.utils.round_sig(err)
                     med, err, errhigh = radvel.utils.sigfig(med, err)
                     max, err, errhigh = radvel.utils.sigfig(
                                         self.post.params[par].value, err)
 
                     # self.post.params[par].value = med
-                    self.post.uparams[par]   = err
+                    self.post.uparams[par] = err
                     self.post.medparams[par] = med
                     self.post.maxparams[par] = max
 
-            rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+
-                                  '/orbit_plot_mc_{}.pdf'.format(starname),
-                                  uparams=self.post.uparams)
+            rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir + '/orbit_plot_mc_{}.pdf'.format(starname),
+                                                uparams=self.post.uparams)
             multiplot_fig, ax_list = rvplot.plot_multipanel()
-            multiplot_fig.savefig(outdir+'/orbit_plot_mc_{}.pdf'.format(
+            if self.save_outputs:
+                multiplot_fig.savefig(outdir+'/orbit_plot_mc_{}.pdf'.format(
                                   starname))
 
-        self.save(filename=outdir+'/post_final.pkl')
-        pickle_out = open(outdir+'/search.pkl','wb')
-        pickle.dump(self, pickle_out)
-        pickle_out.close()
+        if self.save_outputs:
+            self.save(filename=outdir+'/post_final.pkl')
+            pickle_out = open(outdir+'/search.pkl','wb')
+            pickle.dump(self, pickle_out)
+            pickle_out.close()
 
-        periodograms_plus_pers = np.append([self.pers], self.periodograms,
-                                                                axis=0).T
-        threshs_and_pks = np.append([self.bic_threshes], [self.best_bics],
-                                                                axis=0).T
-        np.savetxt(outdir+'/pers_periodograms.csv', periodograms_plus_pers,
-                                                header='period  BIC_array')
-        np.savetxt(outdir+'/thresholds_and_peaks.csv', threshs_and_pks,
-                                        header='threshold  best_bic')
+            periodograms_plus_pers = np.append([self.pers], self.periodograms, axis=0).T
+            threshs_and_pks = np.append([self.bic_threshes], [self.best_bics], axis=0).T
+            np.savetxt(outdir+'/pers_periodograms.csv', periodograms_plus_pers,
+                       header='period  BIC_array')
+            np.savetxt(outdir+'/thresholds_and_peaks.csv', threshs_and_pks,
+                       header='threshold  best_bic')
 
     def continue_search(self):
         """
@@ -514,9 +523,33 @@ class Search(object):
         """
 
         self.add_planet()
-        self.run_search()
+        fixed_threshold = self.bic_threshes[-1]
 
+        self.run_search(fixed_threshold=fixed_threshold)
 
-    def recover_injection(self, injection):
+    def inject_recover(self, injected_orbel, num_cpus=None):
+        """Inject and recover
 
-        
+        Inject and attempt to recover a synthetic planet signal
+
+        Args:
+            injected_orbel (array): array of orbital elements sent to radvel.kepler.rv_drive
+            num_cpus (int): Number of CPUs to utilize. Will default to self.workers
+
+        Returns:
+            tuple: (recovered? (T/F), recovered_orbel)
+        """
+
+        if num_cpus is not None:
+            self.workers = int(num_cpus)
+
+        self.max_planets = self.num_planets + 2
+        self.mcmc = False
+        self.polish = True
+        self.manual_grid = [injected_orbel[0]]
+
+        mod = radvel.kepler.rv_drive(self.data['time'].values, injected_orbel)
+
+        self.data['mnvel'] += mod
+
+        self.continue_search()

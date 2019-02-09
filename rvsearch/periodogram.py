@@ -64,6 +64,8 @@ class Periodogram(object):
         self.manual_grid = manual_grid
         self.fap = fap
         self.num_pers = num_pers
+        if self.manual_grid is not None:
+            self.num_pers = len(manual_grid)
 
         self.eccentric = eccentric
 
@@ -133,14 +135,14 @@ class Periodogram(object):
         """Generate a grid of periods for which to compute likelihoods.
 
         """
-        if self.manual_grid != None:
-            self.pers = self.manual_grid
+        if self.manual_grid is not None:
+            self.pers = np.array(self.manual_grid)
         else:
-            if self.num_pers == None:
+            if self.num_pers is None:
                 self.pers = self.per_spacing()
             else:
-                self.pers = 1/np.linspace(1/self.maxsearchP, 1/self.minsearchP,
-                                            self.num_pers)
+                self.pers = 1/np.linspace(1/self.maxsearchP, 1/self.minsearchP, self.num_pers)
+
         self.freqs = 1/self.pers
 
     def per_bic(self):
