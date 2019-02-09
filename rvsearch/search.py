@@ -506,3 +506,12 @@ class Search(object):
                                                 header='period  BIC_array')
         np.savetxt(outdir+'/thresholds_and_peaks.csv', threshs_and_pks,
                                         header='threshold  best_bic')
+
+    def continue_search(self):
+        """
+        Continue a search by trying to add one more planet
+
+        """
+
+        self.add_planet()
+        self.run_search()
