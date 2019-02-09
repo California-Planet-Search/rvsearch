@@ -268,9 +268,9 @@ class Search(object):
 
         """
         for n in np.arange(1, self.num_planets+1):
-            self.post.params['per{}'.format(n)].vary    = True
-            self.post.params['k{}'.format(n)].vary      = True
-            self.post.params['tc{}'.format(n)].vary     = True
+            self.post.params['per{}'.format(n)].vary = True
+            self.post.params['k{}'.format(n)].vary = True
+            self.post.params['tc{}'.format(n)].vary = True
             self.post.params['secosw{}'.format(n)].vary = True
             self.post.params['sesinw{}'.format(n)].vary = True
 
@@ -313,9 +313,9 @@ class Search(object):
 
         self.post = radvel.fitting.maxlike_fitting(self.post, verbose=False)
 
-        #Check if K is negative. If so, flip parameters accordingly.
+        # Check if K is negative. If so, flip parameters accordingly.
         kkey = 'k{}'.format(self.post.params.num_planets)
-        if self.post.params[kkey] < 0:
+        if self.post.params[kkey].value < 0:
             self.post.params = self.post.params.basis.to_synth(self.post.params)
             tpkey = 'tp{}'.format(self.post.params.num_planets)
             wkey  = 'w{}'.format(self.post.params.num_planets)
@@ -332,9 +332,9 @@ class Search(object):
 
         if self.fix:
             for n in np.arange(1, self.num_planets+1):
-                self.post.params['per{}'.format(n)].vary    = False
-                self.post.params['k{}'.format(n)].vary      = False
-                self.post.params['tc{}'.format(n)].vary     = False
+                self.post.params['per{}'.format(n)].vary = False
+                self.post.params['k{}'.format(n)].vary = False
+                self.post.params['tc{}'.format(n)].vary = False
                 self.post.params['secosw{}'.format(n)].vary = False
                 self.post.params['sesinw{}'.format(n)].vary = False
 
@@ -380,10 +380,10 @@ class Search(object):
                 self.add_planet()
 
             perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
-                                        minsearchp=self.min_per, fap=self.fap,
-                                        manual_grid=self.manual_grid,
-                                        workers=self.workers,
-                                        verbose=self.verbose)
+                                               minsearchp=self.min_per, fap=self.fap,
+                                               manual_grid=self.manual_grid,
+                                               workers=self.workers,
+                                               verbose=self.verbose)
             t1 = time.process_time()
 
             perioder.per_bic()
@@ -434,7 +434,7 @@ class Search(object):
             synthquants = synthchains.quantile([0.159, 0.5, 0.841])
 
             # Compress, thin, and save chain, in fitting basis.
-            csvfn = starname+'/chains.csv.tar.bz2'
+            csvfn = self.starname+'/chains.csv.tar.bz2'
             chains.to_csv(csvfn, compression='bz2')
 
             # Retrieve e and w medians & uncertainties from synthetic chains.
@@ -442,11 +442,11 @@ class Search(object):
                 e_key = 'e{}'.format(n)
                 w_key = 'w{}'.format(n)
 
-                med_e  = synthquants[e_key][0.5]
+                med_e = synthquants[e_key][0.5]
                 high_e = synthquants[e_key][0.841] - med_e
-                low_e  = med_e - synthquants[e_key][0.159]
-                err_e  = np.mean([high_e,low_e])
-                err_e  = radvel.utils.round_sig(err_e)
+                low_e = med_e - synthquants[e_key][0.159]
+                err_e = np.mean([high_e,low_e])
+                err_e = radvel.utils.round_sig(err_e)
                 med_e, err_e, errhigh_e = radvel.utils.sigfig(med_e, err_e)
                 max_e, err_e, errhigh_e = radvel.utils.sigfig(
                                           self.post.params[e_key].value, err_e)
@@ -460,10 +460,10 @@ class Search(object):
                 max_w, err_w, errhigh_w = radvel.utils.sigfig(
                                           self.post.params[w_key].value, err_w)
 
-                #self.post.params[e_key].value = med_e
-                #self.post.params[w_key].value = med_w
-                self.post.uparams[e_key]   = err_e
-                self.post.uparams[w_key]   = err_w
+                # self.post.params[e_key].value = med_e
+                # self.post.params[w_key].value = med_w
+                self.post.uparams[e_key] = err_e
+                self.post.uparams[w_key] = err_w
                 self.post.medparams[e_key] = med_e
                 self.post.medparams[w_key] = med_w
                 self.post.maxparams[e_key] = max_e
@@ -481,7 +481,7 @@ class Search(object):
                     max, err, errhigh = radvel.utils.sigfig(
                                         self.post.params[par].value, err)
 
-                    #self.post.params[par].value = med
+                    # self.post.params[par].value = med
                     self.post.uparams[par]   = err
                     self.post.medparams[par] = med
                     self.post.maxparams[par] = max
@@ -515,3 +515,8 @@ class Search(object):
 
         self.add_planet()
         self.run_search()
+
+
+    def recover_injection(self, injection):
+
+        
