@@ -94,6 +94,7 @@ class Search(object):
         self.manual_grid = manual_grid
         self.workers = workers
         self.verbose = verbose
+        self.save_outputs = save_outputs
 
         self.basebic = None
 
@@ -401,8 +402,8 @@ class Search(object):
                 perioder.bic_thresh = fixed_threshold
             self.bic_threshes.append(perioder.bic_thresh)
             self.best_bics.append(perioder.best_bic)
-            perioder.plot_per()
             if self.save_outputs:
+                perioder.plot_per()
                 perioder.fig.savefig(outdir+'/dbic{}.pdf'.format(
                                      self.num_planets+1))
 
@@ -423,10 +424,10 @@ class Search(object):
             if self.num_planets >= self.max_planets:
                 run = False
             # Generate an orbit plot.
-            rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+
-                                '/orbit_plot{}.pdf'.format(self.num_planets))
-            multiplot_fig, ax_list = rvplot.plot_multipanel()
             if self.save_outputs:
+                rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir +
+                                                                        '/orbit_plot{}.pdf'.format(self.num_planets))
+                multiplot_fig, ax_list = rvplot.plot_multipanel()
                 multiplot_fig.savefig(outdir+'/orbit_plot{}.pdf'.format(
                                                         self.num_planets))
 
@@ -496,10 +497,11 @@ class Search(object):
                     self.post.medparams[par] = med
                     self.post.maxparams[par] = max
 
-            rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir + '/orbit_plot_mc_{}.pdf'.format(starname),
-                                                uparams=self.post.uparams)
-            multiplot_fig, ax_list = rvplot.plot_multipanel()
             if self.save_outputs:
+                rvplot = orbit_plots.MultipanelPlot(self.post,
+                                                    saveplot=outdir + '/orbit_plot_mc_{}.pdf'.format(starname),
+                                                    uparams=self.post.uparams)
+                multiplot_fig, ax_list = rvplot.plot_multipanel()
                 multiplot_fig.savefig(outdir+'/orbit_plot_mc_{}.pdf'.format(
                                   starname))
 
@@ -509,10 +511,12 @@ class Search(object):
             pickle.dump(self, pickle_out)
             pickle_out.close()
 
-            periodograms_plus_pers = np.append([self.pers], self.periodograms, axis=0).T
+            if len(self.pers) == len(self.periodograms):
+                periodograms_plus_pers = np.append([self.pers], self.periodograms, axis=0).T
+                np.savetxt(outdir + '/pers_periodograms.csv', periodograms_plus_pers,
+                           header='period  BIC_array')
+
             threshs_and_pks = np.append([self.bic_threshes], [self.best_bics], axis=0).T
-            np.savetxt(outdir+'/pers_periodograms.csv', periodograms_plus_pers,
-                       header='period  BIC_array')
             np.savetxt(outdir+'/thresholds_and_peaks.csv', threshs_and_pks,
                        header='threshold  best_bic')
 
@@ -543,9 +547,10 @@ class Search(object):
         if num_cpus is not None:
             self.workers = int(num_cpus)
 
-        self.max_planets = self.num_planets + 2
+        self.max_planets = self.num_planets + 1
         self.mcmc = False
-        self.polish = True
+        self.save_outputs = False
+        self.verbose = False
         self.manual_grid = [injected_orbel[0]]
 
         mod = radvel.kepler.rv_drive(self.data['time'].values, injected_orbel)
@@ -553,3 +558,48 @@ class Search(object):
         self.data['mnvel'] += mod
 
         self.continue_search()
+
+        # Determine successful recovery
+        last_planet = self.num_planets
+        pl = str(last_planet)
+        if last_planet >= self.max_planets:
+            synth_params = self.post.params.basis.to_synth(self.post.params)
+            recovered_orbel = [synth_params['per'+pl].value,
+                               synth_params['tp'+pl].value,
+                               synth_params['e'+pl].value,
+                               synth_params['w'+pl].value,
+                               synth_params['k'+pl].value]
+            per, tp, e, w, k = recovered_orbel
+            iper, itp, ie, iw, ik = injected_orbel
+
+            # calculate output model to check for phase mismatch
+            # probably not most efficient way to do this
+            xmod = np.linspace(tp, tp+iper, 100)
+            inmod = radvel.kepler.rv_drive(xmod, injected_orbel)
+            outmod = self.post.likelihood.model(xmod)
+            xph1 = np.mod(xmod - itp, iper)
+            xph1 /= iper
+            xph2 = np.mod(xmod - tp, per)
+            xph2 /= per
+            inmin = xph1[np.argmin(inmod)]
+            outmin = xph2[np.argmin(outmod)]
+            inmax = xph1[np.argmax(inmod)]
+            outmax = xph2[np.argmax(outmod)]
+            phdiff = np.min([abs(inmin - outmin), abs(outmax - inmax)])
+
+            dthresh = 0.25                                 # recover parameters to 25%
+            criteria = [last_planet >= self.max_planets,   # check detected
+                        np.abs(per-iper)/iper <= dthresh,  # check periods match
+                        phdiff <= np.pi / 6,               # check that phase is right
+                        np.abs(k - ik)/ik <= dthresh]      # check that K is right
+
+            criteria = np.array(criteria, dtype=bool)
+            if criteria.all():
+                recovered = True
+            else:
+                recovered = False
+        else:
+            recovered = False
+            recovered_orbel = [np.nan for i in range(5)]
+
+        return recovered, recovered_orbel
