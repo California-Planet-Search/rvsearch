@@ -395,13 +395,13 @@ class Search(object):
             self.bic_threshes.append(perioder.bic_thresh)
             self.best_bics.append(perioder.best_bic)
             perioder.plot_per()
-            perioder.fig.savefig(outdir+'/dbic{}.pdf'.format(
-                                        self.num_planets+1))
+            perioder.fig.savefig(outdir+'/dbic{}.pdf'.format(self.num_planets+1))
 
             t2 = time.process_time()
             if self.verbose:
                 print('Time = {} seconds'.format(t2 - t1))
 
+            # Check whether there is a detection. If so, fit free and proceed.
             if perioder.best_bic > perioder.bic_thresh:
                 self.num_planets += 1
                 for k in self.post.params.keys():
@@ -414,6 +414,7 @@ class Search(object):
                 run = False
             if self.num_planets >= self.max_planets:
                 run = False
+
             # Generate an orbit plot.
             rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+
                                 '/orbit_plot{}.pdf'.format(self.num_planets))
@@ -422,7 +423,7 @@ class Search(object):
                                                     self.num_planets))
 
         # Run MCMC on final posterior, save new parameters and uncertainties.
-        if self.mcmc==True and self.num_planets!=0:
+        if self.mcmc == True and self.num_planets != 0:
             self.post.uparams   = {}
             self.post.medparams = {}
             self.post.maxparams = {}
@@ -434,7 +435,7 @@ class Search(object):
             synthquants = synthchains.quantile([0.159, 0.5, 0.841])
 
             # Compress, thin, and save chain, in fitting basis.
-            csvfn = starname+'/chains.csv.tar.bz2'
+            csvfn = outdir + '/chains.csv.tar.bz2'
             chains.to_csv(csvfn, compression='bz2')
 
             # Retrieve e and w medians & uncertainties from synthetic chains.
