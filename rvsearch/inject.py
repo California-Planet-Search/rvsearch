@@ -77,7 +77,8 @@ class Injections(object):
         sim_tp = np.random.uniform(0, sim_p, size=num_sim)
         sim_om = np.random.uniform(0, 2 * np.pi, size=num_sim)
 
-        df = pd.DataFrame(dict(inj_period=sim_p, inj_tp=sim_tp, inj_e=sim_e, inj_w=sim_om, inj_k=sim_k))
+        df = pd.DataFrame(dict(inj_period=sim_p, inj_tp=sim_tp, inj_e=sim_e,
+                               inj_w=sim_om, inj_k=sim_k))
 
         return df
 
@@ -87,8 +88,8 @@ class Injections(object):
         Try to recover all planets defined in self.simulated_planets
 
         Args:
-            num_cpus (int): number of CPUs to utilize. Each injection will run on a separate CPU.
-                Individual injections are forced to be single-threaded
+            num_cpus (int): number of CPUs to utilize. Each injection will run
+                on a separate CPU. Individual injections are forced to be single-threaded
         Returns:
             DataFrame: summary of injection/recovery tests
 

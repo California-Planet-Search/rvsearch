@@ -434,7 +434,8 @@ class Search(object):
             # Generate an orbit plot.
             if self.save_outputs:
                 rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir +
-                                                                        '/orbit_plot{}.pdf'.format(self.num_planets))
+                                                    '/orbit_plot{}.pdf'.format(
+                                                    self.num_planets))
                 multiplot_fig, ax_list = rvplot.plot_multipanel()
                 multiplot_fig.savefig(outdir+'/orbit_plot{}.pdf'.format(
                                                         self.num_planets))
@@ -559,7 +560,7 @@ class Search(object):
         self.save_outputs = False
         self.basebic = None
         self.verbose = False
-        
+
         # only search at closest period in the original period grid
         self.manual_grid = [self.pers[np.argmin(np.abs(self.pers - injected_orbel[0]))]]
 

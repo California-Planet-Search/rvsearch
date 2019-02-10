@@ -288,7 +288,6 @@ class Periodogram(object):
         """
         if ls==False:
             try:
-                # TO-DO: SPECIFY DIRECTORY/NAME, NUMBER OF PLANETS IN FILENAME, AND ARRAY ORDERING
                 np.savetxt((self.pers, self.power['bic']), filename=\
                                                 'BIC_periodogram.csv')
             except:
