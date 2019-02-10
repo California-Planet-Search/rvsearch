@@ -285,14 +285,17 @@ class Search(object):
             polish_params = []
             polish_bics = []
             peak = np.argmax(self.periodograms[-1])
-            if peak == len(self.periodograms[-1]) - 1:
-                subgrid = np.linspace(self.pers[peak-1], 2*self.pers[peak] -
-                                                        self.pers[peak-1], 9)
+            if self.manual_grid is not None:
+                # Polish around 1% of period value if manual grid specified
+                # especially useful in the case that len(manual_grid) == 1
+                subgrid = np.linspace(0.99*self.manual_grid[peak], 1.01*self.manual_grid[peak], 9)
+            elif peak == len(self.periodograms[-1]) - 1:
+                subgrid = np.linspace(self.pers[peak-1], 2*self.pers[peak] - self.pers[peak-1], 9)
             else: #TO-DO: JUSTIFY 9 GRID POINTS, OR TAKE AS ARGUMENT
                 subgrid = np.linspace(self.pers[peak-1], self.pers[peak+1], 9)
+
             fit_params = []
             power = []
-
             for per in subgrid:
                 for k in default_pdict.keys():
                     self.post.params[k].value = default_pdict[k]
@@ -383,6 +386,8 @@ class Search(object):
         while run:
             if self.num_planets != 0:
                 self.add_planet()
+                if self.basebic is None:
+                    self.basebic = self.post.likelihood.bic()
 
             perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
                                                minsearchp=self.min_per, fap=self.fap,
@@ -527,8 +532,8 @@ class Search(object):
         Continue a search by trying to add one more planet
 
         """
-
-        self.add_planet()
+        if self.num_planets == 0:
+            self.add_planet()
         fixed_threshold = self.bic_threshes[-1]
 
         self.run_search(fixed_threshold=fixed_threshold)
@@ -552,8 +557,11 @@ class Search(object):
         self.max_planets = self.num_planets + 1
         self.mcmc = False
         self.save_outputs = False
+        self.basebic = None
         self.verbose = False
-        self.manual_grid = [injected_orbel[0]]
+        
+        # only search at closest period in the original period grid
+        self.manual_grid = [self.pers[np.argmin(np.abs(self.pers - injected_orbel[0]))]]
 
         mod = radvel.kepler.rv_drive(self.data['time'].values, injected_orbel)
 

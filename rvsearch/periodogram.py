@@ -149,13 +149,15 @@ class Periodogram(object):
         """Compute delta-BIC periodogram. ADD: crit is BIC or AIC.
 
         """
+        prvstr = str(self.post.params.num_planets-1)
+        plstr = str(self.post.params.num_planets)
         if self.verbose:
-            print("Calculating BIC periodogram")
+            print("Calculating BIC periodogram for {} planets vs. {} planets".format(plstr, prvstr))
         # This assumes nth planet parameters, and all periods, are fixed.
         if self.basebic is None:
-            self.post.params['per1'].vary = False
-            self.post.params['tc1'].vary = False
-            self.post.params['k1'].vary = False
+            self.post.params['per'+plstr].vary = False
+            self.post.params['tc'+plstr].vary = False
+            self.post.params['k'+plstr].vary = False
             # Vary ONLY gamma, jitter, dvdt, curv. All else fixed, and k=0
             baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
             baseline_bic = baseline_fit.likelihood.bic()

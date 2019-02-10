@@ -35,6 +35,9 @@ class Injections(object):
         seed = np.round(self.search.data['time'].values[0] * 1000).astype(int)
 
         self.injected_planets = self.random_planets(seed)
+        self.recoveries = self.injected_planets
+
+        self.outdir = os.path.dirname(searchpath)
 
     def random_planets(self, seed):
         """Generate random planets
@@ -136,7 +139,12 @@ class Injections(object):
         outdf['recovered'] = recs
         outdf['bic'] = bics
 
+        self.recoveries = outdf
+
         return outdf
+
+    def save(self):
+        recoveries.to_csv(os.path.join(self.outdir, 'recoveries.csv'), index=False)
 
 
 def plot_recoveries(recoveries):
