@@ -64,6 +64,8 @@ class Periodogram(object):
         self.manual_grid = manual_grid
         self.fap = fap
         self.num_pers = num_pers
+        if self.manual_grid is not None:
+            self.num_pers = len(manual_grid)
 
         self.eccentric = eccentric
 
@@ -133,27 +135,29 @@ class Periodogram(object):
         """Generate a grid of periods for which to compute likelihoods.
 
         """
-        if self.manual_grid != None:
-            self.pers = self.manual_grid
+        if self.manual_grid is not None:
+            self.pers = np.array(self.manual_grid)
         else:
-            if self.num_pers == None:
+            if self.num_pers is None:
                 self.pers = self.per_spacing()
             else:
-                self.pers = 1/np.linspace(1/self.maxsearchP, 1/self.minsearchP,
-                                            self.num_pers)
+                self.pers = 1/np.linspace(1/self.maxsearchP, 1/self.minsearchP, self.num_pers)
+
         self.freqs = 1/self.pers
 
     def per_bic(self):
         """Compute delta-BIC periodogram. ADD: crit is BIC or AIC.
 
         """
+        prvstr = str(self.post.params.num_planets-1)
+        plstr = str(self.post.params.num_planets)
         if self.verbose:
-            print("Calculating BIC periodogram")
+            print("Calculating BIC periodogram for {} planets vs. {} planets".format(plstr, prvstr))
         # This assumes nth planet parameters, and all periods, are fixed.
         if self.basebic is None:
-            self.post.params['per1'].vary = False
-            self.post.params['tc1'].vary = False
-            self.post.params['k1'].vary = False
+            self.post.params['per'+plstr].vary = False
+            self.post.params['tc'+plstr].vary = False
+            self.post.params['k'+plstr].vary = False
             # Vary ONLY gamma, jitter, dvdt, curv. All else fixed, and k=0
             baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
             baseline_bic = baseline_fit.likelihood.bic()

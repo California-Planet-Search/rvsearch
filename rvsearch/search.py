@@ -31,13 +31,14 @@ class Search(object):
         fix (bool): Whether to fix known planet parameters during search.
         polish (bool): Whether to create finer period grid after planet is found.
         verbose (bool):
+        save_outputs (bool): Save output plots and files? [default = True]
 
     """
 
     def __init__(self, data, post=None, starname='star', max_planets=8,
                 priors=[], crit='bic', fap=0.01, min_per=3, manual_grid=None,
                 trend=False, fix=False, polish=True, mcmc=True, workers=1,
-                verbose=True):
+                verbose=True, save_outputs=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
@@ -93,6 +94,7 @@ class Search(object):
         self.manual_grid = manual_grid
         self.workers = workers
         self.verbose = verbose
+        self.save_outputs = save_outputs
 
         self.basebic = None
 
@@ -268,9 +270,9 @@ class Search(object):
 
         """
         for n in np.arange(1, self.num_planets+1):
-            self.post.params['per{}'.format(n)].vary    = True
-            self.post.params['k{}'.format(n)].vary      = True
-            self.post.params['tc{}'.format(n)].vary     = True
+            self.post.params['per{}'.format(n)].vary = True
+            self.post.params['k{}'.format(n)].vary = True
+            self.post.params['tc{}'.format(n)].vary = True
             self.post.params['secosw{}'.format(n)].vary = True
             self.post.params['sesinw{}'.format(n)].vary = True
 
@@ -283,14 +285,17 @@ class Search(object):
             polish_params = []
             polish_bics = []
             peak = np.argmax(self.periodograms[-1])
-            if peak == len(self.periodograms[-1]) - 1:
-                subgrid = np.linspace(self.pers[peak-1], 2*self.pers[peak] -
-                                                        self.pers[peak-1], 9)
+            if self.manual_grid is not None:
+                # Polish around 1% of period value if manual grid specified
+                # especially useful in the case that len(manual_grid) == 1
+                subgrid = np.linspace(0.99*self.manual_grid[peak], 1.01*self.manual_grid[peak], 9)
+            elif peak == len(self.periodograms[-1]) - 1:
+                subgrid = np.linspace(self.pers[peak-1], 2*self.pers[peak] - self.pers[peak-1], 9)
             else: #TO-DO: JUSTIFY 9 GRID POINTS, OR TAKE AS ARGUMENT
                 subgrid = np.linspace(self.pers[peak-1], self.pers[peak+1], 9)
+
             fit_params = []
             power = []
-
             for per in subgrid:
                 for k in default_pdict.keys():
                     self.post.params[k].value = default_pdict[k]
@@ -313,9 +318,9 @@ class Search(object):
 
         self.post = radvel.fitting.maxlike_fitting(self.post, verbose=False)
 
-        #Check if K is negative. If so, flip parameters accordingly.
+        # Check if K is negative. If so, flip parameters accordingly.
         kkey = 'k{}'.format(self.post.params.num_planets)
-        if self.post.params[kkey] < 0:
+        if self.post.params[kkey].value < 0:
             self.post.params = self.post.params.basis.to_synth(self.post.params)
             tpkey = 'tp{}'.format(self.post.params.num_planets)
             wkey  = 'w{}'.format(self.post.params.num_planets)
@@ -332,9 +337,9 @@ class Search(object):
 
         if self.fix:
             for n in np.arange(1, self.num_planets+1):
-                self.post.params['per{}'.format(n)].vary    = False
-                self.post.params['k{}'.format(n)].vary      = False
-                self.post.params['tc{}'.format(n)].vary     = False
+                self.post.params['per{}'.format(n)].vary = False
+                self.post.params['k{}'.format(n)].vary = False
+                self.post.params['tc{}'.format(n)].vary = False
                 self.post.params['secosw{}'.format(n)].vary = False
                 self.post.params['sesinw{}'.format(n)].vary = False
 
@@ -360,8 +365,11 @@ class Search(object):
         """
         self.post.writeto(filename)
 
-    def run_search(self):
+    def run_search(self, fixed_threshold=None):
         """Run an iterative search for planets not given in posterior.
+
+        Args:
+            fixed_threshold (float): (optional) use a fixed delta BIC threshold
 
         """
         outdir = os.path.join(os.getcwd(), self.starname)
@@ -378,12 +386,14 @@ class Search(object):
         while run:
             if self.num_planets != 0:
                 self.add_planet()
+                if self.basebic is None:
+                    self.basebic = self.post.likelihood.bic()
 
             perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
-                                        minsearchp=self.min_per, fap=self.fap,
-                                        manual_grid=self.manual_grid,
-                                        workers=self.workers,
-                                        verbose=self.verbose)
+                                               minsearchp=self.min_per, fap=self.fap,
+                                               manual_grid=self.manual_grid,
+                                               workers=self.workers,
+                                               verbose=self.verbose)
             t1 = time.process_time()
 
             perioder.per_bic()
@@ -391,11 +401,17 @@ class Search(object):
             if self.num_planets == 0:
                 self.pers = perioder.pers
 
-            perioder.eFAP_thresh()
+            if fixed_threshold is None:
+                perioder.eFAP_thresh()
+            else:
+                perioder.bic_thresh = fixed_threshold
             self.bic_threshes.append(perioder.bic_thresh)
             self.best_bics.append(perioder.best_bic)
-            perioder.plot_per()
-            perioder.fig.savefig(outdir+'/dbic{}.pdf'.format(self.num_planets+1))
+
+            if self.save_outputs:
+                perioder.plot_per()
+                perioder.fig.savefig(outdir+'/dbic{}.pdf'.format(
+                                     self.num_planets+1))
 
             t2 = time.process_time()
             if self.verbose:
@@ -416,11 +432,12 @@ class Search(object):
                 run = False
 
             # Generate an orbit plot.
-            rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+
-                                '/orbit_plot{}.pdf'.format(self.num_planets))
-            multiplot_fig, ax_list = rvplot.plot_multipanel()
-            multiplot_fig.savefig(outdir+'/orbit_plot{}.pdf'.format(
-                                                    self.num_planets))
+            if self.save_outputs:
+                rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir +
+                                                                        '/orbit_plot{}.pdf'.format(self.num_planets))
+                multiplot_fig, ax_list = rvplot.plot_multipanel()
+                multiplot_fig.savefig(outdir+'/orbit_plot{}.pdf'.format(
+                                                        self.num_planets))
 
         # Run MCMC on final posterior, save new parameters and uncertainties.
         if self.mcmc == True and self.num_planets != 0:
@@ -443,11 +460,11 @@ class Search(object):
                 e_key = 'e{}'.format(n)
                 w_key = 'w{}'.format(n)
 
-                med_e  = synthquants[e_key][0.5]
+                med_e = synthquants[e_key][0.5]
                 high_e = synthquants[e_key][0.841] - med_e
-                low_e  = med_e - synthquants[e_key][0.159]
-                err_e  = np.mean([high_e,low_e])
-                err_e  = radvel.utils.round_sig(err_e)
+                low_e = med_e - synthquants[e_key][0.159]
+                err_e = np.mean([high_e,low_e])
+                err_e = radvel.utils.round_sig(err_e)
                 med_e, err_e, errhigh_e = radvel.utils.sigfig(med_e, err_e)
                 max_e, err_e, errhigh_e = radvel.utils.sigfig(
                                           self.post.params[e_key].value, err_e)
@@ -461,10 +478,10 @@ class Search(object):
                 max_w, err_w, errhigh_w = radvel.utils.sigfig(
                                           self.post.params[w_key].value, err_w)
 
-                #self.post.params[e_key].value = med_e
-                #self.post.params[w_key].value = med_w
-                self.post.uparams[e_key]   = err_e
-                self.post.uparams[w_key]   = err_w
+                # self.post.params[e_key].value = med_e
+                # self.post.params[w_key].value = med_w
+                self.post.uparams[e_key] = err_e
+                self.post.uparams[w_key] = err_w
                 self.post.medparams[e_key] = med_e
                 self.post.medparams[w_key] = med_w
                 self.post.maxparams[e_key] = max_e
@@ -473,37 +490,126 @@ class Search(object):
             # Retrieve medians & uncertainties for the fitting basis parameters.
             for par in self.post.params.keys():
                 if self.post.params[par].vary:
-                    med  = quants[par][0.5]
+                    med = quants[par][0.5]
                     high = quants[par][0.841] - med
-                    low  = med - quants[par][0.159]
-                    err  = np.mean([high,low])
-                    err  = radvel.utils.round_sig(err)
+                    low = med - quants[par][0.159]
+                    err = np.mean([high,low])
+                    err = radvel.utils.round_sig(err)
                     med, err, errhigh = radvel.utils.sigfig(med, err)
                     max, err, errhigh = radvel.utils.sigfig(
                                         self.post.params[par].value, err)
 
-                    #self.post.params[par].value = med
-                    self.post.uparams[par]   = err
+                    # self.post.params[par].value = med
+                    self.post.uparams[par] = err
                     self.post.medparams[par] = med
                     self.post.maxparams[par] = max
 
-            rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir+
-                                  '/orbit_plot_mc_{}.pdf'.format(starname),
-                                  uparams=self.post.uparams)
-            multiplot_fig, ax_list = rvplot.plot_multipanel()
-            multiplot_fig.savefig(outdir+'/orbit_plot_mc_{}.pdf'.format(
+            if self.save_outputs:
+                rvplot = orbit_plots.MultipanelPlot(self.post,
+                                                    saveplot=outdir + '/orbit_plot_mc_{}.pdf'.format(starname),
+                                                    uparams=self.post.uparams)
+                multiplot_fig, ax_list = rvplot.plot_multipanel()
+                multiplot_fig.savefig(outdir+'/orbit_plot_mc_{}.pdf'.format(
                                   starname))
 
-        self.save(filename=outdir+'/post_final.pkl')
-        pickle_out = open(outdir+'/search.pkl','wb')
-        pickle.dump(self, pickle_out)
-        pickle_out.close()
+        if self.save_outputs:
+            self.save(filename=outdir+'/post_final.pkl')
+            pickle_out = open(outdir+'/search.pkl','wb')
+            pickle.dump(self, pickle_out)
+            pickle_out.close()
 
-        periodograms_plus_pers = np.append([self.pers], self.periodograms,
-                                                                axis=0).T
-        threshs_and_pks = np.append([self.bic_threshes], [self.best_bics],
-                                                                axis=0).T
-        np.savetxt(outdir+'/pers_periodograms.csv', periodograms_plus_pers,
-                                                header='period  BIC_array')
-        np.savetxt(outdir+'/thresholds_and_peaks.csv', threshs_and_pks,
-                                        header='threshold  best_bic')
+            if len(self.pers) == len(self.periodograms):
+                periodograms_plus_pers = np.append([self.pers], self.periodograms, axis=0).T
+                np.savetxt(outdir + '/pers_periodograms.csv', periodograms_plus_pers,
+                           header='period  BIC_array')
+
+            threshs_and_pks = np.append([self.bic_threshes], [self.best_bics], axis=0).T
+            np.savetxt(outdir+'/thresholds_and_peaks.csv', threshs_and_pks,
+                       header='threshold  best_bic')
+
+    def continue_search(self):
+        """
+        Continue a search by trying to add one more planet
+
+        """
+        if self.num_planets == 0:
+            self.add_planet()
+        fixed_threshold = self.bic_threshes[-1]
+
+        self.run_search(fixed_threshold=fixed_threshold)
+
+    def inject_recover(self, injected_orbel, num_cpus=None):
+        """Inject and recover
+
+        Inject and attempt to recover a synthetic planet signal
+
+        Args:
+            injected_orbel (array): array of orbital elements sent to radvel.kepler.rv_drive
+            num_cpus (int): Number of CPUs to utilize. Will default to self.workers
+
+        Returns:
+            tuple: (recovered? (T/F), recovered_orbel)
+        """
+
+        if num_cpus is not None:
+            self.workers = int(num_cpus)
+
+        self.max_planets = self.num_planets + 1
+        self.mcmc = False
+        self.save_outputs = False
+        self.basebic = None
+        self.verbose = False
+        
+        # only search at closest period in the original period grid
+        self.manual_grid = [self.pers[np.argmin(np.abs(self.pers - injected_orbel[0]))]]
+
+        mod = radvel.kepler.rv_drive(self.data['time'].values, injected_orbel)
+
+        self.data['mnvel'] += mod
+
+        self.continue_search()
+
+        # Determine successful recovery
+        last_planet = self.num_planets
+        pl = str(last_planet)
+        if last_planet >= self.max_planets:
+            synth_params = self.post.params.basis.to_synth(self.post.params)
+            recovered_orbel = [synth_params['per'+pl].value,
+                               synth_params['tp'+pl].value,
+                               synth_params['e'+pl].value,
+                               synth_params['w'+pl].value,
+                               synth_params['k'+pl].value]
+            per, tp, e, w, k = recovered_orbel
+            iper, itp, ie, iw, ik = injected_orbel
+
+            # calculate output model to check for phase mismatch
+            # probably not most efficient way to do this
+            xmod = np.linspace(tp, tp+iper, 100)
+            inmod = radvel.kepler.rv_drive(xmod, injected_orbel)
+            outmod = self.post.likelihood.model(xmod)
+            xph1 = np.mod(xmod - itp, iper)
+            xph1 /= iper
+            xph2 = np.mod(xmod - tp, per)
+            xph2 /= per
+            inmin = xph1[np.argmin(inmod)]
+            outmin = xph2[np.argmin(outmod)]
+            inmax = xph1[np.argmax(inmod)]
+            outmax = xph2[np.argmax(outmod)]
+            phdiff = np.min([abs(inmin - outmin), abs(outmax - inmax)])
+
+            dthresh = 0.25                                 # recover parameters to 25%
+            criteria = [last_planet >= self.max_planets,   # check detected
+                        np.abs(per-iper)/iper <= dthresh,  # check periods match
+                        phdiff <= np.pi / 6,               # check that phase is right
+                        np.abs(k - ik)/ik <= dthresh]      # check that K is right
+
+            criteria = np.array(criteria, dtype=bool)
+            if criteria.all():
+                recovered = True
+            else:
+                recovered = False
+        else:
+            recovered = False
+            recovered_orbel = [np.nan for i in range(5)]
+
+        return recovered, recovered_orbel
