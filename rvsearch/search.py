@@ -509,15 +509,15 @@ class Search(object):
             if self.save_outputs:
                 # Generate a corner plot for the synthetic chains.
                 Corner = mcmc_plots.CornerPlot(self.post, synthchains,
-                                               saveplot=outdir+'/corner_plot_{}.pdf'.format(starname))
+                                               saveplot=outdir+'/corner_plot_{}.pdf'.format(self.starname))
 
                 # Generate an orbit plot wth median parameters and uncertainties.
                 rvplot = orbit_plots.MultipanelPlot(self.post,
-                                                    saveplot=outdir+'/orbit_plot_mc_{}.pdf'.format(starname),
+                                                    saveplot=outdir+'/orbit_plot_mc_{}.pdf'.format(self.starname),
                                                     uparams=self.post.uparams)
                 multiplot_fig, ax_list = rvplot.plot_multipanel()
                 multiplot_fig.savefig(outdir+'/orbit_plot_mc_{}.pdf'.format(
-                                  starname))
+                                      self.starname))
 
         if self.save_outputs:
             self.save(filename=outdir+'/post_final.pkl')
