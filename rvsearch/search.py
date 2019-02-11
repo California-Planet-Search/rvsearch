@@ -2,7 +2,6 @@
 
 import os
 import copy
-import time
 import pdb
 import pickle
 
@@ -395,7 +394,6 @@ class Search(object):
                                                manual_grid=self.manual_grid,
                                                workers=self.workers,
                                                verbose=self.verbose)
-            t1 = time.process_time()
 
             perioder.per_bic()
             self.periodograms.append(perioder.power[self.crit])
@@ -413,10 +411,6 @@ class Search(object):
                 perioder.plot_per()
                 perioder.fig.savefig(outdir+'/dbic{}.pdf'.format(
                                      self.num_planets+1))
-
-            t2 = time.process_time()
-            if self.verbose:
-                print('Time = {} seconds'.format(t2 - t1))
 
             # Check whether there is a detection. If so, fit free and proceed.
             if perioder.best_bic > perioder.bic_thresh:
