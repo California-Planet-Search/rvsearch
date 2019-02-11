@@ -20,6 +20,7 @@ class Search(object):
 
     Args:
         data (DataFrame): pandas dataframe containing times, vel, err, and insts.
+        post (radvel.Posterior): Optional posterior with known planet params.
         starname (str): String, used to name the output directory.
         max_planets (int): Integer, limit on iterative planet search.
         priors (list): List of radvel prior objects to use.
