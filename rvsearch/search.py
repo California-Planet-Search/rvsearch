@@ -9,7 +9,7 @@ import pickle
 import numpy as np
 import radvel
 import radvel.fitting
-from radvel.plot import orbit_plots
+from radvel.plot import orbit_plots, mcmc_plots
 
 import rvsearch.periodogram as periodogram
 import rvsearch.utils as utils
@@ -506,8 +506,13 @@ class Search(object):
                     self.post.maxparams[par] = max
 
             if self.save_outputs:
+                # Generate a corner plot for the synthetic chains.
+                Corner = mcmc_plots.CornerPlot(self.post, synthchains,
+                                               saveplot=outdir+'/corner_plot_{}.pdf'.format(starname))
+
+                # Generate an orbit plot wth median parameters and uncertainties.
                 rvplot = orbit_plots.MultipanelPlot(self.post,
-                                                    saveplot=outdir + '/orbit_plot_mc_{}.pdf'.format(starname),
+                                                    saveplot=outdir+'/orbit_plot_mc_{}.pdf'.format(starname),
                                                     uparams=self.post.uparams)
                 multiplot_fig, ax_list = rvplot.plot_multipanel()
                 multiplot_fig.savefig(outdir+'/orbit_plot_mc_{}.pdf'.format(
@@ -521,7 +526,7 @@ class Search(object):
 
             if len(self.pers) == len(self.periodograms):
                 periodograms_plus_pers = np.append([self.pers], self.periodograms, axis=0).T
-                np.savetxt(outdir + '/pers_periodograms.csv', periodograms_plus_pers,
+                np.savetxt(outdir+'/pers_periodograms.csv', periodograms_plus_pers,
                            header='period  BIC_array')
 
             threshs_and_pks = np.append([self.bic_threshes], [self.best_bics], axis=0).T
