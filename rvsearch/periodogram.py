@@ -289,13 +289,13 @@ class Periodogram(object):
         thresh = xmod[np.where(np.abs(lfit-self.fap/self.num_pers) ==
                         np.min(np.abs(lfit-self.fap/self.num_pers)))]
         self.bic_thresh = thresh[0]
-        #self.bic_thresh = np.amax(thresh[0], 30)
 
     def save_per(self, ls=False):
         """Save BIC periodogram as csv.
 
         Args:
             ls (bool): Save Lomb-Scargle periodogram?
+            
         """
         if ls==False:
             try:
