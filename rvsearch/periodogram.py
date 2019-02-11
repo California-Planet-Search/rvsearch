@@ -11,6 +11,8 @@ import astropy.stats
 import radvel
 import radvel.fitting
 from radvel.plot import orbit_plots
+try:
+    from tqdm import tdqm
 
 import rvsearch.utils as utils
 
@@ -179,6 +181,10 @@ class Periodogram(object):
         self.post.params['k{}'.format(self.num_known_planets+1)].vary = True
         self.post.params['tc{}'.format(self.num_known_planets+1)].vary = True
 
+        if self.verbose:
+            # Initialize progress bar.
+            pbar = tqdm(total=self.num_pers)
+
         # Define a function to compute periodogram for a given grid section.
         def fit_period(per_array):
             post = copy.deepcopy(self.post)
@@ -186,9 +192,6 @@ class Periodogram(object):
             bic = np.zeros_like(per_array)
 
             for i, per in enumerate(per_array):
-                if self.verbose:
-                    limit = int(self.num_pers/float(self.workers))
-                    print(' {}'.format(i), '/', limit, end='\r')
                 # Reset posterior parameters to default values.
                 for k in self.default_pdict.keys():
                     post.params[k].value = self.default_pdict[k]
@@ -219,6 +222,10 @@ class Periodogram(object):
                 for k in post.params.keys():
                     best_params[k] = post.params[k].value
                 fit_params[i] = best_params
+
+                if self.verbose:
+                    # Update progress bar.
+                    pbar.update(1)
             return [bic, fit_params]
 
         if self.workers == 1:
@@ -237,6 +244,10 @@ class Periodogram(object):
                 all_params.append(chunk[1])
             self.bic = [y for x in all_bics for y in x]
             self.fit_params = [y for x in all_params for y in x]
+
+        if self.verbose:
+            # Close progress bar.
+            pbar.close()
 
         fit_index = np.argmax(self.bic)
         self.bestfit_params = self.fit_params[fit_index]
