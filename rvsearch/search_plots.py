@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 from matplotlib import rcParams, gridspec
 from matplotlib import pyplot as plt
@@ -7,14 +9,14 @@ import radvel
 from radvel import plot
 from radvel.utils import t_to_phase, fastbin, sigfig
 
-class PeriodModelPlot(object):
+class SearchPlot(object):
     """Class to jointly plot the periodograms, best model phaseplots, and
         window function for each search iteration.
 
     Args:
         search (rvsearch.Search): rvsearch.Search object.
-            This includes the periodograms and best-fit RadVel
-            posteriors for each added planet.
+            This includes the periodograms, best-fit RadVel model parameters
+            for each added planet, and final posterior.
 
     """
     def __init__(self, search, saveplot=None, epoch=2450000, phase_nrows=None,
@@ -24,12 +26,12 @@ class PeriodModelPlot(object):
                  fit_linewidth=2.0, set_xlim=None, text_size=9,
                  legend_kwards=dict(loc='best')):
 
-        self.search = search
-        self.post = self.search.post
-        self.num_known_planets = self.search.num_planets
-        self.pers = self.search.pers
-        self.periodograms = self.search.periodograms
-        self.bic_threshes = self.search.bic_threshes
+        self.post = search.post
+        self.num_known_planets = search.num_planets
+        self.pers = search.pers
+        self.periodograms = search.periodograms
+        self.bic_threshes = search.bic_threshes
+        # self.outdir = os.path.join(os.getcwd(), search.starname)
 
         self.saveplot = saveplot
         self.epoch = epoch
@@ -129,7 +131,6 @@ class PeriodModelPlot(object):
         pass
 
     def plot_periodogram(self, pnum=0):
-        # TO-DO: WORK IN AIC/BIC OPTION, INCLUDE IN PLOT TITLE
         peak = np.argmax(self.periodograms[pnum])
         f_real = 1/self.pers[peak]
 
