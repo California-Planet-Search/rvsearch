@@ -4,4 +4,5 @@ matplotlib
 pandas
 astropy
 PyAstronomy
-radvel>=1.1
+radvel>=1.2
+pathos
