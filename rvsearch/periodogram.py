@@ -11,8 +11,7 @@ import astropy.stats
 import radvel
 import radvel.fitting
 from radvel.plot import orbit_plots
-try:
-    from tqdm import tdqm
+from tqdm import tqdm
 
 import rvsearch.utils as utils
 
@@ -295,7 +294,7 @@ class Periodogram(object):
 
         Args:
             ls (bool): Save Lomb-Scargle periodogram?
-            
+
         """
         if ls==False:
             try:
