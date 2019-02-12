@@ -180,9 +180,21 @@ class Periodogram(object):
         self.post.params['k{}'.format(self.num_known_planets+1)].vary  = True
         self.post.params['tc{}'.format(self.num_known_planets+1)].vary = True
 
+        # Divide period grid into as many subgrids as there are parallel workers.
+        self.sub_pers = np.array_split(self.pers, self.workers)
+
+        if self.verbose:
+            # Create a separate progress bar for each parallel worker.
+            pbars = [tqdm(total = len(self.sub_pers[i]), position=i) for i in
+                     np.arange(self.workers)]
+
         # Define a function to compute periodogram for a given grid section.
-        def fit_period(per_array):
+        def fit_period(n):
             post = copy.deepcopy(self.post)
+            per_array = self.sub_pers[n]
+            '''
+            TO DECIDE: WRITE PER_ARRAY AS SUB_PERS COPY, OR REFERENCE SUB_PERS?
+            '''
             fit_params = [{} for x in range(len(per_array))]
             bic = np.zeros_like(per_array)
 
@@ -213,20 +225,16 @@ class Periodogram(object):
                 fit_params[i] = best_params
 
                 if self.verbose:
-                    self.pbar.update(1)
+                    pbars[n].update(1)
 
             return [bic, fit_params]
 
-        if self.verbose:
-            self.pbar = tqdm(total=int(self.num_pers/float(self.workers)))
-
         if self.workers == 1:
-            self.bic, self.fit_params = fit_period(self.pers)
+            self.bic, self.fit_params = fit_period(0)
         else:
             # Parallelize the loop over sections of the period grid.
-            sub_pers = np.array_split(self.pers, self.workers)
             p = mp.Pool(processes=self.workers)
-            output = p.map(fit_period, sub_pers)
+            output = p.map(fit_period, np.arange(self.workers))
 
             # Sort output.
             all_bics = []
@@ -241,6 +249,9 @@ class Periodogram(object):
         self.bestfit_params = self.fit_params[fit_index]
         self.best_bic = self.bic[fit_index]
         self.power['bic'] = self.bic
+
+        if self.verbose:
+            
 
     def ls(self):
         """Compute Lomb-Scargle periodogram with astropy.
