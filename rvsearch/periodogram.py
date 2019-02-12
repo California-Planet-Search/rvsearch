@@ -212,25 +212,21 @@ class Periodogram(object):
                     best_params[k] = post.params[k].value
                 fit_params[i] = best_params
 
+                if self.verbose:
+                    self.pbar.update(1)
+
             return [bic, fit_params]
 
+        if self.verbose:
+            self.pbar = tqdm(total=self.num_pers)
+
         if self.workers == 1:
-            if self.verbose:
-                # Run with progress bar.
-                self.bic, self.fit_params = list(tqdm(fit_period(self.pers),
-                                                      total=self.num_pers))
-            else:
-                self.bic, self.fit_params = fit_period(self.pers)
+            self.bic, self.fit_params = fit_period(self.pers)
         else:
             # Parallelize the loop over sections of the period grid.
             sub_pers = np.array_split(self.pers, self.workers)
             p = mp.Pool(processes=self.workers)
-
-            if self.verbose:
-                # Parallelize with progress bar.
-                output = list(tqdm(p.map(fit_period, sub_pers), total=self.num_pers))
-            else:
-                output = p.map(fit_period, sub_pers)
+            output = p.map(fit_period, sub_pers)
 
             # Sort output.
             all_bics = []
