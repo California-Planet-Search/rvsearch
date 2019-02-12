@@ -218,7 +218,7 @@ class Periodogram(object):
             return [bic, fit_params]
 
         if self.verbose:
-            self.pbar = tqdm(total=self.num_pers)
+            self.pbar = tqdm(total=int(self.num_pers/float(self.workers)))
 
         if self.workers == 1:
             self.bic, self.fit_params = fit_period(self.pers)
