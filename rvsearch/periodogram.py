@@ -37,7 +37,7 @@ class Periodogram(object):
 
     def __init__(self, post, basebic=None, minsearchp=3, maxsearchp=10000,
                  baseline=True, basefactor=5., oversampling=1., manual_grid=None,
-                 fap=0.01, num_pers=None, eccentric=False, workers=1,
+                 fap=0.001, num_pers=None, eccentric=False, workers=1,
                  verbose=True):
         self.post = copy.deepcopy(post)
         self.default_pdict = {}
@@ -177,7 +177,7 @@ class Periodogram(object):
             self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary \
                                                                         = False
 
-        self.post.params['k{}'.format(self.num_known_planets+1)].vary = True
+        self.post.params['k{}'.format(self.num_known_planets+1)].vary  = True
         self.post.params['tc{}'.format(self.num_known_planets+1)].vary = True
 
         # Define a function to compute periodogram for a given grid section.
@@ -197,14 +197,8 @@ class Periodogram(object):
                 post = radvel.fitting.maxlike_fitting(post, verbose=False)
                 bic[i] = baseline_bic - post.likelihood.bic()
 
-                #Debug a bad fit. Try to fix.
-                if bic[i] < self.floor - 0.5:
-                    '''
-                    rvplot = orbit_plots.MultipanelPlot(post, saveplot=
-                                                'bad_plot{}.pdf'.format(i))
-                    multiplot_fig, ax_list = rvplot.plot_multipanel()
-                    multiplot_fig.savefig('bad_plot{}.pdf'.format(i))
-                    '''
+                if bic[i] < self.floor - 0.25:
+                    # If the fit is bad, reset k_n+1 = 0 and try again.
                     for k in self.default_pdict.keys():
                         post.params[k].value = self.default_pdict[k]
                     post.params[perkey].value = per
