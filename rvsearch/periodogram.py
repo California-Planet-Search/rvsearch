@@ -248,10 +248,7 @@ class Periodogram(object):
         fit_index = np.argmax(self.bic)
         self.bestfit_params = self.fit_params[fit_index]
         self.best_bic = self.bic[fit_index]
-        self.power['bic'] = self.bic
-
-        if self.verbose:
-            
+        self.power['bic'] = self.bic            
 
     def ls(self):
         """Compute Lomb-Scargle periodogram with astropy.
