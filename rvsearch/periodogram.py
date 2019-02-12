@@ -180,10 +180,6 @@ class Periodogram(object):
         self.post.params['k{}'.format(self.num_known_planets+1)].vary = True
         self.post.params['tc{}'.format(self.num_known_planets+1)].vary = True
 
-        if self.verbose:
-            # Initialize progress bar.
-            pbar = tqdm(total=self.num_pers)
-
         # Define a function to compute periodogram for a given grid section.
         def fit_period(per_array):
             post = copy.deepcopy(self.post)
@@ -222,18 +218,25 @@ class Periodogram(object):
                     best_params[k] = post.params[k].value
                 fit_params[i] = best_params
 
-                if self.verbose:
-                    # Update progress bar.
-                    pbar.update(1)
             return [bic, fit_params]
 
         if self.workers == 1:
-            self.bic, self.fit_params = fit_period(self.pers)
+            if self.verbose:
+                # Run with progress bar.
+                self.bic, self.fit_params = list(tqdm(fit_period(self.pers),
+                                                      total=self.num_pers))
+            else:
+                self.bic, self.fit_params = fit_period(self.pers)
         else:
             # Parallelize the loop over sections of the period grid.
             sub_pers = np.array_split(self.pers, self.workers)
             p = mp.Pool(processes=self.workers)
-            output = p.map(fit_period, sub_pers)
+
+            if self.verbose:
+                # Parallelize with progress bar.
+                output = list(tqdm(p.map(fit_period, sub_pers), total=self.num_pers))
+            else:
+                output = p.map(fit_period, sub_pers)
 
             # Sort output.
             all_bics = []
@@ -243,10 +246,6 @@ class Periodogram(object):
                 all_params.append(chunk[1])
             self.bic = [y for x in all_bics for y in x]
             self.fit_params = [y for x in all_params for y in x]
-
-        if self.verbose:
-            # Close progress bar.
-            pbar.close()
 
         fit_index = np.argmax(self.bic)
         self.bestfit_params = self.fit_params[fit_index]

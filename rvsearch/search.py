@@ -504,6 +504,7 @@ class Search(object):
                 # Generate a corner plot for the synthetic chains.
                 Corner = mcmc_plots.CornerPlot(self.post, synthchains,
                                                saveplot=outdir+'/corner_plot_{}.pdf'.format(self.starname))
+                Corner.plot()
 
                 # Generate an orbit plot wth median parameters and uncertainties.
                 rvplot = orbit_plots.MultipanelPlot(self.post,

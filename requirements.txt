@@ -6,3 +6,4 @@ astropy
 PyAstronomy
 radvel>=1.2
 pathos
+tqdm
