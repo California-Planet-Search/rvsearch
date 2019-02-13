@@ -56,8 +56,6 @@ class Search(object):
             self.params = utils.initialize_default_pars(instnames=self.tels)
             self.post   = utils.initialize_post(data, params=self.params,
                                                 priors=self.priors)
-            self.params['Tc'].value = self.data['time'].values[
-                np.argmin(data['mnvel'] - data['mnvel'].mean())]
 
         else:
             self.post   = post
@@ -164,8 +162,6 @@ class Search(object):
         new_num_planets = current_num_planets + 1
 
         default_pars = utils.initialize_default_pars(instnames=self.tels)
-        default_pars['Tc'].value = self.data['time'].values[
-            np.argmin(data['mnvel'] - data['mnvel'].mean())]
 
         new_params = radvel.Parameters(new_num_planets, basis=fitting_basis)
 
@@ -306,9 +302,12 @@ class Search(object):
                 for k in default_pdict.keys():
                     self.post.params[k].value = default_pdict[k]
                 perkey = 'per{}'.format(self.num_planets)
+                kkey = 'k{}'.format(self.num_planets)
+                tckey = 'tc{}'.format(self.num_planets)
                 self.post.params[perkey].value = per
 
-                fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
+                fit = radvel.fitting.maxlike_fitting(self.post, verbose=True)
+
                 power.append(-fit.likelihood.bic())
 
                 best_params = {}
