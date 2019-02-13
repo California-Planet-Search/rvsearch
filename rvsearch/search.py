@@ -324,23 +324,6 @@ class Search(object):
 
         self.post = radvel.fitting.maxlike_fitting(self.post, verbose=False)
 
-        # Check if K is negative. If so, flip parameters accordingly.
-        kkey = 'k{}'.format(self.post.params.num_planets)
-        if self.post.params[kkey].value < 0:
-            self.post.params = self.post.params.basis.to_synth(self.post.params)
-            tpkey = 'tp{}'.format(self.post.params.num_planets)
-            wkey  = 'w{}'.format(self.post.params.num_planets)
-
-            self.post.params[kkey].value  = -self.post.params['k2'].value
-            self.post.params[tpkey].value += self.post.params[perkey].value/2
-            if self.post.params[wkey].value > 0:
-                self.post.params[wkey].value -= np.pi
-            else:
-                self.post.params[wkey].value += np.pi
-
-            self.post.params = self.post.params.basis.from_synth(
-                               self.post.params, 'per tc secosw sesinw k')
-
         if self.fix:
             for n in np.arange(1, self.num_planets+1):
                 self.post.params['per{}'.format(n)].vary = False
