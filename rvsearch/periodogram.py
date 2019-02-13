@@ -1,9 +1,5 @@
 import copy
 import pdb
-#import multiprocessing
-#from multiprocessing import Pool
-import pathos.multiprocessing as mp
-import threading as threading
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,6 +8,7 @@ import radvel
 import radvel.fitting
 from radvel.plot import orbit_plots
 from tqdm import tqdm
+import pathos.multiprocessing as mp
 
 import rvsearch.utils as utils
 
@@ -248,7 +245,11 @@ class Periodogram(object):
         fit_index = np.argmax(self.bic)
         self.bestfit_params = self.fit_params[fit_index]
         self.best_bic = self.bic[fit_index]
-        self.power['bic'] = self.bic            
+        self.power['bic'] = self.bic
+
+        if self.verbose:
+            for pbar in pbars:
+                pbar.close()
 
     def ls(self):
         """Compute Lomb-Scargle periodogram with astropy.
