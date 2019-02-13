@@ -34,7 +34,7 @@ class Periodogram(object):
 
     def __init__(self, post, basebic=None, minsearchp=3, maxsearchp=10000,
                  baseline=True, basefactor=5., oversampling=1., manual_grid=None,
-                 fap=0.001, num_pers=None, eccentric=False, workers=1,
+                 fap=0.01, num_pers=None, eccentric=False, workers=1,
                  verbose=True):
         self.post = copy.deepcopy(post)
         self.default_pdict = {}
@@ -227,6 +227,7 @@ class Periodogram(object):
             return [bic, fit_params]
 
         if self.workers == 1:
+            # Call the periodogram loop on one core.
             self.bic, self.fit_params = fit_period(0)
         else:
             # Parallelize the loop over sections of the period grid.
@@ -248,8 +249,11 @@ class Periodogram(object):
         self.power['bic'] = self.bic
 
         if self.verbose:
+            # Clean up the progress bars.
             for pbar in pbars:
                 pbar.close()
+            for i in np.arange(self.workers):
+                print('')
 
     def ls(self):
         """Compute Lomb-Scargle periodogram with astropy.
