@@ -192,15 +192,10 @@ class Search(object):
 
         new_params.num_planets = new_num_planets
 
-        # TO-DO: Clean. Figure out how to handle jitter prior, whether needed
-        if self.priors != []:
-            new_post = utils.initialize_post(self.data, new_params, self.priors)
-
-        else:
-            priors = []
-            priors.append(radvel.prior.PositiveKPrior(new_num_planets))
-            priors.append(radvel.prior.EccentricityPrior(new_num_planets))
-            new_post = utils.initialize_post(self.data, new_params, priors)
+        priors = []
+        priors.append(radvel.prior.PositiveKPrior(new_num_planets))
+        priors.append(radvel.prior.EccentricityPrior(new_num_planets))
+        new_post = utils.initialize_post(self.data, new_params, priors)
         self.post = new_post
 
 

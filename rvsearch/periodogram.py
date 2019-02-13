@@ -250,6 +250,8 @@ class Periodogram(object):
         if self.verbose:
             for pbar in pbars:
                 pbar.close()
+            for i in np.arange(self.workers):
+                print('')
 
     def ls(self):
         """Compute Lomb-Scargle periodogram with astropy.
