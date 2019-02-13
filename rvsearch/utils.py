@@ -15,25 +15,26 @@ except:
 """Functions for posterior modification (resetting, intializing, etc.)
 """
 
+
 def reset_params(post, default_pdict):
 	#Reset post.params values to default values
 	for k in default_pdict.keys():
 		post.params[k].value = default_pdict[k]
 	return post
 
-def initialize_default_pars(instnames=['inst'], fitting_basis= \
-										'per tc secosw sesinw k'):
+
+def initialize_default_pars(instnames=['inst'], fitting_basis='per tc secosw sesinw k'):
     """Set up a default Parameters object.
 
 	None of the basis values are free params, for the initial 0-planet fit.
 	Remember to reset .vary to True for all relevant params.
 
-    Args:
-        instnames (list): codes of instruments used
-        fitting_basis: optional
+	Args:
+    	instnames (list): codes of instruments used
+    	fitting_basis: optional
 
-    Returns:
-        Parameters object
+	Returns:
+		Parameters object
     """
 
     anybasis_params = radvel.Parameters(num_planets=1, basis='per tc e w k')
