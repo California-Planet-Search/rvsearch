@@ -1,9 +1,5 @@
 import copy
 import pdb
-#import multiprocessing
-#from multiprocessing import Pool
-import pathos.multiprocessing as mp
-import threading as threading
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,6 +7,8 @@ import astropy.stats
 import radvel
 import radvel.fitting
 from radvel.plot import orbit_plots
+from tqdm import tqdm
+import pathos.multiprocessing as mp
 
 import rvsearch.utils as utils
 
@@ -171,24 +169,31 @@ class Periodogram(object):
         self.post.params['per{}'.format(self.num_known_planets+1)].vary = False
         if self.eccentric == False:
             # If eccentric set to False, fix eccentricity to zero.
-            self.post.params['secosw{}'.format(self.num_known_planets+1)].vary \
-                                                                        = False
-            self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary \
-                                                                        = False
+            self.post.params['secosw{}'.format(self.num_known_planets+1)].vary = False
+            self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary = False
 
-        self.post.params['k{}'.format(self.num_known_planets+1)].vary = True
+        self.post.params['k{}'.format(self.num_known_planets+1)].vary  = True
         self.post.params['tc{}'.format(self.num_known_planets+1)].vary = True
 
+        # Divide period grid into as many subgrids as there are parallel workers.
+        self.sub_pers = np.array_split(self.pers, self.workers)
+
+        if self.verbose:
+            # Create a separate progress bar for each parallel worker.
+            pbars = [tqdm(total = len(self.sub_pers[i]), position=i) for i in
+                     np.arange(self.workers)]
+
         # Define a function to compute periodogram for a given grid section.
-        def fit_period(per_array):
+        def fit_period(n):
             post = copy.deepcopy(self.post)
+            per_array = self.sub_pers[n]
+            '''
+            TO DECIDE: WRITE PER_ARRAY AS SUB_PERS COPY, OR REFERENCE SUB_PERS?
+            '''
             fit_params = [{} for x in range(len(per_array))]
             bic = np.zeros_like(per_array)
 
             for i, per in enumerate(per_array):
-                if self.verbose:
-                    limit = int(self.num_pers/float(self.workers))
-                    print(' {}'.format(i), '/', limit, end='\r')
                 # Reset posterior parameters to default values.
                 for k in self.default_pdict.keys():
                     post.params[k].value = self.default_pdict[k]
@@ -199,14 +204,8 @@ class Periodogram(object):
                 post = radvel.fitting.maxlike_fitting(post, verbose=False)
                 bic[i] = baseline_bic - post.likelihood.bic()
 
-                #Debug a bad fit. Try to fix.
-                if bic[i] < self.floor - 0.5:
-                    '''
-                    rvplot = orbit_plots.MultipanelPlot(post, saveplot=
-                                                'bad_plot{}.pdf'.format(i))
-                    multiplot_fig, ax_list = rvplot.plot_multipanel()
-                    multiplot_fig.savefig('bad_plot{}.pdf'.format(i))
-                    '''
+                if bic[i] < self.floor - 0.25:
+                    # If the fit is bad, reset k_n+1 = 0 and try again.
                     for k in self.default_pdict.keys():
                         post.params[k].value = self.default_pdict[k]
                     post.params[perkey].value = per
@@ -219,15 +218,19 @@ class Periodogram(object):
                 for k in post.params.keys():
                     best_params[k] = post.params[k].value
                 fit_params[i] = best_params
+
+                if self.verbose:
+                    pbars[n].update(1)
+
             return [bic, fit_params]
 
         if self.workers == 1:
-            self.bic, self.fit_params = fit_period(self.pers)
+            # Call the periodogram loop on one core.
+            self.bic, self.fit_params = fit_period(0)
         else:
             # Parallelize the loop over sections of the period grid.
-            sub_pers = np.array_split(self.pers, self.workers)
             p = mp.Pool(processes=self.workers)
-            output = p.map(fit_period, sub_pers)
+            output = p.map(fit_period, np.arange(self.workers))
 
             # Sort output.
             all_bics = []
@@ -242,6 +245,13 @@ class Periodogram(object):
         self.bestfit_params = self.fit_params[fit_index]
         self.best_bic = self.bic[fit_index]
         self.power['bic'] = self.bic
+
+        if self.verbose:
+            # Clean up the progress bars.
+            for pbar in pbars:
+                pbar.close()
+            for i in np.arange(self.workers):
+                print('')
 
     def ls(self):
         """Compute Lomb-Scargle periodogram with astropy.
@@ -278,13 +288,13 @@ class Periodogram(object):
         thresh = xmod[np.where(np.abs(lfit-self.fap/self.num_pers) ==
                         np.min(np.abs(lfit-self.fap/self.num_pers)))]
         self.bic_thresh = thresh[0]
-        #self.bic_thresh = np.amax(thresh[0], 30)
 
     def save_per(self, ls=False):
         """Save BIC periodogram as csv.
 
         Args:
             ls (bool): Save Lomb-Scargle periodogram?
+
         """
         if ls==False:
             try:
@@ -349,7 +359,7 @@ class Periodogram(object):
         ax.set_xlabel('Period (days)')
         ax.set_ylabel(r'$\Delta$BIC')  # TO-DO: WORK IN AIC/BIC OPTION
         ax.set_title('Planet {} vs. planet {}'.format(self.num_known_planets+1,
-                                                        self.num_known_planets))
+                                                      self.num_known_planets))
 
         # Store figure as object attribute, make separate saving functionality?
         self.fig = fig

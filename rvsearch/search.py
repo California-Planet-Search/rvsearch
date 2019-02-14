@@ -192,15 +192,10 @@ class Search(object):
 
         new_params.num_planets = new_num_planets
 
-        # TO-DO: Clean. Figure out how to handle jitter prior, whether needed
-        if self.priors != []:
-            new_post = utils.initialize_post(self.data, new_params, self.priors)
-
-        else:
-            priors = []
-            priors.append(radvel.prior.PositiveKPrior(new_num_planets))
-            priors.append(radvel.prior.EccentricityPrior(new_num_planets))
-            new_post = utils.initialize_post(self.data, new_params, priors)
+        priors = []
+        priors.append(radvel.prior.PositiveKPrior(new_num_planets))
+        priors.append(radvel.prior.EccentricityPrior(new_num_planets))
+        new_post = utils.initialize_post(self.data, new_params, priors)
         self.post = new_post
 
 
@@ -317,23 +312,6 @@ class Search(object):
             self.post.params['per{}'.format(self.num_planets)].vary = True
 
         self.post = radvel.fitting.maxlike_fitting(self.post, verbose=False)
-
-        # Check if K is negative. If so, flip parameters accordingly.
-        kkey = 'k{}'.format(self.post.params.num_planets)
-        if self.post.params[kkey].value < 0:
-            self.post.params = self.post.params.basis.to_synth(self.post.params)
-            tpkey = 'tp{}'.format(self.post.params.num_planets)
-            wkey  = 'w{}'.format(self.post.params.num_planets)
-
-            self.post.params[kkey].value  = -self.post.params['k2'].value
-            self.post.params[tpkey].value += self.post.params[perkey].value/2
-            if self.post.params[wkey].value > 0:
-                self.post.params[wkey].value -= np.pi
-            else:
-                self.post.params[wkey].value += np.pi
-
-            self.post.params = self.post.params.basis.from_synth(
-                               self.post.params, 'per tc secosw sesinw k')
 
         if self.fix:
             for n in np.arange(1, self.num_planets+1):
