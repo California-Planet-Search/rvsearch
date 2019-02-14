@@ -8,8 +8,8 @@ from radvel import plot
 from radvel.utils import t_to_phase, fastbin, sigfig
 
 class PeriodModelPlot(object):
-    """Class to jointly plot the periodograms and best models
-    for each search iteration. Based on radvel.orbit_plots.MultipanelPlot.
+    """Class to jointly plot the periodograms, best model phaseplots, and
+        window function for each search iteration.
 
     Args:
         search (rvsearch.Search): rvsearch.Search object.
