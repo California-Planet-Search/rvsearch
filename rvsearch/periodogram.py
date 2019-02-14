@@ -169,10 +169,8 @@ class Periodogram(object):
         self.post.params['per{}'.format(self.num_known_planets+1)].vary = False
         if self.eccentric == False:
             # If eccentric set to False, fix eccentricity to zero.
-            self.post.params['secosw{}'.format(self.num_known_planets+1)].vary \
-                                                                        = False
-            self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary \
-                                                                        = False
+            self.post.params['secosw{}'.format(self.num_known_planets+1)].vary = False
+            self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary = False
 
         self.post.params['k{}'.format(self.num_known_planets+1)].vary  = True
         self.post.params['tc{}'.format(self.num_known_planets+1)].vary = True
@@ -361,7 +359,7 @@ class Periodogram(object):
         ax.set_xlabel('Period (days)')
         ax.set_ylabel(r'$\Delta$BIC')  # TO-DO: WORK IN AIC/BIC OPTION
         ax.set_title('Planet {} vs. planet {}'.format(self.num_known_planets+1,
-                                                        self.num_known_planets))
+                                                      self.num_known_planets))
 
         # Store figure as object attribute, make separate saving functionality?
         self.fig = fig
