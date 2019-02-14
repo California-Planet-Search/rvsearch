@@ -35,24 +35,29 @@ class SearchPlot(object):
 
         self.saveplot = saveplot
         self.epoch = epoch
-        self.phase_nrows = phase_nrows
-        self.phase_ncols = phase_ncols
-        self.uparams = None
+        self.yscale_auto = yscale_auto
+        self.yscale_sigma = yscale_sigma
+        if phase_ncols is None:
+            self.phase_ncols = 1
+        if phase_nrows is None:
+            self.phase_nrows = self.post.likelihood.model.num_planets
+        self.uparams = uparams
+        self.rv_phase_space = rv_phase_space
         self.telfmts = telfmts
         self.legend = legend
+        self.phase_limits = phase_limits
         self.nobin = nobin
         self.phasetext_size = phasetext_size
-        self.rv_phase_space = rv_phase_space
         self.figwidth = figwidth
         self.fit_linewidth = fit_linewidth
-        self.set_lim = set_xlim
-        self.text_size =etext_size
+        self.set_xlim = set_xlim
         self.legend_kwargs = legend_kwargs
+        rcParams['font.size'] = text_size
 
-        if isinstance(self.post.likelihood, radvel,likelihood.CompositeLikelihood):
+        if isinstance(self.post.likelihood, radvel.likelihood.CompositeLikelihood):
             self.like_list = self.post.likelihood.like_list
         else:
-            self.like_list = [ self.post.likelihood ]
+            self.like_list = [self.post.likelihood]
 
         # FIGURE PROVISIONING
         self.ax_rv_height = self.figwidth * 0.6
@@ -104,9 +109,8 @@ class SearchPlot(object):
             self.plttimes = self.rvtimes - self.epoch
             self.mplttimes = self.rvmodt - self.epoch
         else:
-           self.plttimes = self.rvtimes - self.epoch
-           self.mplttimes = self.rvmodt - self.epoch
-
+            self.plttimes = self.rvtimes - self.epoch
+            self.mplttimes = self.rvmodt - self.epoch
 
         self.slope = (
             self.post.params['dvdt'].value * (self.rvmodt-self.model.time_base)
@@ -339,7 +343,88 @@ class SearchPlot(object):
         ax.set_title('Planet {} vs. planet {}'.format(self.num_known_planets+1,
                                                         self.num_known_planets))
 
-    def plot_periodograms_orbits(self):
-        """Call everything above to construct a multipanel plot.
+    def plot_RV(self, nophase=False, letter_labels=True):
+        """Provision and plot periodograms and orbit plots.
+
+        Args:
+            nophase (bool, optional): if True, don't
+                include phase plots. Default: False.
+            letter_labels (bool, optional): if True, include
+                letter labels on orbit and residual plots.
+                Default: True.
+
+        Returns:
+            tuple containing:
+                - current matplotlib Figure object
+                - list of Axes objects
+
         """
-        fig = plt.figure()
+        if nophase:
+            scalefactor = 1
+        else:
+            scalefactor = self.phase_nrows
+
+        figheight = self.ax_rv_height + self.ax_phase_height * scalefactor
+
+
+        # provision figure
+        fig = pl.figure(figsize=(self.figwidth, figheight))
+
+        fig.subplots_adjust(left=0.12, right=0.95)
+        gs_rv = gridspec.GridSpec(2, 1, height_ratios=[1., 0.5])
+
+        divide = 1 - self.ax_rv_height / figheight
+        gs_rv.update(left=0.12, right=0.93, top=0.93,
+                     bottom=divide+self.rv_phase_space*0.5, hspace=0.)
+
+        # orbit plot
+        ax_rv = pl.subplot(gs_rv[0, 0])
+        self.ax_list += [ax_rv]
+
+        pl.sca(ax_rv)
+        self.plot_timeseries()
+        if letter_labels:
+            pltletter = ord('a')
+            plot.labelfig(pltletter)
+            pltletter += 1
+
+         # residuals
+        ax_resid = pl.subplot(gs_rv[1, 0])
+        self.ax_list += [ax_resid]
+
+        pl.sca(ax_resid)
+        self.plot_residuals()
+        if letter_labels:
+            plot.labelfig(pltletter)
+            pltletter += 1
+
+
+        # phase-folded plots
+        if not nophase:
+            gs_phase = gridspec.GridSpec(self.phase_nrows, self.phase_ncols)
+
+            if self.phase_ncols == 1:
+                gs_phase.update(left=0.12, right=0.93,
+                                top=divide - self.rv_phase_space * 0.5,
+                                bottom=0.07, hspace=0.003)
+            else:
+                gs_phase.update(left=0.12, right=0.93,
+                                top=divide - self.rv_phase_space * 0.5,
+                                bottom=0.07, hspace=0.25, wspace=0.25)
+
+            for i in range(self.num_planets):
+                i_row = int(i / self.phase_ncols)
+                i_col = int(i - i_row * self.phase_ncols)
+                ax_phase = pl.subplot(gs_phase[i_row, i_col])
+                self.ax_list += [ax_phase]
+
+                pl.sca(ax_phase)
+                self.plot_phasefold(pltletter, i+1)
+                pltletter += 1
+
+
+        if self.saveplot is not None:
+            pl.savefig(self.saveplot, dpi=150)
+            print("RV multi-panel plot saved to %s" % self.saveplot)
+
+        return fig, self.ax_list
