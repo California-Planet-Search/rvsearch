@@ -214,7 +214,6 @@ class Periodogram(object):
                     post.params[kkey].value = 0
                     post = radvel.fitting.maxlike_fitting(post, verbose=False)
                     bic[i] = baseline_bic - post.likelihood.bic()
-                    pdb.set_trace()
 
                 # Append the best-fit parameters to the period-iterated list.
                 best_params = {}
