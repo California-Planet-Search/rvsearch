@@ -146,8 +146,8 @@ class Search(object):
         else:
             # Flat
             self.post.params['dvdt'].value = 0
-            self.post.params['dvdt'].vary  = False
             self.post.params['curv'].value = 0
+            self.post.params['dvdt'].vary  = False
             self.post.params['curv'].vary  = False
 
 
