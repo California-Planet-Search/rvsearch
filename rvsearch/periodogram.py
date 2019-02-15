@@ -211,7 +211,7 @@ class Periodogram(object):
                         post.params[k].value = self.default_pdict[k]
                     post.params[perkey].value = per
                     kkey = 'k{}'.format(post.params.num_planets)
-                    post.params[kkey].value = 0.01
+                    post.params[kkey].value = 0
                     #post.params[kkey].vary = False
                     post = radvel.fitting.maxlike_fitting(post, verbose=False)
                     #post.params[kkey].vary = True
