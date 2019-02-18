@@ -139,7 +139,8 @@ class Periodogram(object):
             if self.num_pers is None:
                 self.pers = self.per_spacing()
             else:
-                self.pers = 1/np.linspace(1/self.maxsearchP, 1/self.minsearchP, self.num_pers)
+                self.pers = 1/np.linspace(1/self.maxsearchP, 1/self.minsearchP,
+                                          self.num_pers)
 
         self.freqs = 1/self.pers
 
