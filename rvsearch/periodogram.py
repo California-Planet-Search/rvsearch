@@ -214,6 +214,16 @@ class Periodogram(object):
                     post = radvel.fitting.maxlike_fitting(post, verbose=False)
                     bic[i] = baseline_bic - post.likelihood.bic()
 
+                if bic[i] < self.floor - 1:
+                    # If the fit is still bad, reset tc to better value and try again.
+                    for k in self.default_pdict.keys():
+                        post.params[k].value = self.default_pdict[k]
+                    veldiff = np.absolute(post.likelihood.y - np.mean(post.likelihood.y))
+                    tc_new = self.times[np.argmin(veldiff)]
+                    post.params['tc{}'.format(post.params.num_planets)].value = tc_new
+                    post = radvel.fitting.maxlike_fitting(post, verbose=False)
+                    bic[i] = baseline_bic - post.likelihood.bic()
+
                 # Append the best-fit parameters to the period-iterated list.
                 best_params = {}
                 for k in post.params.keys():
