@@ -107,7 +107,7 @@ def initialize_post(data, params=None, priors=[]):
 
 	return post
 
-def window(time, freqs, plot=False):
+def window(times, freqs, plot=False):
 	"""Function to generate, and plot, the window function of observations.
 
 	Args:
@@ -116,8 +116,8 @@ def window(time, freqs, plot=False):
 	"""
 	W = np.zeros(len(freqs))
 	for i, freq in enumerate(freqs):
-		W[i] = np.sum(np.exp(-2*np.pi*1j*time*freq))
-	W /= float(len(freq))
+		W[i] = np.absolute(np.sum(np.exp(-2*np.pi*1j*times*freq)))
+	W /= len(times)
 	return W
 
 def read_from_csv(filename, binsize=0.0, verbose=True):
