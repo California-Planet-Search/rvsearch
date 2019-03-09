@@ -14,7 +14,7 @@ plim = (1, 1e6)
 klim = (0.1, 1000)
 elim = (0, 0)
 
-for sfile in search_list[0:1]:
+for sfile in search_list:
     sdir = os.path.abspath(os.path.dirname(sfile))
     sfile = os.path.abspath(sfile)
     print(sfile)
