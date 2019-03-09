@@ -23,7 +23,7 @@ for sfile in search_list:
         if not os.path.exists('recoveries.csv'):
             try:
                 inj = rvsearch.inject.Injections(sfile, plim, klim, elim, num_sim=100)
-                recoveries = inj.run_injections(num_cpus=100)
+                recoveries = inj.run_injections(num_cpus=64)
                 
             
             except OSError:
