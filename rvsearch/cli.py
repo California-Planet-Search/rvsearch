@@ -99,7 +99,7 @@ def main():
                           help="Number of injections [default=100]"
                           )
     psr_peri.add_argument('--num_cpus',
-                          action='store', default=8,
+                          action='store', default=8, type=int,
                           help="Number of CPUs [8]"
                           )
 
