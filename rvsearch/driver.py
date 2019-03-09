@@ -35,8 +35,9 @@ def injections(args):
 
         if not os.path.exists('recoveries.csv'):
             try:
-                inj = rvsearch.inject.Injections(sfile, plim, klim, elim, num_sim=100)
-                recoveries = inj.run_injections(num_cpus=100)
+                inj = rvsearch.inject.Injections(sfile, plim, klim, elim,
+                                                 num_sim=args.num_inject)
+                recoveries = inj.run_injections(num_cpus=args.num_cpus)
                 inj.save()
             except OSError:
                 print("WARNING: Problem with {}".format(sfile))
