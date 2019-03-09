@@ -6,11 +6,41 @@ the `cli.py` command line interface.
 from __future__ import print_function
 import os
 from glob import glob
+import copy
 import pylab as pl
 import pandas as pd
 
 import rvsearch
+import radvel
 from radvel.utils import working_directory
+
+
+def run_search(args):
+    """Run a search from a given RadVel setup file
+
+    Args:
+        args (ArgumentParser): command line arguments
+    """
+
+    config_file = args.setupfn
+    conf_base = os.path.basename(config_file).split('.')[0]
+
+    P, post = radvel.utils.initialize_posterior(config_file)
+
+    starname = conf_base
+    data = P.data
+
+    if args.known:
+        ipost = copy.deepcopy(post)
+    else:
+        ipost = None
+
+    searcher = rvsearch.search.Search(data, starname=starname,
+                                      min_per=args.minP,
+                                      workers=args.num_cpus,
+                                      post=ipost,
+                                      verbose=True)
+    searcher.run_search()
 
 
 def injections(args):
