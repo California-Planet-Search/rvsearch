@@ -32,7 +32,6 @@ for sfile in search_list[0:1]:
         else:
             recoveries = pd.read_csv('recoveries.csv')
             
-            pl.clf()
-            fig = rvsearch.inject.plot_recoveries(recoveries)
-            fig.savefig('recoveries.pdf')
-
+        pl.clf()
+        fig = rvsearch.inject.plot_recoveries(recoveries)
+        fig.savefig('recoveries.pdf')
