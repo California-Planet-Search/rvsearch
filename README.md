@@ -1,6 +1,8 @@
 # radvel-search
 RV Planet Search Pipeline Based on RadVel
 
+[![Powered by RadVel](https://img.shields.io/badge/powered_by-RadVel-EB5368.svg?style=flat)](https://radvel.readthedocs.io)
+
 Use RadVel setup files to load:
 - parameters for "known" planets
 - data and instruments
