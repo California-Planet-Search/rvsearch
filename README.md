@@ -10,7 +10,7 @@ Use RadVel setup files to load:
 - fitting (search) basis (not implemented)
 
 
-Example run:
+Calling syntax:
 
 `rvsearch search path-to-setup`
 
