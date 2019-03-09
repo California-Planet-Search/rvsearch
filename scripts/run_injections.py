@@ -21,13 +21,13 @@ for sfile in search_list:
 
     with working_directory(sdir):
         if not os.path.exists('recoveries.csv'):
-            # try:
-            inj = rvsearch.inject.Injections(sfile, plim, klim, elim, num_sim=100)
-            recoveries = inj.run_injections(num_cpus=25)
+            try:
+                inj = rvsearch.inject.Injections(sfile, plim, klim, elim, num_sim=100)
+                recoveries = inj.run_injections(num_cpus=25)
 
-            # except OSError:
-            #     print("WARNING: Problem with {}".format(sfile))
-            #     continue
+            except OSError:
+                print("WARNING: Problem with {}".format(sfile))
+                continue
         else:
             recoveries = pd.read_csv('recoveries.csv')
             
