@@ -14,7 +14,7 @@ plim = (1, 1e6)
 klim = (0.1, 1000)
 elim = (0, 0)
 
-for sfile in search_list:
+for sfile in search_list[0:1]:
     sdir = os.path.abspath(os.path.dirname(sfile))
     sfile = os.path.abspath(sfile)
     print(sfile)
@@ -24,6 +24,7 @@ for sfile in search_list:
             try:
                 inj = rvsearch.inject.Injections(sfile, plim, klim, elim, num_sim=100)
                 recoveries = inj.run_injections(num_cpus=100)
+                inj.save()
 
             except OSError:
                 print("WARNING: Problem with {}".format(sfile))

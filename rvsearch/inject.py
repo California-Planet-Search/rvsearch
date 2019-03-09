@@ -145,7 +145,7 @@ class Injections(object):
         return outdf
 
     def save(self):
-        recoveries.to_csv(os.path.join(self.outdir, 'recoveries.csv'), index=False)
+        recoveries.to_csv(os.path.join('recoveries.csv'), index=False)
 
 
 def plot_recoveries(recoveries):
