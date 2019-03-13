@@ -1,0 +1,370 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Miscellaneous Utilities &mdash; rvsearch 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Plotting" href="plots.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> rvsearch
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="periodogram.html">Periodograms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="search_class.html">Blind Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inject.html">Injection and Recovery Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plots.html">Plotting</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Miscellaneous Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">rvsearch</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="api.html">API</a> &raquo;</li>
+        
+      <li>Miscellaneous Utilities</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/utils.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="module-rvsearch">
+<span id="miscellaneous-utilities"></span><span id="utils"></span><h1>Miscellaneous Utilities<a class="headerlink" href="#module-rvsearch" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-rvsearch.utils"></span><dl class="function">
+<dt id="rvsearch.utils.initialize_default_pars">
+<code class="descclassname">rvsearch.utils.</code><code class="descname">initialize_default_pars</code><span class="sig-paren">(</span><em>instnames=['inst'], fitting_basis='per tc secosw sesinw k'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#initialize_default_pars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.initialize_default_pars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set up a default Parameters object.</p>
+<blockquote>
+<div>None of the basis values are free params, for the initial 0-planet fit.
+Remember to reset .vary to True for all relevant params.</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>instnames</strong> (<em>list</em>) – codes of instruments used</li>
+<li><strong>fitting_basis</strong> – optional</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Parameters object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rvsearch.utils.initialize_post">
+<code class="descclassname">rvsearch.utils.</code><code class="descname">initialize_post</code><span class="sig-paren">(</span><em>data</em>, <em>params=None</em>, <em>priors=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#initialize_post"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.initialize_post" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a posterior object with data, params, and priors.
+:param data: a pandas dataframe.
+:param params: a list of radvel parameter objects.
+:param priors: a list of priors to place on the posterior object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">post (radvel Posterior object)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rvsearch.utils.read_from_csv">
+<code class="descclassname">rvsearch.utils.</code><code class="descname">read_from_csv</code><span class="sig-paren">(</span><em>filename</em>, <em>binsize=0.0</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#read_from_csv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.read_from_csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read radial velocity data from a csv file into a Pandas dataframe.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<em>string</em>) – Path to csv file</li>
+<li><strong>binsize</strong> (<em>float</em>) – Times in which to bin data, in given units</li>
+<li><strong>verbose</strong> (<em>bool</em>) – Notify user if instrument types not given?</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rvsearch.utils.read_from_vst">
+<code class="descclassname">rvsearch.utils.</code><code class="descname">read_from_vst</code><span class="sig-paren">(</span><em>filename</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#read_from_vst"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.read_from_vst" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read radial velocity data from a vst file into a Pandas dataframe.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<em>string</em>) – Path to csv file</li>
+<li><strong>verbose</strong> (<em>bool</em>) – Notify user if instrument types not given?</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Only relevant for HIRES users.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="rvsearch.utils.scrape">
+<code class="descclassname">rvsearch.utils.</code><code class="descname">scrape</code><span class="sig-paren">(</span><em>starlist</em>, <em>star_db_name=None</em>, <em>filename='system_props.csv'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#scrape"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.scrape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take data from completed searches and compile into one dataframe.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>starlist</strong> (<em>list</em>) – List of starnames to access in current directory</li>
+<li><strong>star_db_name</strong> (<em>string</em><em> [</em><em>optional</em><em>]</em>) – Filename of star properties dataframe</li>
+<li><strong>filename</strong> (<em>string</em>) – Path to which to save dataframe</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If specified, compute planet masses and semi-major axes.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="rvsearch.utils.window">
+<code class="descclassname">rvsearch.utils.</code><code class="descname">window</code><span class="sig-paren">(</span><em>time</em>, <em>freqs</em>, <em>plot=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.window" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to generate, and plot, the window function of observations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time</strong> – times of observations in a dataset. FOR SEPARATE TELESCOPES?</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="plots.html" class="btn btn-neutral" title="Plotting" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Lee Rosenthal and BJ Fulton.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="_static/language_data.js"></script>
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

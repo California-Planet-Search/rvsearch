@@ -15,14 +15,14 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
+
 import rvsearch
-import radvel
 
 # -- Project information -----------------------------------------------------
 
 project = 'rvsearch'
-copyright = '2019, Lee Rosenthal'
-author = 'Lee Rosenthal'
+copyright = '2019, Lee Rosenthal and BJ Fulton'
+author = 'Lee Rosenthal and BJ Fulton'
 
 # The short X.Y version
 version = '.'.join(rvsearch.__version__.split('.')[:-1])
@@ -157,7 +157,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'rvsearch', 'rvsearch Documentation',
-     author, 'rvsearch', 'One line description of project.',
+     author, 'rvsearch', 'Find planets in RV data',
      'Miscellaneous'),
 ]
 

@@ -1,15 +1,11 @@
 """Injection and recovery class"""
 
 import os
-import copy
 import numpy as np
 import pandas as pd
 import pylab as pl
 import pickle
 import pathos.multiprocessing as mp
-
-import rvsearch
-import radvel
 
 
 class Injections(object):

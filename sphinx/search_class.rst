@@ -1,10 +1,9 @@
-.. _search:
+.. _search_class:
 
-Search Pipeline
-===============
+Blind Search
+============
 .. module:: rvsearch
 
 .. automodule:: rvsearch.search
    :members:
    :special-members:
-   :show-inheritance:
