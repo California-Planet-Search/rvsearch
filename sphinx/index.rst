@@ -3,15 +3,24 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to rvsearch's documentation!
-====================================
+Welcome to the documentation for RVsearch
+=========================================
+
+Blind RV planet search pipeline based on `RadVel <radvel.readthedocs.org>`_.
+
+Use RadVel setup files to load:
+   - parameters for "known" planets
+   - data and instruments
+   - fix/vary within search
+   - fitting (search) basis
+
+
+Contents:
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
-   intro
-   tutorial
 
+   api
 
 
 Indices and tables

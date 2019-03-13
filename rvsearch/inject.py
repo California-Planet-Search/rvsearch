@@ -145,7 +145,7 @@ class Injections(object):
         return outdf
 
     def interpolate(self, period, k):
-
+        pass
 
     def save(self):
         self.recoveries.to_csv(os.path.join('recoveries.csv'), index=False)
