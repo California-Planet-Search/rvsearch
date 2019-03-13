@@ -1,0 +1,388 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rvsearch.inject &mdash; rvsearch 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> rvsearch
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">rvsearch</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>rvsearch.inject</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for rvsearch.inject</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Injection and recovery class&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">pl</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">pathos.multiprocessing</span> <span class="k">as</span> <span class="nn">mp</span>
+
+
+<div class="viewcode-block" id="Injections"><a class="viewcode-back" href="../../inject.html#rvsearch.inject.Injections">[docs]</a><span class="k">class</span> <span class="nc">Injections</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to perform and record injection and recovery tests for a planetary system.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        searchpath (string): Path to a saved rvsearch.Search object</span>
+<span class="sd">        plim (tuple): lower and upper period bounds for injections</span>
+<span class="sd">        klim (tuple): lower and upper k bounds for injections</span>
+<span class="sd">        elim (tuple): lower and upper e bounds for injections</span>
+<span class="sd">        num_sim (int): number of planets to simulate</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Injections.__init__"><a class="viewcode-back" href="../../inject.html#rvsearch.inject.Injections.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">searchpath</span><span class="p">,</span> <span class="n">plim</span><span class="p">,</span> <span class="n">klim</span><span class="p">,</span> <span class="n">elim</span><span class="p">,</span> <span class="n">num_sim</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">searchpath</span> <span class="o">=</span> <span class="n">searchpath</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plim</span> <span class="o">=</span> <span class="n">plim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">klim</span> <span class="o">=</span> <span class="n">klim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elim</span> <span class="o">=</span> <span class="n">elim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_sim</span> <span class="o">=</span> <span class="n">num_sim</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">search</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">searchpath</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">))</span>
+        <span class="n">seed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">search</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">injected_planets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_planets</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recoveries</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">injected_planets</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">outdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">searchpath</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Injections.random_planets"><a class="viewcode-back" href="../../inject.html#rvsearch.inject.Injections.random_planets">[docs]</a>    <span class="k">def</span> <span class="nf">random_planets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate random planets</span>
+
+<span class="sd">        Produce a DataFrame with random planet parameters</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            seed (int): seed for random number generator</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            DataFrame: with columns inj_period, inj_tp, inj_e, inj_w, inj_k</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plim</span>
+        <span class="n">k1</span><span class="p">,</span> <span class="n">k2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">klim</span>
+        <span class="n">e1</span><span class="p">,</span> <span class="n">e2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">elim</span>
+        <span class="n">num_sim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_sim</span>
+
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">p1</span> <span class="o">==</span> <span class="n">p2</span><span class="p">:</span>
+            <span class="n">sim_p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_sim</span><span class="p">)</span> <span class="o">+</span> <span class="n">p1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sim_p</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">p1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">p2</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="n">num_sim</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">k1</span> <span class="o">==</span> <span class="n">k2</span><span class="p">:</span>
+            <span class="n">sim_k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_sim</span><span class="p">)</span> <span class="o">+</span> <span class="n">k1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sim_k</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">k1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">k2</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="n">num_sim</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">e1</span> <span class="o">==</span> <span class="n">e2</span><span class="p">:</span>
+            <span class="n">sim_e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_sim</span><span class="p">)</span> <span class="o">+</span> <span class="n">e1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sim_e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">num_sim</span><span class="p">)</span>
+
+        <span class="n">sim_tp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">sim_p</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">num_sim</span><span class="p">)</span>
+        <span class="n">sim_om</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">num_sim</span><span class="p">)</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">inj_period</span><span class="o">=</span><span class="n">sim_p</span><span class="p">,</span> <span class="n">inj_tp</span><span class="o">=</span><span class="n">sim_tp</span><span class="p">,</span> <span class="n">inj_e</span><span class="o">=</span><span class="n">sim_e</span><span class="p">,</span>
+                               <span class="n">inj_w</span><span class="o">=</span><span class="n">sim_om</span><span class="p">,</span> <span class="n">inj_k</span><span class="o">=</span><span class="n">sim_k</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">df</span></div>
+
+<div class="viewcode-block" id="Injections.run_injections"><a class="viewcode-back" href="../../inject.html#rvsearch.inject.Injections.run_injections">[docs]</a>    <span class="k">def</span> <span class="nf">run_injections</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_cpus</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Launch injection/recovery tests</span>
+
+<span class="sd">        Try to recover all planets defined in self.simulated_planets</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            num_cpus (int): number of CPUs to utilize. Each injection will run</span>
+<span class="sd">                on a separate CPU. Individual injections are forced to be single-threaded</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            DataFrame: summary of injection/recovery tests</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">_run_one</span><span class="p">(</span><span class="n">orbel</span><span class="p">):</span>
+            <span class="n">sfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">searchpath</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+            <span class="n">search</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">sfile</span><span class="p">)</span>
+            <span class="n">sfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+            <span class="n">recovered</span><span class="p">,</span> <span class="n">recovered_orbel</span> <span class="o">=</span> <span class="n">search</span><span class="o">.</span><span class="n">inject_recover</span><span class="p">(</span><span class="n">orbel</span><span class="p">,</span> <span class="n">num_cpus</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">bic</span> <span class="o">=</span> <span class="n">search</span><span class="o">.</span><span class="n">best_bics</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="k">return</span> <span class="n">recovered</span><span class="p">,</span> <span class="n">recovered_orbel</span><span class="p">,</span> <span class="n">bic</span>
+
+        <span class="n">outcols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;inj_period&#39;</span><span class="p">,</span> <span class="s1">&#39;inj_tp&#39;</span><span class="p">,</span> <span class="s1">&#39;inj_e&#39;</span><span class="p">,</span> <span class="s1">&#39;inj_w&#39;</span><span class="p">,</span> <span class="s1">&#39;inj_k&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;rec_period&#39;</span><span class="p">,</span> <span class="s1">&#39;rec_tp&#39;</span><span class="p">,</span> <span class="s1">&#39;rec_e&#39;</span><span class="p">,</span> <span class="s1">&#39;rec_w&#39;</span><span class="p">,</span> <span class="s1">&#39;rec_k&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;recovered&#39;</span><span class="p">,</span> <span class="s1">&#39;bic&#39;</span><span class="p">]</span>
+        <span class="n">outdf</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([],</span> <span class="n">index</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_sim</span><span class="p">),</span>
+                             <span class="n">columns</span><span class="o">=</span><span class="n">outcols</span><span class="p">)</span>
+        <span class="n">outdf</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">injected_planets</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">injected_planets</span>
+
+        <span class="n">pool</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="n">num_cpus</span><span class="p">)</span>
+
+        <span class="n">in_orbels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">out_orbels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">recs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">bics</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">injected_planets</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="n">in_orbels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">values</span><span class="p">))</span>
+
+        <span class="n">outputs</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">_run_one</span><span class="p">,</span> <span class="n">in_orbels</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">:</span>
+            <span class="n">recovered</span><span class="p">,</span> <span class="n">recovered_orbel</span><span class="p">,</span> <span class="n">bic</span> <span class="o">=</span> <span class="n">out</span>
+            <span class="n">out_orbels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">recovered_orbel</span><span class="p">)</span>
+            <span class="n">recs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">recovered</span><span class="p">)</span>
+            <span class="n">bics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bic</span><span class="p">)</span>
+
+        <span class="n">out_orbels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">out_orbels</span><span class="p">)</span>
+        <span class="n">outdf</span><span class="p">[</span><span class="s1">&#39;rec_period&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">out_orbels</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">outdf</span><span class="p">[</span><span class="s1">&#39;rec_tp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">out_orbels</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">outdf</span><span class="p">[</span><span class="s1">&#39;rec_e&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">out_orbels</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="n">outdf</span><span class="p">[</span><span class="s1">&#39;rec_w&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">out_orbels</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span>
+        <span class="n">outdf</span><span class="p">[</span><span class="s1">&#39;rec_k&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">out_orbels</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span>
+
+        <span class="n">outdf</span><span class="p">[</span><span class="s1">&#39;recovered&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">recs</span>
+        <span class="n">outdf</span><span class="p">[</span><span class="s1">&#39;bic&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bics</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">recoveries</span> <span class="o">=</span> <span class="n">outdf</span>
+
+        <span class="k">return</span> <span class="n">outdf</span></div>
+
+    <span class="k">def</span> <span class="nf">interpolate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recoveries</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;recoveries.csv&#39;</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="plot_recoveries"><a class="viewcode-back" href="../../inject.html#rvsearch.inject.plot_recoveries">[docs]</a><span class="k">def</span> <span class="nf">plot_recoveries</span><span class="p">(</span><span class="n">recoveries</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Plot injection/recovery results</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        recoveries (DataFrame): injection/recovery results as output by self.run_injections</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        matplotlib.figure</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">good</span> <span class="o">=</span> <span class="n">recoveries</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">&#39;recovered == True&#39;</span><span class="p">)</span>
+    <span class="n">bad</span> <span class="o">=</span> <span class="n">recoveries</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">&#39;recovered == False&#39;</span><span class="p">)</span>
+
+    <span class="n">pl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">good</span><span class="p">[</span><span class="s1">&#39;rec_period&#39;</span><span class="p">],</span> <span class="n">good</span><span class="p">[</span><span class="s1">&#39;rec_k&#39;</span><span class="p">],</span> <span class="s1">&#39;bo&#39;</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;recovered&#39;</span><span class="p">)</span>
+    <span class="n">pl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">bad</span><span class="p">[</span><span class="s1">&#39;inj_period&#39;</span><span class="p">],</span> <span class="n">bad</span><span class="p">[</span><span class="s1">&#39;inj_k&#39;</span><span class="p">],</span> <span class="s1">&#39;ro&#39;</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;missed&#39;</span><span class="p">)</span>
+    <span class="n">pl</span><span class="o">.</span><span class="n">loglog</span><span class="p">()</span>
+
+    <span class="n">xt</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">xticks</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">pl</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">xt</span><span class="p">,</span> <span class="n">xt</span><span class="p">)</span>
+
+    <span class="n">yt</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">yticks</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">pl</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">yt</span><span class="p">,</span> <span class="n">yt</span><span class="p">)</span>
+
+    <span class="n">pl</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Period [days]&#39;</span><span class="p">)</span>
+    <span class="n">pl</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;K [m/s]&#39;</span><span class="p">)</span>
+
+    <span class="n">pl</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">recoveries</span><span class="p">[</span><span class="s1">&#39;inj_period&#39;</span><span class="p">]),</span> <span class="nb">max</span><span class="p">(</span><span class="n">recoveries</span><span class="p">[</span><span class="s1">&#39;inj_period&#39;</span><span class="p">]))</span>
+    <span class="n">pl</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">recoveries</span><span class="p">[</span><span class="s1">&#39;inj_k&#39;</span><span class="p">]),</span> <span class="nb">max</span><span class="p">(</span><span class="n">recoveries</span><span class="p">[</span><span class="s1">&#39;inj_k&#39;</span><span class="p">]))</span>
+
+    <span class="n">pl</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">fig</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Lee Rosenthal and BJ Fulton.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../_static/language_data.js"></script>
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

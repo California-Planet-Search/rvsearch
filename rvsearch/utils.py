@@ -21,8 +21,8 @@ def reset_params(post, default_pdict):
 		post.params[k].value = default_pdict[k]
 	return post
 
-def initialize_default_pars(instnames=['inst'], fitting_basis= \
-										'per tc secosw sesinw k'):
+def initialize_default_pars(instnames=['inst'],
+                            fitting_basis='per tc secosw sesinw k'):
     """Set up a default Parameters object.
 
 	None of the basis values are free params, for the initial 0-planet fit.

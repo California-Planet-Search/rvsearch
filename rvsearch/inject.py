@@ -1,15 +1,11 @@
 """Injection and recovery class"""
 
 import os
-import copy
 import numpy as np
 import pandas as pd
 import pylab as pl
 import pickle
 import pathos.multiprocessing as mp
-
-import rvsearch
-import radvel
 
 
 class Injections(object):
@@ -144,12 +140,15 @@ class Injections(object):
 
         return outdf
 
+    def interpolate(self, period, k):
+        pass
+
     def save(self):
-        recoveries.to_csv(os.path.join(self.outdir, 'recoveries.csv'), index=False)
+        self.recoveries.to_csv(os.path.join('recoveries.csv'), index=False)
 
 
 def plot_recoveries(recoveries):
-    """Plot injetion/recovery results
+    """Plot injection/recovery results
 
     Args:
         recoveries (DataFrame): injection/recovery results as output by self.run_injections
