@@ -144,12 +144,15 @@ class Injections(object):
 
         return outdf
 
+    def interpolate(self, period, k):
+
+
     def save(self):
         self.recoveries.to_csv(os.path.join('recoveries.csv'), index=False)
 
 
 def plot_recoveries(recoveries):
-    """Plot injetion/recovery results
+    """Plot injection/recovery results
 
     Args:
         recoveries (DataFrame): injection/recovery results as output by self.run_injections
