@@ -37,8 +37,8 @@ class Search(object):
 
     def __init__(self, data, post=None, starname='star', max_planets=8,
                 priors=[], crit='bic', fap=0.01, min_per=3, manual_grid=None,
-                trend=False, fix=False, polish=True, mcmc=True, workers=1,
-                verbose=True, save_outputs=True):
+                oversampling=1., trend=False, fix=False, polish=True, mcmc=True,
+                workers=1, verbose=True, save_outputs=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
@@ -59,11 +59,11 @@ class Search(object):
         else:
             self.post   = post
             # self.priors = post.priors
-        '''
-        self.post   = post
-        self.params = self.post.params
-        self.priors = self.post.priors
-        '''
+
+        # self.post   = post
+        # self.params = self.post.params
+        # self.priors = self.post.priors
+
         self.all_params = []
 
         self.max_planets = max_planets
@@ -73,16 +73,16 @@ class Search(object):
             self.num_planets = self.post.params.num_planets
 
         self.crit = crit
-        '''
-        # Play with calling __name__ of method
-        if crit=='bic':
-            self.crit = radvel.posterior.bic()
-        eif crit=='aic':
-            self.crit = radvel.posterior.aic()
-        self.critname = self.crit.__string__
-        else:
-            raise ValueError('Invalid information criterion.')
-        '''
+
+        # # Play with calling __name__ of method
+        # if crit=='bic':
+        #     self.crit = radvel.posterior.bic()
+        # eif crit=='aic':
+        #     self.crit = radvel.posterior.aic()
+        # self.critname = self.crit.__string__
+        # else:
+        #     raise ValueError('Invalid information criterion.')
+
         self.fap = fap
         self.min_per = min_per
 
@@ -92,6 +92,7 @@ class Search(object):
         self.mcmc = mcmc
 
         self.manual_grid = manual_grid
+        self.oversampling = oversampling
         self.workers = workers
         self.verbose = verbose
         self.save_outputs = save_outputs
@@ -145,8 +146,8 @@ class Search(object):
         else:
             # Flat
             self.post.params['dvdt'].value = 0
-            self.post.params['dvdt'].vary  = False
             self.post.params['curv'].value = 0
+            self.post.params['dvdt'].vary  = False
             self.post.params['curv'].vary  = False
 
 
@@ -236,29 +237,26 @@ class Search(object):
         new_post = utils.initialize_post(self.data, new_params, priors)
         self.post = new_post
 
-    '''
-    def trend_swap(self):
-        """Perform a BIC test for trend versus long-period Keplerian fit.
-
-        """
-        kpost = copy.deepcopy(self.post)
-
-        times    = self.post.likelihood.x
-        baseline = times[-1] - times[0]
-
-        # THIS CAN BE USED ONCE SUB_PLANET() GENERALIZED TO ANY N
-        #for n in np.arange(1, self.num_planets+1):
-        #    if self.post.params['per{}'.format(n)].value > 1.5*baseline:
-        #        self.sub_planet()
-
-        per = self.post.params['per{}'.format(self.num_planets)].value
-        if per > 1.5*baseline:
-            k = kpost.params['k{}'.format(self.num_planets)].value
-            self.sub_planet()
-            self.post.params['dvdt'] = True
-            self.post.params['dvdt'].value = 2*np.pi*k/per
-    '''
-
+    # def trend_swap(self):
+    #     """Perform a BIC test for trend versus long-period Keplerian fit.
+    #
+    #     """
+    #     kpost = copy.deepcopy(self.post)
+    #
+    #     times    = self.post.likelihood.x
+    #     baseline = times[-1] - times[0]
+    #
+    #     # THIS CAN BE USED ONCE SUB_PLANET() GENERALIZED TO ANY N
+    #     #for n in np.arange(1, self.num_planets+1):
+    #     #    if self.post.params['per{}'.format(n)].value > 1.5*baseline:
+    #     #        self.sub_planet()
+    #
+    #     per = self.post.params['per{}'.format(self.num_planets)].value
+    #     if per > 1.5*baseline:
+    #         k = kpost.params['k{}'.format(self.num_planets)].value
+    #         self.sub_planet()
+    #         self.post.params['dvdt'] = True
+    #         self.post.params['dvdt'].value = 2*np.pi*k/per
 
     def fit_orbit(self):
         """Perform a max-likelihood fit with all parameters free.
@@ -370,6 +368,7 @@ class Search(object):
             perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
                                                minsearchp=self.min_per, fap=self.fap,
                                                manual_grid=self.manual_grid,
+                                               oversampling=self.oversampling,
                                                workers=self.workers,
                                                verbose=self.verbose)
 
@@ -508,8 +507,7 @@ class Search(object):
                        header='threshold  best_bic')
 
     def continue_search(self):
-        """
-        Continue a search by trying to add one more planet
+        """Continue a search by trying to add one more planet
 
         """
         if self.num_planets == 0:
@@ -517,79 +515,3 @@ class Search(object):
         fixed_threshold = self.bic_threshes[-1]
 
         self.run_search(fixed_threshold=fixed_threshold)
-
-    def inject_recover(self, injected_orbel, num_cpus=None):
-        """Inject and recover
-
-        Inject and attempt to recover a synthetic planet signal
-
-        Args:
-            injected_orbel (array): array of orbital elements sent to radvel.kepler.rv_drive
-            num_cpus (int): Number of CPUs to utilize. Will default to self.workers
-
-        Returns:
-            tuple: (recovered? (T/F), recovered_orbel)
-        """
-
-        if num_cpus is not None:
-            self.workers = int(num_cpus)
-
-        self.max_planets = self.num_planets + 1
-        self.mcmc = False
-        self.save_outputs = False
-        self.basebic = None
-        self.verbose = False
-
-        # only search at closest period in the original period grid
-        self.manual_grid = [self.pers[np.argmin(np.abs(self.pers - injected_orbel[0]))]]
-
-        mod = radvel.kepler.rv_drive(self.data['time'].values, injected_orbel)
-
-        self.data['mnvel'] += mod
-
-        self.continue_search()
-
-        # Determine successful recovery
-        last_planet = self.num_planets
-        pl = str(last_planet)
-        if last_planet >= self.max_planets:
-            synth_params = self.post.params.basis.to_synth(self.post.params)
-            recovered_orbel = [synth_params['per'+pl].value,
-                               synth_params['tp'+pl].value,
-                               synth_params['e'+pl].value,
-                               synth_params['w'+pl].value,
-                               synth_params['k'+pl].value]
-            per, tp, e, w, k = recovered_orbel
-            iper, itp, ie, iw, ik = injected_orbel
-
-            # calculate output model to check for phase mismatch
-            # probably not most efficient way to do this
-            xmod = np.linspace(tp, tp+iper, 100)
-            inmod = radvel.kepler.rv_drive(xmod, injected_orbel)
-            outmod = self.post.likelihood.model(xmod)
-            xph1 = np.mod(xmod - itp, iper)
-            xph1 /= iper
-            xph2 = np.mod(xmod - tp, per)
-            xph2 /= per
-            inmin = xph1[np.argmin(inmod)]
-            outmin = xph2[np.argmin(outmod)]
-            inmax = xph1[np.argmax(inmod)]
-            outmax = xph2[np.argmax(outmod)]
-            phdiff = np.min([abs(inmin - outmin), abs(outmax - inmax)])
-
-            dthresh = 0.25                                 # recover parameters to 25%
-            criteria = [last_planet >= self.max_planets,   # check detected
-                        np.abs(per-iper)/iper <= dthresh,  # check periods match
-                        phdiff <= np.pi / 6,               # check that phase is right
-                        np.abs(k - ik)/ik <= dthresh]      # check that K is right
-
-            criteria = np.array(criteria, dtype=bool)
-            if criteria.all():
-                recovered = True
-            else:
-                recovered = False
-        else:
-            recovered = False
-            recovered_orbel = [np.nan for i in range(5)]
-
-        return recovered, recovered_orbel

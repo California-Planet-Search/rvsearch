@@ -16,17 +16,18 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+import rvsearch
 
 # -- Project information -----------------------------------------------------
 
 project = 'rvsearch'
-copyright = '2019, Lee Rosenthal'
-author = 'Lee Rosenthal'
+copyright = '2019, Lee Rosenthal and BJ Fulton'
+author = 'Lee Rosenthal and BJ Fulton'
 
 # The short X.Y version
-version = ''
-# The full version, including alpha/beta/rc tags
-release = ''
+version = '.'.join(rvsearch.__version__.split('.')[:-1])
+# The full version, including alpha/beta/rc tags.
+release = rvsearch.__version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -40,7 +41,11 @@ release = ''
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.doctest',
     'sphinx.ext.mathjax',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.viewcode',
+    'nbsphinx'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -76,7 +81,7 @@ pygments_style = None
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -152,7 +157,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'rvsearch', 'rvsearch Documentation',
-     author, 'rvsearch', 'One line description of project.',
+     author, 'rvsearch', 'Find planets in RV data',
      'Miscellaneous'),
 ]
 
