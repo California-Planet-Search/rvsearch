@@ -1,11 +1,8 @@
 import numpy as np
-from matplotlib import rcParams, gridspec
+import pylab as pl
 from matplotlib import pyplot as plt
-from matplotlib.ticker import MaxNLocator
-from astropy.time import Time
 import radvel
-from radvel import plot
-from radvel.utils import t_to_phase, fastbin, sigfig
+
 
 class PeriodModelPlot(object):
     """Class to jointly plot the periodograms, best model phaseplots, and
@@ -174,3 +171,49 @@ class PeriodModelPlot(object):
         """Call everything above to construct a multipanel plot.
         """
         fig = plt.figure()
+
+
+class CompletenessPlots(object):
+    """Class to plot results of injection/recovery tests
+
+    Args:
+        completeness (inject.Completeness): completeness object
+
+    """
+    def __init__(self, completeness):
+        self.comp = completeness
+
+    @staticmethod
+    def completeness_plot(xgrid, ygrid, comp_array, title='', xlabel='', ylabel=''):
+        """Plot completeness contours
+
+        Args:
+            xgrid (array): grid of x points to plot at
+            ygrid (array): grid of y points to plot at
+            comp_array (array): array of shape (len(xgrid) x len(ygrid)) with completeness value
+                at each combination of xgrid and ygrid
+            title (string): (optional) plot title
+            xlabel (string): (optional) x-axis label
+            ylabel (string): (optional) y-axis label
+        """
+        CS = pl.contourf(xgrid, ygrid, comp_array, 10, cmap=pl.cm.Reds_r, vmax=0.9)
+        ax = pl.gca()
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+
+        xticks = pl.xticks()[0]
+        pl.xticks(xticks, xticks)
+
+        yticks = pl.yticks()[0]
+        pl.yticks(yticks, yticks)
+
+        pl.xlim(xgrid.min(), xgrid.max())
+        pl.ylim(ygrid.min(), ygrid.max())
+
+        pl.title(title)
+        pl.xlabel(xlabel)
+        pl.ylabel(ylabel)
+
+        pl.grid(True)
+
+        return CS

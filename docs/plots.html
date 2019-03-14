@@ -183,9 +183,9 @@
 </style>
 <div class="section" id="module-rvsearch">
 <span id="plotting"></span><span id="plots"></span><h1>Plotting<a class="headerlink" href="#module-rvsearch" title="Permalink to this headline">¶</a></h1>
-<span class="target" id="module-rvsearch.search_plots"></span><dl class="class">
-<dt id="rvsearch.search_plots.PeriodModelPlot">
-<em class="property">class </em><code class="descclassname">rvsearch.search_plots.</code><code class="descname">PeriodModelPlot</code><span class="sig-paren">(</span><em>search</em>, <em>saveplot=None</em>, <em>epoch=2450000</em>, <em>phase_nrows=None</em>, <em>yscale_auto=False</em>, <em>yscale_sigma=3.0</em>, <em>phase_ncols=None</em>, <em>uparams=None</em>, <em>telfmts={}</em>, <em>legend=True</em>, <em>nobin=False</em>, <em>phasetext_size='large'</em>, <em>rv_phase_space=0.08</em>, <em>figwidth=7.5</em>, <em>fit_linewidth=2.0</em>, <em>set_xlim=None</em>, <em>text_size=9</em>, <em>legend_kwards={'loc': 'best'}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search_plots.html#PeriodModelPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search_plots.PeriodModelPlot" title="Permalink to this definition">¶</a></dt>
+<span class="target" id="module-rvsearch.plots"></span><dl class="class">
+<dt id="rvsearch.plots.PeriodModelPlot">
+<em class="property">class </em><code class="descclassname">rvsearch.plots.</code><code class="descname">PeriodModelPlot</code><span class="sig-paren">(</span><em>search</em>, <em>saveplot=None</em>, <em>epoch=2450000</em>, <em>phase_nrows=None</em>, <em>yscale_auto=False</em>, <em>yscale_sigma=3.0</em>, <em>phase_ncols=None</em>, <em>uparams=None</em>, <em>telfmts={}</em>, <em>legend=True</em>, <em>nobin=False</em>, <em>phasetext_size='large'</em>, <em>rv_phase_space=0.08</em>, <em>figwidth=7.5</em>, <em>fit_linewidth=2.0</em>, <em>set_xlim=None</em>, <em>text_size=9</em>, <em>legend_kwards={'loc': 'best'}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>Class to jointly plot the periodograms, best model phaseplots, and</dt>
 <dd>window function for each search iteration.</dd>
@@ -201,26 +201,26 @@ posteriors for each added planet.</td>
 </tbody>
 </table>
 <dl class="method">
-<dt id="rvsearch.search_plots.PeriodModelPlot.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>search</em>, <em>saveplot=None</em>, <em>epoch=2450000</em>, <em>phase_nrows=None</em>, <em>yscale_auto=False</em>, <em>yscale_sigma=3.0</em>, <em>phase_ncols=None</em>, <em>uparams=None</em>, <em>telfmts={}</em>, <em>legend=True</em>, <em>nobin=False</em>, <em>phasetext_size='large'</em>, <em>rv_phase_space=0.08</em>, <em>figwidth=7.5</em>, <em>fit_linewidth=2.0</em>, <em>set_xlim=None</em>, <em>text_size=9</em>, <em>legend_kwards={'loc': 'best'}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search_plots.html#PeriodModelPlot.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search_plots.PeriodModelPlot.__init__" title="Permalink to this definition">¶</a></dt>
+<dt id="rvsearch.plots.PeriodModelPlot.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>search</em>, <em>saveplot=None</em>, <em>epoch=2450000</em>, <em>phase_nrows=None</em>, <em>yscale_auto=False</em>, <em>yscale_sigma=3.0</em>, <em>phase_ncols=None</em>, <em>uparams=None</em>, <em>telfmts={}</em>, <em>legend=True</em>, <em>nobin=False</em>, <em>phasetext_size='large'</em>, <em>rv_phase_space=0.08</em>, <em>figwidth=7.5</em>, <em>fit_linewidth=2.0</em>, <em>set_xlim=None</em>, <em>text_size=9</em>, <em>legend_kwards={'loc': 'best'}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="rvsearch.search_plots.PeriodModelPlot.__weakref__">
-<code class="descname">__weakref__</code><a class="headerlink" href="#rvsearch.search_plots.PeriodModelPlot.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dt id="rvsearch.plots.PeriodModelPlot.__weakref__">
+<code class="descname">__weakref__</code><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.__weakref__" title="Permalink to this definition">¶</a></dt>
 <dd><p>list of weak references to the object (if defined)</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="rvsearch.search_plots.PeriodModelPlot.plot_periodograms_orbits">
-<code class="descname">plot_periodograms_orbits</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search_plots.html#PeriodModelPlot.plot_periodograms_orbits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search_plots.PeriodModelPlot.plot_periodograms_orbits" title="Permalink to this definition">¶</a></dt>
+<dt id="rvsearch.plots.PeriodModelPlot.plot_periodograms_orbits">
+<code class="descname">plot_periodograms_orbits</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot.plot_periodograms_orbits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.plot_periodograms_orbits" title="Permalink to this definition">¶</a></dt>
 <dd><p>Call everything above to construct a multipanel plot.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="rvsearch.search_plots.PeriodModelPlot.plot_timeseries">
-<code class="descname">plot_timeseries</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search_plots.html#PeriodModelPlot.plot_timeseries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search_plots.PeriodModelPlot.plot_timeseries" title="Permalink to this definition">¶</a></dt>
+<dt id="rvsearch.plots.PeriodModelPlot.plot_timeseries">
+<code class="descname">plot_timeseries</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot.plot_timeseries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.plot_timeseries" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make a plot of the RV data and model in the current Axes.</p>
 </dd></dl>
 

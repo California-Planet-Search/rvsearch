@@ -6,7 +6,7 @@ import pandas as pd
 import pylab as pl
 import pickle
 import pathos.multiprocessing as mp
-
+import radvel
 
 class Injections(object):
     """
@@ -145,6 +145,95 @@ class Injections(object):
 
     def save(self):
         self.recoveries.to_csv(os.path.join('recoveries.csv'), index=False)
+
+
+class Completeness(object):
+    """Calculate completeness surface from a suite of injections
+
+    Args:
+        recoveries (DataFrame): DataFrame with injection/recovery tests from Injections.save
+    """
+
+    def __init__(self, recoveries, mstar=1.0):
+        """Object to handle a suite of injection/recovery tests
+
+        Args:
+            recoveries (DataFrame): DataFrame of injection/recovery tests from Injections class
+            mstar (float): (optional) stellar mass to use in conversion from p, k to au, msini
+
+        """
+        self.recoveries = recoveries
+
+        self.recoveries['inj_msini'] = radvel.utils.Msini(self.recoveries['inj_k'],
+                                                          self.recoveries['inj_period'],
+                                                          mstar, self.recoveries['inj_e'])
+        self.recoveries['rec_msini'] = radvel.utils.Msini(self.recoveries['rec_k'],
+                                                          self.recoveries['rec_period'],
+                                                          mstar, self.recoveries['rec_e'])
+
+        self.recoveries['inj_au'] = radvel.utils.semi_major_axis(self.recoveries['inj_period'], mstar)
+        self.recoveries['rec_au'] = radvel.utils.semi_major_axis(self.recoveries['rec_period'], mstar)
+
+    @classmethod
+    def from_csv(cls, recovery_file):
+        """Read recoveries and create Completeness object"""
+        recoveries = pd.read_csv(recovery_file)
+        return cls(recoveries)
+
+    def completeness_grid(self, xcol, ycol, xlim, ylim, resolution=50, xlogwin=0.5, ylogwin=0.5):
+        """Calculate completeness on a fine grid
+
+        Compute a 2D moving average in loglog space
+
+        Args:
+            xcol (string): x column label from self.recoveries
+            ycol (string): y column label from self.recoveries
+            xlim (tuple): min and max x limits
+            ylim (tuple): min and max y limits
+            resolution (int): (optional) grid is sampled at this resolution
+            xlogwin (float): (optional) x width of moving average
+            ylogwin (float): (optional) y width of moving average
+
+        """
+        xgrid = np.logspace(np.log10(xlim[0]),
+                            np.log10(xlim[1]),
+                            resolution)
+        ygrid = np.logspace(np.log10(ylim[0]),
+                            np.log10(ylim[1]),
+                            resolution)
+
+        xinj = self.recoveries[xcol]
+        yinj = self.recoveries[ycol]
+
+        good = self.recoveries['recovered']
+
+        z = np.zeros((len(ygrid), len(xgrid)))
+        last = 0
+        for i,x in enumerate(xgrid):
+            for j,y in enumerate(ygrid):
+                xlow = 10**(np.log10(x) - xlogwin/2)
+                xhigh = 10**(np.log10(x) + xlogwin/2)
+                ylow = 10**(np.log10(y) - ylogwin/2)
+                yhigh = 10**(np.log10(y) + ylogwin/2)
+
+                xbox = yinj[np.where((xinj <= xhigh) & (xinj >= xlow))[0]]
+                if y > max(xbox) or y < min(xbox):
+                    z[j, i] = np.nan
+                    continue
+
+                boxall = np.where((xinj <= xhigh) & (xinj >= xlow) &
+                                  (yinj <= yhigh) & (yinj >= ylow))[0]
+                boxgood = np.where((xinj[good] <= xhigh) &
+                                   (xinj[good] >= xlow) & (yinj[good] <= yhigh) &
+                                   (yinj[good] >= ylow))[0]
+                # print(x, y, xlow, xhigh, ylow, yhigh, len(boxgood), len(boxall))
+                if len(boxall) > 10:
+                    z[j, i] = float(len(boxgood))/len(boxall)
+                    last = float(len(boxgood))/len(boxall)
+                else:
+                    z[j, i] = np.nan
+
+        return (xgrid, ygrid, z)
 
 
 def plot_recoveries(recoveries):
