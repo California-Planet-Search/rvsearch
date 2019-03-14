@@ -234,38 +234,3 @@ class Completeness(object):
                     z[j, i] = np.nan
 
         return (xgrid, ygrid, z)
-
-
-def plot_recoveries(recoveries):
-    """Plot injection/recovery results
-
-    Args:
-        recoveries (DataFrame): injection/recovery results as output by self.run_injections
-
-    Returns:
-        matplotlib.figure
-    """
-
-    good = recoveries.query('recovered == True')
-    bad = recoveries.query('recovered == False')
-
-    pl.plot(good['rec_period'], good['rec_k'], 'bo', ms=10, label='recovered')
-    pl.plot(bad['inj_period'], bad['inj_k'], 'ro', ms=10, label='missed')
-    pl.loglog()
-
-    xt = pl.xticks()[0]
-    pl.xticks(xt, xt)
-
-    yt = pl.yticks()[0]
-    pl.yticks(yt, yt)
-
-    pl.xlabel('Period [days]')
-    pl.ylabel('K [m/s]')
-
-    pl.xlim(min(recoveries['inj_period']), max(recoveries['inj_period']))
-    pl.ylim(min(recoveries['inj_k']), max(recoveries['inj_k']))
-
-    pl.legend()
-
-    fig = pl.gcf()
-    return fig
