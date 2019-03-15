@@ -117,7 +117,7 @@ def window(times, freqs, plot=False):
 	W = np.zeros(len(freqs))
 	for i, freq in enumerate(freqs):
 		W[i] = np.absolute(np.sum(np.exp(-2*np.pi*1j*times*freq)))
-	W /= len(times)
+	W /= float(len(times))
 	return W
 
 def read_from_csv(filename, binsize=0.0, verbose=True):
