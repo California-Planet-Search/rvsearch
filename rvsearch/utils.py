@@ -266,6 +266,26 @@ def scrape(starlist, star_db_name=None, filename='system_props.csv'):
 	props.to_csv('system_props.csv')
 	return props
 
+
+def cartesian_product(*arrays):
+	"""
+	    Generate a cartesian product of input arrays.
+
+	Args:
+    	arrays (arrays): 1-D arrays to form the cartesian product of.
+
+	Returns:
+	    array: cartesian product of input arrays
+	"""
+	la = len(arrays)
+	dtype = np.result_type(*arrays)
+	arr = np.empty([len(a) for a in arrays] + [la], dtype=dtype)
+	for i, a in enumerate(np.ix_(*arrays)):
+		arr[...,i] = a
+
+	return arr.reshape(-1, la)
+
+
 # Test search-specific priors
 '''
 class Beta(Prior):

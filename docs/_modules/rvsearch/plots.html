@@ -1,0 +1,382 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rvsearch.plots &mdash; rvsearch 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> rvsearch
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">rvsearch</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>rvsearch.plots</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for rvsearch.plots</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="k">import</span> <span class="n">rcParams</span><span class="p">,</span> <span class="n">gridspec</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="k">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">from</span> <span class="nn">matplotlib.ticker</span> <span class="k">import</span> <span class="n">MaxNLocator</span>
+<span class="kn">from</span> <span class="nn">astropy.time</span> <span class="k">import</span> <span class="n">Time</span>
+<span class="kn">import</span> <span class="nn">radvel</span>
+<span class="kn">from</span> <span class="nn">radvel</span> <span class="k">import</span> <span class="n">plot</span>
+<span class="kn">from</span> <span class="nn">radvel.utils</span> <span class="k">import</span> <span class="n">t_to_phase</span><span class="p">,</span> <span class="n">fastbin</span><span class="p">,</span> <span class="n">sigfig</span>
+
+<div class="viewcode-block" id="PeriodModelPlot"><a class="viewcode-back" href="../../plots.html#rvsearch.plots.PeriodModelPlot">[docs]</a><span class="k">class</span> <span class="nc">PeriodModelPlot</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class to jointly plot the periodograms, best model phaseplots, and</span>
+<span class="sd">        window function for each search iteration.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        search (rvsearch.Search): rvsearch.Search object.</span>
+<span class="sd">            This includes the periodograms and best-fit RadVel</span>
+<span class="sd">            posteriors for each added planet.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="PeriodModelPlot.__init__"><a class="viewcode-back" href="../../plots.html#rvsearch.plots.PeriodModelPlot.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">search</span><span class="p">,</span> <span class="n">saveplot</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="mi">2450000</span><span class="p">,</span> <span class="n">phase_nrows</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">yscale_auto</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">yscale_sigma</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">phase_ncols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">uparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">telfmts</span><span class="o">=</span><span class="p">{},</span> <span class="n">legend</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nobin</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">phasetext_size</span><span class="o">=</span><span class="s1">&#39;large&#39;</span><span class="p">,</span> <span class="n">rv_phase_space</span><span class="o">=</span><span class="mf">0.08</span><span class="p">,</span> <span class="n">figwidth</span><span class="o">=</span><span class="mf">7.5</span><span class="p">,</span>
+                 <span class="n">fit_linewidth</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">set_xlim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">text_size</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span>
+                 <span class="n">legend_kwards</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;best&#39;</span><span class="p">)):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">search</span> <span class="o">=</span> <span class="n">search</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">post</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">search</span><span class="o">.</span><span class="n">post</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">search</span><span class="o">.</span><span class="n">num_planets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">search</span><span class="o">.</span><span class="n">pers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">periodograms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">search</span><span class="o">.</span><span class="n">periodograms</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bic_threshes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">search</span><span class="o">.</span><span class="n">bic_threshes</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">saveplot</span> <span class="o">=</span> <span class="n">saveplot</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epoch</span> <span class="o">=</span> <span class="n">epoch</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phase_nrows</span> <span class="o">=</span> <span class="n">phase_nrows</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phase_ncols</span> <span class="o">=</span> <span class="n">phase_ncols</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uparams</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">telfmts</span> <span class="o">=</span> <span class="n">telfmts</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">legend</span> <span class="o">=</span> <span class="n">legend</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nobin</span> <span class="o">=</span> <span class="n">nobin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phasetext_size</span> <span class="o">=</span> <span class="n">phasetext_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rv_phase_space</span> <span class="o">=</span> <span class="n">rv_phase_space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">figwidth</span> <span class="o">=</span> <span class="n">figwidth</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_linewidth</span> <span class="o">=</span> <span class="n">fit_linewidth</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_lim</span> <span class="o">=</span> <span class="n">set_xlim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">text_size</span> <span class="o">=</span><span class="n">etext_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">legend_kwargs</span> <span class="o">=</span> <span class="n">legend_kwargs</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="p">,</span> <span class="n">radvel</span><span class="p">,</span><span class="n">likelihood</span><span class="o">.</span><span class="n">CompositeLikelihood</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">like_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">like_list</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">like_list</span> <span class="o">=</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span> <span class="p">]</span>
+
+        <span class="c1"># FIGURE PROVISIONING</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax_rv_height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">figwidth</span> <span class="o">*</span> <span class="mf">0.6</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax_phase_height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax_rv_height</span> <span class="o">/</span> <span class="mf">1.4</span>
+
+        <span class="c1"># convert params to synth basis</span>
+        <span class="n">synthparams</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">to_synth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">synthparams</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rvtimes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rverr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">errorbars</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_planets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">num_planets</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">rawresid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">residuals</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">resid</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rawresid</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;dvdt&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rvtimes</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">time_base</span><span class="p">)</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;curv&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rvtimes</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">time_base</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">saveplot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">resolution</span> <span class="o">=</span> <span class="mi">10000</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">resolution</span> <span class="o">=</span> <span class="mi">2000</span>
+
+        <span class="n">periods</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_planets</span><span class="p">):</span>
+            <span class="n">periods</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">synthparams</span><span class="p">[</span><span class="s1">&#39;per</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">periods</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">longp</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">periods</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">longp</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rvtimes</span><span class="p">)</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rvtimes</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rvmodt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
+            <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rvtimes</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.05</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rvtimes</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.05</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">+</span> <span class="n">longp</span><span class="p">,</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">resolution</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">orbit_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rvmodt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rvmod</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rvtimes</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">rvtimes</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch</span><span class="p">)</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">2.4e6</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plttimes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rvtimes</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mplttimes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rvmodt</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">epoch</span> <span class="o">=</span> <span class="mi">2450000</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plttimes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rvtimes</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mplttimes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rvmodt</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch</span>
+        <span class="k">else</span><span class="p">:</span>
+           <span class="bp">self</span><span class="o">.</span><span class="n">plttimes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rvtimes</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch</span>
+           <span class="bp">self</span><span class="o">.</span><span class="n">mplttimes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rvmodt</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">slope</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;dvdt&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rvmodt</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">time_base</span><span class="p">)</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;curv&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rvmodt</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">time_base</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">slope_low</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;dvdt&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rvtimes</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">time_base</span><span class="p">)</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;curv&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rvtimes</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">time_base</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="p">)</span>
+
+        <span class="c1"># list for Axes objects</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax_list</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="PeriodModelPlot.plot_timeseries"><a class="viewcode-back" href="../../plots.html#rvsearch.plots.PeriodModelPlot.plot_timeseries">[docs]</a>    <span class="k">def</span> <span class="nf">plot_timeseries</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make a plot of the RV data and model in the current Axes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">hline</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;0.5&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">plot_phasefold</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pltletter</span><span class="p">,</span> <span class="n">pnum</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">plot_periodogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pnum</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="c1"># TO-DO: WORK IN AIC/BIC OPTION, INCLUDE IN PLOT TITLE</span>
+        <span class="n">peak</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">periodograms</span><span class="p">[</span><span class="n">pnum</span><span class="p">])</span>
+        <span class="n">f_real</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">pers</span><span class="p">[</span><span class="n">peak</span><span class="p">]</span>
+
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">periodograms</span><span class="p">[</span><span class="n">pnum</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pers</span><span class="p">[</span><span class="n">peak</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">periodograms</span><span class="p">[</span><span class="n">pnum</span><span class="p">][</span><span class="n">peak</span><span class="p">],</span>
+                   <span class="n">label</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> days&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pers</span><span class="p">[</span><span class="n">peak</span><span class="p">],</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span>
+
+        <span class="c1"># If D-BIC threshold has been calculated, plot.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bic_thresh</span><span class="p">[</span><span class="n">pnum</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bic_thresh</span><span class="p">[</span><span class="n">pnum</span> <span class="p">],</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;$\Delta$BIC threshold&#39;</span><span class="p">)</span>
+            <span class="n">upper</span> <span class="o">=</span> <span class="mf">1.05</span><span class="o">*</span><span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">periodograms</span><span class="p">[</span><span class="n">pnum</span><span class="p">]),</span> <span class="bp">self</span><span class="o">.</span><span class="n">bic_thresh</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">periodograms</span><span class="p">[</span><span class="n">pnum</span><span class="p">]),</span> <span class="n">upper</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">periodograms</span><span class="p">[</span><span class="n">pnum</span><span class="p">]),</span> <span class="mf">1.05</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">periodograms</span><span class="p">[</span><span class="n">pnum</span><span class="p">])])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">pers</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">pers</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+
+        <span class="k">if</span> <span class="n">alias</span><span class="p">:</span>
+            <span class="c1"># Plot sidereal day, lunation period, and sidereal year aliases.</span>
+            <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">]</span>
+            <span class="n">alias</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.997</span><span class="p">,</span> <span class="mf">29.531</span><span class="p">,</span> <span class="mf">365.256</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+                <span class="n">f_ap</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="n">alias</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">f_real</span>
+                <span class="n">f_am</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="n">alias</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_real</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="n">f_am</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                           <span class="n">label</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> day alias&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">alias</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="n">f_ap</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Period (days)&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\Delta$BIC&#39;</span><span class="p">)</span>  <span class="c1"># TO-DO: WORK IN AIC/BIC OPTION</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Planet </span><span class="si">{}</span><span class="s1"> vs. planet </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span><span class="p">))</span>
+
+        <span class="c1"># Store figure as object attribute, make separate saving functionality?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">fig</span>
+        <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
+            <span class="c1"># FINISH THIS, WRITE NAMING PROCEDURE</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;dbic</span><span class="si">{}</span><span class="s1">.pdf&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+
+<div class="viewcode-block" id="PeriodModelPlot.plot_periodograms_orbits"><a class="viewcode-back" href="../../plots.html#rvsearch.plots.PeriodModelPlot.plot_periodograms_orbits">[docs]</a>    <span class="k">def</span> <span class="nf">plot_periodograms_orbits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Call everything above to construct a multipanel plot.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Lee Rosenthal and BJ Fulton.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../_static/language_data.js"></script>
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

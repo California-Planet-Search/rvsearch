@@ -3,9 +3,12 @@
 import os
 import numpy as np
 import pandas as pd
+from scipy.interpolate import interp2d, SmoothBivariateSpline
 import pickle
 import pathos.multiprocessing as mp
 import radvel
+
+import rvsearch.utils
 
 class Injections(object):
     """
@@ -153,12 +156,16 @@ class Completeness(object):
         recoveries (DataFrame): DataFrame with injection/recovery tests from Injections.save
     """
 
-    def __init__(self, recoveries, mstar=1.0):
+    def __init__(self, recoveries, xcol='inj_period', ycol='inj_k', mstar=1.0):
         """Object to handle a suite of injection/recovery tests
 
         Args:
             recoveries (DataFrame): DataFrame of injection/recovery tests from Injections class
             mstar (float): (optional) stellar mass to use in conversion from p, k to au, msini
+            xcol (string): (optional) column name for independent variable. Completeness grids and
+                interpolator will work in these axes
+            ycol (string): (optional) column name for dependent variable. Completeness grids and
+                interpolator will work in these axes
 
         """
         self.recoveries = recoveries
@@ -173,13 +180,19 @@ class Completeness(object):
         self.recoveries['inj_au'] = radvel.utils.semi_major_axis(self.recoveries['inj_period'], mstar)
         self.recoveries['rec_au'] = radvel.utils.semi_major_axis(self.recoveries['rec_period'], mstar)
 
+        self.xcol = xcol
+        self.ycol = ycol
+
+        self.grid = None
+        self.interpolator = None
+
     @classmethod
-    def from_csv(cls, recovery_file):
+    def from_csv(cls, recovery_file, *kwargs):
         """Read recoveries and create Completeness object"""
         recoveries = pd.read_csv(recovery_file)
-        return cls(recoveries)
+        return cls(recoveries, *kwargs)
 
-    def completeness_grid(self, xcol, ycol, xlim, ylim, resolution=50, xlogwin=0.5, ylogwin=0.5):
+    def completeness_grid(self, xlim, ylim, resolution=50, xlogwin=0.5, ylogwin=0.5):
         """Calculate completeness on a fine grid
 
         Compute a 2D moving average in loglog space
@@ -201,8 +214,8 @@ class Completeness(object):
                             np.log10(ylim[1]),
                             resolution)
 
-        xinj = self.recoveries[xcol]
-        yinj = self.recoveries[ycol]
+        xinj = self.recoveries[self.xcol]
+        yinj = self.recoveries[self.ycol]
 
         good = self.recoveries['recovered']
 
@@ -232,4 +245,19 @@ class Completeness(object):
                 else:
                     z[j, i] = np.nan
 
+        self.grid = (xgrid, ygrid, z)
+
         return (xgrid, ygrid, z)
+
+    def interpolate(self, x, y):
+        if self.interpolator is None:
+            assert self.grid is not None, "Must run Completeness.completeness_grid before interpolating."
+            # self.interpolator = interp2d(self.grid[0], self.grid[1], self.grid[2],
+            #                              bounds_error=False, fill_value=np.nan)
+            gi = rvsearch.utils.cartesian_product(self.grid[0], self.grid[1])
+            xi = gi[:,0]
+            yi = gi[:,1]
+            print(xi, yi)
+            self.interpolator = SmoothBivariateSpline(xi, yi, self.grid[2].flatten())
+
+        return self.interpolator(x, y)
