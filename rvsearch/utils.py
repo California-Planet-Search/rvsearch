@@ -14,6 +14,7 @@ except:
 """Functions for posterior modification (resetting, intializing, etc.)
 """
 
+
 def reset_params(post, default_pdict):
     # Reset post.params values to default values
     for k in default_pdict.keys():
@@ -61,18 +62,18 @@ def initialize_default_pars(instnames=['inst'], fitting_basis='per tc secosw ses
 
 def initialize_post(data, params=None, priors=[]):
     """Initialize a posterior object with data, params, and priors.
-	Args:
-		data: a pandas dataframe.
-		params: a list of radvel parameter objects.
-		priors: a list of priors to place on the posterior object.
-	Returns:
-		post (radvel Posterior object)
+    Args:
+        data: a pandas dataframe.
+        params: a list of radvel parameter objects.
+        priors: a list of priors to place on the posterior object.
+    Returns:
+        post (radvel Posterior object)
 
-	"""
+    """
 
-    if params == None:
-        #params = radvel.Parameters(1, basis='per tc secosw sesinw logk')
-		params = initialize_default_pars(instnames=data.tel)
+    if params is None:
+        # params = radvel.Parameters(1, basis='per tc secosw sesinw logk')
+        params = initialize_default_pars(instnames=data.tel)
     iparams = radvel.basis._copy_params(params)
 
     # Allow for time to be listed as 'time' or 'jd' (Julian Date).
@@ -89,8 +90,8 @@ def initialize_post(data, params=None, priors=[]):
 
     for inst in telgrps.keys():
         likes[inst] = radvel.likelihood.RVLikelihood(
-			mod, data.iloc[telgrps[inst]].time, data.iloc[telgrps[inst]].mnvel,
-			data.iloc[telgrps[inst]].errvel, suffix='_'+inst)
+            mod, data.iloc[telgrps[inst]].time, data.iloc[telgrps[inst]].mnvel,
+            data.iloc[telgrps[inst]].errvel, suffix='_'+inst)
 
         likes[inst].params['gamma_'+inst] = iparams['gamma_'+inst]
         likes[inst].params['jit_'+inst] = iparams['jit_'+inst]
@@ -98,38 +99,38 @@ def initialize_post(data, params=None, priors=[]):
     like = radvel.likelihood.CompositeLikelihood(list(likes.values()))
 
     post = radvel.posterior.Posterior(like)
-    if priors == []:
+    if priors is []:
         priors.append(radvel.prior.PositiveKPrior(post.params.num_planets))
         priors.append(radvel.prior.EccentricityPrior(post.params.num_planets))
     # priors.append([radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0)
-    #									for inst in telgrps.keys()])
+    # for inst in telgrps.keys()])
     post.priors = priors
 
     return post
 
 
 def window(times, freqs, plot=False):
-	"""Function to generate, and plot, the window function of observations.
+    """Function to generate, and plot, the window function of observations.
 
     Args:
-		time: times of observations in a dataset. FOR SEPARATE TELESCOPES?
+        time: times of observations in a dataset. FOR SEPARATE TELESCOPES?
 
-	"""
-	W = np.zeros(len(freqs))
-	for i, freq in enumerate(freqs):
-		W[i] = np.absolute(np.sum(np.exp(-2*np.pi*1j*times*freq)))
-	W /= float(len(times))
-	return W
+    """
+    W = np.zeros(len(freqs))
+    for i, freq in enumerate(freqs):
+        W[i] = np.absolute(np.sum(np.exp(-2*np.pi*1j*times*freq)))
+    W /= float(len(times))
+    return W
 
 def read_from_csv(filename, binsize=0.0, verbose=True):
     """Read radial velocity data from a csv file into a Pandas dataframe.
 
-	Args:
-		filename (string): Path to csv file
-		binsize (float): Times in which to bin data, in given units
-		verbose (bool): Notify user if instrument types not given?
+    Args:
+        filename (string): Path to csv file
+        binsize (float): Times in which to bin data, in given units
+        verbose (bool): Notify user if instrument types not given?
 
-	"""
+    """
     data = pd.read_csv(filename)
     if 'tel' not in data.columns:
         if verbose:
@@ -145,10 +146,11 @@ def read_from_csv(filename, binsize=0.0, verbose=True):
         else:
             raise ValueError('Incorrect data input.')
         time, mnvel, errvel, tel = radvel.utils.bintels(t, data['mnvel'].values,
-														data['errvel'].values,
-														data['tel'].values,
-														binsize=binsize)
-        bin_dict = {tkey:time, 'mnvel':mnvel, 'errvel':errvel, 'tel':tel}
+                                                        data['errvel'].values,
+                                                        data['tel'].values,
+                                                        binsize=binsize)
+        bin_dict = {tkey: time, 'mnvel': mnvel,
+                    'errvel': errvel, 'tel': tel}
         data = pd.DataFrame(data=bin_dict)
 
     return data
@@ -170,13 +172,13 @@ def read_from_vst(filename, verbose=True):
     """Read radial velocity data from a vst file into a Pandas dataframe.
 
     Args:
-		filename (string): Path to csv file
-		verbose (bool): Notify user if instrument types not given?
+        filename (string): Path to csv file
+        verbose (bool): Notify user if instrument types not given?
 
-	Note:
-		Only relevant for HIRES users.
+    Note:
+        Only relevant for HIRES users.
 
-	"""
+    """
     b = io.read_vst(filename)
     data = pd.DataFrame()
     data['time'] = b.jd
@@ -193,15 +195,15 @@ def read_from_vst(filename, verbose=True):
 def scrape(starlist, star_db_name=None, filename='system_props.csv'):
     """Take data from completed searches and compile into one dataframe.
 
-	Args:
-		starlist (list): List of starnames to access in current directory
-		star_db_name (string [optional]): Filename of star properties dataframe
-		filename (string): Path to which to save dataframe
+    Args:
+        starlist (list): List of starnames to access in current directory
+        star_db_name (string [optional]): Filename of star properties dataframe
+        filename (string): Path to which to save dataframe
 
-	Note:
-		If specified, compute planet masses and semi-major axes.
+    Note:
+        If specified, compute planet masses and semi-major axes.
 
-	"""
+    """
     all_params = []
     nplanets = []
 
@@ -212,7 +214,7 @@ def scrape(starlist, star_db_name=None, filename='system_props.csv'):
             post = radvel.posterior.load(star+'/post_final.pkl')
         except (RuntimeError, FileNotFoundError):
             print('Not done looking for planets around {} yet, \
-								try again later.'.format(star))
+                                try again later.'.format(star))
             continue
 
         if post.params.num_planets == 1:
@@ -288,9 +290,10 @@ def cartesian_product(*arrays):
     dtype = np.result_type(*arrays)
     arr = np.empty([len(a) for a in arrays] + [la], dtype=dtype)
     for i, a in enumerate(np.ix_(*arrays)):
-        arr[...,i] = a
+        arr[..., i] = a
 
     return arr.reshape(-1, la)
+
 
 # Test search-specific priors
 '''
