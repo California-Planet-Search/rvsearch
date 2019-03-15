@@ -108,20 +108,18 @@ def initialize_post(data, params=None, priors=[]):
     return post
 
 
-def window(time, freqs, plot=False):
-    """Function to generate, and plot, the window function of observations.
+def window(times, freqs, plot=False):
+	"""Function to generate, and plot, the window function of observations.
 
     Args:
 		time: times of observations in a dataset. FOR SEPARATE TELESCOPES?
 
 	"""
-    W = np.zeros(len(freqs))
-    for i, freq in enumerate(freqs):
-        W[i] = np.sum(np.exp(-2*np.pi*1j*time*freq))
-    W /= float(len(freq))
-
-    return W
-
+	W = np.zeros(len(freqs))
+	for i, freq in enumerate(freqs):
+		W[i] = np.absolute(np.sum(np.exp(-2*np.pi*1j*times*freq)))
+	W /= float(len(times))
+	return W
 
 def read_from_csv(filename, binsize=0.0, verbose=True):
     """Read radial velocity data from a csv file into a Pandas dataframe.
