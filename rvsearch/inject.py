@@ -3,9 +3,12 @@
 import os
 import numpy as np
 import pandas as pd
-import pylab as pl
+from scipy.interpolate import interp2d, SmoothBivariateSpline, RegularGridInterpolator
 import pickle
 import pathos.multiprocessing as mp
+import radvel
+
+import rvsearch.utils
 
 
 class Injections(object):
@@ -147,36 +150,125 @@ class Injections(object):
         self.recoveries.to_csv(os.path.join('recoveries.csv'), index=False)
 
 
-def plot_recoveries(recoveries):
-    """Plot injection/recovery results
+class Completeness(object):
+    """Calculate completeness surface from a suite of injections
 
     Args:
-        recoveries (DataFrame): injection/recovery results as output by self.run_injections
-
-    Returns:
-        matplotlib.figure
+        recoveries (DataFrame): DataFrame with injection/recovery tests from Injections.save
     """
 
-    good = recoveries.query('recovered == True')
-    bad = recoveries.query('recovered == False')
+    def __init__(self, recoveries, xcol='inj_period', ycol='inj_k', mstar=1.0):
+        """Object to handle a suite of injection/recovery tests
 
-    pl.plot(good['rec_period'], good['rec_k'], 'bo', ms=10, label='recovered')
-    pl.plot(bad['inj_period'], bad['inj_k'], 'ro', ms=10, label='missed')
-    pl.loglog()
+        Args:
+            recoveries (DataFrame): DataFrame of injection/recovery tests from Injections class
+            mstar (float): (optional) stellar mass to use in conversion from p, k to au, msini
+            xcol (string): (optional) column name for independent variable. Completeness grids and
+                interpolator will work in these axes
+            ycol (string): (optional) column name for dependent variable. Completeness grids and
+                interpolator will work in these axes
 
-    xt = pl.xticks()[0]
-    pl.xticks(xt, xt)
+        """
+        self.recoveries = recoveries
 
-    yt = pl.yticks()[0]
-    pl.yticks(yt, yt)
+        self.recoveries['inj_msini'] = radvel.utils.Msini(self.recoveries['inj_k'],
+                                                          self.recoveries['inj_period'],
+                                                          mstar, self.recoveries['inj_e'])
+        self.recoveries['rec_msini'] = radvel.utils.Msini(self.recoveries['rec_k'],
+                                                          self.recoveries['rec_period'],
+                                                          mstar, self.recoveries['rec_e'])
 
-    pl.xlabel('Period [days]')
-    pl.ylabel('K [m/s]')
+        self.recoveries['inj_au'] = radvel.utils.semi_major_axis(self.recoveries['inj_period'], mstar)
+        self.recoveries['rec_au'] = radvel.utils.semi_major_axis(self.recoveries['rec_period'], mstar)
 
-    pl.xlim(min(recoveries['inj_period']), max(recoveries['inj_period']))
-    pl.ylim(min(recoveries['inj_k']), max(recoveries['inj_k']))
+        self.xcol = xcol
+        self.ycol = ycol
 
-    pl.legend()
+        self.grid = None
+        self.interpolator = None
 
-    fig = pl.gcf()
-    return fig
+    @classmethod
+    def from_csv(cls, recovery_file, *kwargs):
+        """Read recoveries and create Completeness object"""
+        recoveries = pd.read_csv(recovery_file)
+        return cls(recoveries, *kwargs)
+
+    def completeness_grid(self, xlim, ylim, resolution=50, xlogwin=0.5, ylogwin=0.5):
+        """Calculate completeness on a fine grid
+
+        Compute a 2D moving average in loglog space
+
+        Args:
+            xcol (string): x column label from self.recoveries
+            ycol (string): y column label from self.recoveries
+            xlim (tuple): min and max x limits
+            ylim (tuple): min and max y limits
+            resolution (int): (optional) grid is sampled at this resolution
+            xlogwin (float): (optional) x width of moving average
+            ylogwin (float): (optional) y width of moving average
+
+        """
+        xgrid = np.logspace(np.log10(xlim[0]),
+                            np.log10(xlim[1]),
+                            resolution)
+        ygrid = np.logspace(np.log10(ylim[0]),
+                            np.log10(ylim[1]),
+                            resolution)
+
+        xinj = self.recoveries[self.xcol]
+        yinj = self.recoveries[self.ycol]
+
+        good = self.recoveries['recovered']
+
+        z = np.zeros((len(ygrid), len(xgrid)))
+        last = 0
+        for i,x in enumerate(xgrid):
+            for j,y in enumerate(ygrid):
+                xlow = 10**(np.log10(x) - xlogwin/2)
+                xhigh = 10**(np.log10(x) + xlogwin/2)
+                ylow = 10**(np.log10(y) - ylogwin/2)
+                yhigh = 10**(np.log10(y) + ylogwin/2)
+
+                xbox = yinj[np.where((xinj <= xhigh) & (xinj >= xlow))[0]]
+                if y > max(xbox) or y < min(xbox):
+                    z[j, i] = np.nan
+                    continue
+
+                boxall = np.where((xinj <= xhigh) & (xinj >= xlow) &
+                                  (yinj <= yhigh) & (yinj >= ylow))[0]
+                boxgood = np.where((xinj[good] <= xhigh) &
+                                   (xinj[good] >= xlow) & (yinj[good] <= yhigh) &
+                                   (yinj[good] >= ylow))[0]
+                # print(x, y, xlow, xhigh, ylow, yhigh, len(boxgood), len(boxall))
+                if len(boxall) > 10:
+                    z[j, i] = float(len(boxgood))/len(boxall)
+                    last = float(len(boxgood))/len(boxall)
+                else:
+                    z[j, i] = np.nan
+
+        self.grid = (xgrid, ygrid, z)
+
+        return (xgrid, ygrid, z)
+
+    def interpolate(self, x, y, refresh=False):
+        """Interpolate completeness surface
+
+        Interpolate completeness surface at x, y. X, y should be in the same
+        units as self.xcol and self.ycol
+
+        Args:
+            x (array): x points to interpolate to
+            y (array): y points to interpolate to
+            refresh (bool): (optional) refresh the interpolator?
+
+        Returns:
+            array : completeness value at x and y
+
+        """
+        if self.interpolator is None or refresh:
+            assert self.grid is not None, "Must run Completeness.completeness_grid before interpolating."
+            gi = rvsearch.utils.cartesian_product(self.grid[0], self.grid[1])
+            zi = self.grid[2].T
+            self.interpolator = RegularGridInterpolator((self.grid[0], self.grid[1]), zi)
+
+        return self.interpolator((x, y))
