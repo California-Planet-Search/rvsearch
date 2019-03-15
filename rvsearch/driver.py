@@ -32,6 +32,7 @@ def run_search(args):
 
     if args.known:
         ipost = copy.deepcopy(post)
+        ipost = radvel.fitting.maxlike_fitting(post, verbose=True)
     else:
         ipost = None
 

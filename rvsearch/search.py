@@ -51,7 +51,7 @@ class Search(object):
 
         self.starname = starname
 
-        if post == None:
+        if post is None:
             self.priors = priors
             self.params = utils.initialize_default_pars(instnames=self.tels)
             self.post   = utils.initialize_post(data, params=self.params,
@@ -99,7 +99,7 @@ class Search(object):
 
         self.basebic = None
 
-        self.pers = None
+        self.pers = []
         self.periodograms = []
         self.bic_threshes = []
         self.best_bics = []
@@ -407,7 +407,7 @@ class Search(object):
             if self.save_outputs:
                 rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir +
                                                     '/orbit_plot{}.pdf'.format(
-                                                    self.num_planets))
+                                                     self.num_planets))
                 multiplot_fig, ax_list = rvplot.plot_multipanel()
                 multiplot_fig.savefig(outdir+'/orbit_plot{}.pdf'.format(
                                                         self.num_planets))
@@ -420,8 +420,11 @@ class Search(object):
             # Use minimal recommended parameters for mcmc.
             chains = radvel.mcmc(self.post, thin=5, nwalkers=50, nrun=10000)
             quants = chains.quantile([0.159, 0.5, 0.841])
-            # Convert chains to e, w basis.
-            synthchains = self.post.params.basis.to_synth(chains)
+            synthchains = chains.copy()
+            for par in self.post.params.keys():
+                if not self.post.params[par].vary:
+                    synthchains[par] = self.post.params[par].value
+            synthchains = self.post.params.basis.to_synth(synthchains)
             synthquants = synthchains.quantile([0.159, 0.5, 0.841])
 
             # Compress, thin, and save chain, in fitting basis.
@@ -462,20 +465,20 @@ class Search(object):
 
             # Retrieve medians & uncertainties for the fitting basis parameters.
             for par in self.post.params.keys():
-                if self.post.params[par].vary:
-                    med = quants[par][0.5]
-                    high = quants[par][0.841] - med
-                    low = med - quants[par][0.159]
-                    err = np.mean([high,low])
-                    err = radvel.utils.round_sig(err)
-                    med, err, errhigh = radvel.utils.sigfig(med, err)
-                    max, err, errhigh = radvel.utils.sigfig(
-                                        self.post.params[par].value, err)
+                # if self.post.params[par].vary:
+                med = synthquants[par][0.5]
+                high = synthquants[par][0.841] - med
+                low = med - synthquants[par][0.159]
+                err = np.mean([high,low])
+                err = radvel.utils.round_sig(err)
+                med, err, errhigh = radvel.utils.sigfig(med, err)
+                max, err, errhigh = radvel.utils.sigfig(
+                                    self.post.params[par].value, err)
 
-                    # self.post.params[par].value = med
-                    self.post.uparams[par] = err
-                    self.post.medparams[par] = med
-                    self.post.maxparams[par] = max
+                # self.post.params[par].value = med
+                self.post.uparams[par] = err
+                self.post.medparams[par] = med
+                self.post.maxparams[par] = max
 
             if self.save_outputs:
                 # Generate a corner plot for the synthetic chains.
