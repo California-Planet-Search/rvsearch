@@ -3,12 +3,13 @@
 import os
 import numpy as np
 import pandas as pd
-from scipy.interpolate import interp2d, SmoothBivariateSpline
+from scipy.interpolate import interp2d, SmoothBivariateSpline, RegularGridInterpolator
 import pickle
 import pathos.multiprocessing as mp
 import radvel
 
 import rvsearch.utils
+
 
 class Injections(object):
     """
@@ -249,15 +250,25 @@ class Completeness(object):
 
         return (xgrid, ygrid, z)
 
-    def interpolate(self, x, y):
-        if self.interpolator is None:
-            assert self.grid is not None, "Must run Completeness.completeness_grid before interpolating."
-            # self.interpolator = interp2d(self.grid[0], self.grid[1], self.grid[2],
-            #                              bounds_error=False, fill_value=np.nan)
-            gi = rvsearch.utils.cartesian_product(self.grid[0], self.grid[1])
-            xi = gi[:,0]
-            yi = gi[:,1]
-            print(xi, yi)
-            self.interpolator = SmoothBivariateSpline(xi, yi, self.grid[2].flatten())
+    def interpolate(self, x, y, refresh=False):
+        """Interpolate completeness surface
 
-        return self.interpolator(x, y)
+        Interpolate completeness surface at x, y. X, y should be in the same
+        units as self.xcol and self.ycol
+
+        Args:
+            x (array): x points to interpolate to
+            y (array): y points to interpolate to
+            refresh (bool): (optional) refresh the interpolator?
+
+        Returns:
+            array : completeness value at x and y
+
+        """
+        if self.interpolator is None or refresh:
+            assert self.grid is not None, "Must run Completeness.completeness_grid before interpolating."
+            gi = rvsearch.utils.cartesian_product(self.grid[0], self.grid[1])
+            zi = self.grid[2].T
+            self.interpolator = RegularGridInterpolator((self.grid[0], self.grid[1]), zi)
+
+        return self.interpolator((x, y))
