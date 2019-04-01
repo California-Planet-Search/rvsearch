@@ -213,7 +213,7 @@ class Periodogram(object):
                     post.params['k{}'.format(post.params.num_planets)].value = 0
                     post = radvel.fitting.maxlike_fitting(post, verbose=False)
                     bic[i] = baseline_bic - post.likelihood.bic()
-
+                                    
                 if bic[i] < self.floor - 1:
                     # If the fit is still bad, reset tc to better value and try again.
                     for k in self.default_pdict.keys():
