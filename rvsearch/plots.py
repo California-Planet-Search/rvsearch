@@ -162,7 +162,7 @@ class PeriodModelPlot(object):
         ax.yaxis.set_ticks(ticks[1:])
 
 
-[docs]    def plot_residuals(self):
+    def plot_residuals(self):
         """
         Make a plot of residuals and RV trend in the current Axes.
         """
@@ -187,7 +187,7 @@ class PeriodModelPlot(object):
         ax.yaxis.set_major_locator(MaxNLocator(5, prune='both'))
 
 
-[docs]    def plot_phasefold(self, pltletter, pnum):
+    def plot_phasefold(self, pltletter, pnum):
         """
         Plot phased orbit plots for each planet in the fit.
 
