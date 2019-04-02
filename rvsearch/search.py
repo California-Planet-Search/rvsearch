@@ -59,6 +59,7 @@ class Search(object):
         else:
             self.post   = post
             # self.priors = post.priors
+        import pdb; pdb.set_trace()
 
         # self.post   = post
         # self.params = self.post.params
