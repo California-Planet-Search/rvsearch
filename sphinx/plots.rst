@@ -4,6 +4,6 @@ Plotting
 ========
 .. module:: rvsearch
 
-.. automodule:: rvsearch.search_plots
+.. automodule:: rvsearch.plots
    :members:
    :special-members:
