@@ -31,10 +31,15 @@ def main():
     psr_parent.add_argument('--num_cpus',
                             action='store', default=8, type=int,
                             help="Number of CPUs [8]")
+    psr_parent.add_argument('-d', '--search_dir', metavar='search directory',
+                          type=str,
+                          help="path to existing radvel-search output directory"
+                          )
+
 
     # Search
     psr_search = subpsr.add_parser('search', parents=[psr_parent], )
-    psr_search.add_argument('setupfn', metavar="RadVel setup file", type=str,
+    psr_search.add_argument('-s', '--setupfn', metavar="RadVel setup file", type=str,
                             help="Path to RadVel setup file.")
     psr_search.add_argument('--minP',
                           type=float, action='store', default=1.2,
@@ -55,10 +60,6 @@ def main():
 
     # Injections
     psr_inj = subpsr.add_parser('inject', parents=[psr_parent], )
-    psr_inj.add_argument('search_dir', metavar='search directory',
-                          type=str,
-                          help="path to existing radvel-search output directory"
-                          )
     psr_inj.add_argument('--minP',
                           type=float, action='store', default=1.2,
                           help="Minimum injection period [default=1.2]"
@@ -91,6 +92,21 @@ def main():
 
     psr_search.set_defaults(func=rvsearch.driver.run_search)
     psr_inj.set_defaults(func=rvsearch.driver.injections)
+
+    # Plots
+    psr_plot = subpsr.add_parser('plot', parents=[psr_parent],)
+    psr_plot.add_argument('-t', '--type',
+                          type=str, nargs='+',
+                          choices=['recovery'],
+                          help="type of plot(s) to generate"
+                          )
+    psr_plot.add_argument('--mstar',
+                         type=float, action='store', default=1.0,
+                         help="Stellar mass [msun]"
+                         )
+
+    psr_plot.set_defaults(func=rvsearch.driver.plots)
+
 
     args = psr.parse_args()
 

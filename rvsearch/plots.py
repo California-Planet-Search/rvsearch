@@ -183,15 +183,18 @@ class CompletenessPlots(object):
     def __init__(self, completeness):
         self.comp = completeness
 
+        self.xlim = (min(completeness.recoveries[completeness.xcol]),
+                     max(completeness.recoveries[completeness.xcol]))
 
-    def completeness_plot(self, xgrid, ygrid, comp_array, title='', xlabel='', ylabel=''):
+        self.ylim = (min(completeness.recoveries[completeness.ycol]),
+                     max(completeness.recoveries[completeness.ycol]))
+
+        self.xgrid, self.ygrid, self.comp_array = completeness.completeness_grid(self.xlim, self.ylim)
+
+    def completeness_plot(self, title='', xlabel='', ylabel=''):
         """Plot completeness contours
 
         Args:
-            xgrid (array): grid of x points to plot at
-            ygrid (array): grid of y points to plot at
-            comp_array (array): array of shape (len(xgrid) x len(ygrid)) with completeness value
-                at each combination of xgrid and ygrid
             title (string): (optional) plot title
             xlabel (string): (optional) x-axis label
             ylabel (string): (optional) y-axis label
@@ -199,7 +202,10 @@ class CompletenessPlots(object):
         good = self.comp.recoveries.query('recovered == True')
         bad = self.comp.recoveries.query('recovered == False')
 
-        CS = pl.contourf(xgrid, ygrid, comp_array, 10, cmap=pl.cm.Reds_r, vmax=0.9)
+        fig = pl.figure(figsize=(5, 3.5))
+        pl.subplots_adjust(bottom=0.18, left=0.22, right=0.95)
+
+        CS = pl.contourf(self.xgrid, self.ygrid, self.comp_array, 10, cmap=pl.cm.Reds_r, vmax=0.9)
         pl.plot(good[self.comp.xcol], good[self.comp.ycol], 'b.', alpha=0.3, label='recovered')
         pl.plot(bad[self.comp.xcol], bad[self.comp.ycol], 'r.', alpha=0.3, label='missed')
         ax = pl.gca()
@@ -212,8 +218,8 @@ class CompletenessPlots(object):
         yticks = pl.yticks()[0]
         pl.yticks(yticks, yticks)
 
-        pl.xlim(xgrid.min(), xgrid.max())
-        pl.ylim(ygrid.min(), ygrid.max())
+        pl.xlim(self.xlim[0], self.xlim[1])
+        pl.ylim(self.ylim[0], self.ylim[1])
 
         pl.title(title)
         pl.xlabel(xlabel)
