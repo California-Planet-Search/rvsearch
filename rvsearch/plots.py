@@ -286,12 +286,14 @@ class PeriodModelPlot(object):
             bbox=dict(ec='none', fc='w', alpha=0.8)
         )
 
-    def plot_periodogram(self, pnum=0):
+    def plot_periodogram(self, pltletter, pnum=0):
+
+        ax = pl.gca()
+
         # TO-DO: WORK IN AIC/BIC OPTION, INCLUDE IN PLOT TITLE
         peak = np.argmax(self.periodograms[pnum])
         f_real = 1/self.pers[peak]
 
-        fig, ax = plt.subplots()
         ax.plot(self.pers, self.periodograms[pnum])
         ax.scatter(self.pers[peak], self.periodograms[pnum][peak],
                    label='{} days'.format(np.round(self.pers[peak], decimals=1)))
@@ -321,12 +323,6 @@ class PeriodModelPlot(object):
         ax.set_xlabel('Period (days)')
         ax.set_ylabel(r'$\Delta$BIC')  # TO-DO: WORK IN AIC/BIC OPTION
         ax.set_title('Planet {} vs. planet {}'.format(self.num_known_planets+1, self.num_known_planets))
-
-        # Store figure as object attribute, make separate saving functionality?
-        self.fig = fig
-        if save:
-            # FINISH THIS, WRITE NAMING PROCEDURE
-            fig.savefig('dbic{}.pdf'.format(self.num_known_planets+1))
 
     def plot_periodograms_orbits(self):
         """Call everything above to construct a multipanel plot.
