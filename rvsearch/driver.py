@@ -74,10 +74,6 @@ def injections(args):
         else:
             recoveries = pd.read_csv('recoveries.csv')
 
-        pl.clf()
-        fig = rvsearch.inject.plot_recoveries(recoveries)
-        fig.savefig('recoveries.pdf')
-
 
 def plots(args):
     """
