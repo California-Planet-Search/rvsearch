@@ -5,15 +5,14 @@ the `cli.py` command line interface.
 """
 from __future__ import print_function
 import os
-from glob import glob
 import copy
 import pylab as pl
 import pandas as pd
+import pickle
 
-import rvsearch
 import radvel
 from radvel.utils import working_directory
-
+import rvsearch
 
 def run_search(args):
     """Run a search from a given RadVel setup file
@@ -79,3 +78,49 @@ def injections(args):
         fig = rvsearch.inject.plot_recoveries(recoveries)
         fig.savefig('recoveries.pdf')
 
+
+def plots(args):
+    """
+    Generate plots
+
+    Args:
+        args (ArgumentParser): command line arguments
+    """
+    sdir = args.search_dir
+
+
+    with working_directory(sdir):
+        sfile = os.path.abspath('search.pkl')
+        run_name = sfile.split('/')[-2]
+        if not os.path.exists(sfile):
+            print("No search file found in {}".format(sdir))
+            os._exit(1)
+
+        rfile = os.path.abspath('recoveries.csv')
+        if not os.path.exists(rfile):
+            print("No recovery file found in {}".format(sdir))
+            os._exit(1)
+
+        for ptype in args.type:
+            print("Creating {} plot for {}".format(ptype, run_name))
+
+            if ptype == 'recovery':
+                xcol = 'inj_au'
+                ycol = 'inj_msini'
+                xlabel = '$a$ [AU]'
+                ylabel = r'M$\sin{i_p}$ [M$_\oplus$]'
+                print("Plotting {} vs. {}".format(ycol, xcol))
+
+                mstar = args.mstar
+
+                comp = rvsearch.Completeness.from_csv(rfile, xcol=xcol, ycol=ycol, mstar=mstar)
+                cplt = rvsearch.plots.CompletenessPlots(comp)
+
+                fig = cplt.completeness_plot(title=run_name,
+                                             xlabel=xlabel,
+                                             ylabel=ylabel)
+
+                saveto = os.path.join(run_name+'_recoveries.pdf')
+
+                fig.savefig(saveto)
+                print("Recovery plot saved to {}".format(os.path.abspath(saveto)))

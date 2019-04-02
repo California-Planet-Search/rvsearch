@@ -188,12 +188,12 @@ class Completeness(object):
         self.interpolator = None
 
     @classmethod
-    def from_csv(cls, recovery_file, *kwargs):
+    def from_csv(cls, recovery_file, *args, **kwargs):
         """Read recoveries and create Completeness object"""
         recoveries = pd.read_csv(recovery_file)
-        return cls(recoveries, *kwargs)
+        return cls(recoveries, *args, **kwargs)
 
-    def completeness_grid(self, xlim, ylim, resolution=50, xlogwin=0.5, ylogwin=0.5):
+    def completeness_grid(self, xlim, ylim, resolution=40, xlogwin=0.5, ylogwin=0.5):
         """Calculate completeness on a fine grid
 
         Compute a 2D moving average in loglog space
