@@ -515,3 +515,73 @@ class Search(object):
         fixed_threshold = self.bic_threshes[-1]
 
         self.run_search(fixed_threshold=fixed_threshold)
+
+    def inject_recover(self, injected_orbel, num_cpus=None):
+        """Inject and recover
+        Inject and attempt to recover a synthetic planet signal
+        Args:
+            injected_orbel (array): array of orbital elements sent to radvel.kepler.rv_drive
+            num_cpus (int): Number of CPUs to utilize. Will default to self.workers
+        Returns:
+            tuple: (recovered? (T/F), recovered_orbel)
+        """
+
+        if num_cpus is not None:
+            self.workers = int(num_cpus)
+
+        self.max_planets = self.num_planets + 1
+        self.mcmc = False
+        self.save_outputs = False
+        self.verbose = False
+        self.manual_grid = [injected_orbel[0]]
+
+        mod = radvel.kepler.rv_drive(self.data['time'].values, injected_orbel)
+
+        self.data['mnvel'] += mod
+
+        self.continue_search()
+
+        # Determine successful recovery
+        last_planet = self.num_planets
+        pl = str(last_planet)
+        if last_planet >= self.max_planets:
+            synth_params = self.post.params.basis.to_synth(self.post.params)
+            recovered_orbel = [synth_params['per'+pl].value,
+                               synth_params['tp'+pl].value,
+                               synth_params['e'+pl].value,
+                               synth_params['w'+pl].value,
+                               synth_params['k'+pl].value]
+            per, tp, e, w, k = recovered_orbel
+            iper, itp, ie, iw, ik = injected_orbel
+
+            # calculate output model to check for phase mismatch
+            # probably not most efficient way to do this
+            xmod = np.linspace(tp, tp+iper, 100)
+            inmod = radvel.kepler.rv_drive(xmod, injected_orbel)
+            outmod = self.post.likelihood.model(xmod)
+            xph1 = np.mod(xmod - itp, iper)
+            xph1 /= iper
+            xph2 = np.mod(xmod - tp, per)
+            xph2 /= per
+            inmin = xph1[np.argmin(inmod)]
+            outmin = xph2[np.argmin(outmod)]
+            inmax = xph1[np.argmax(inmod)]
+            outmax = xph2[np.argmax(outmod)]
+            phdiff = np.min([abs(inmin - outmin), abs(outmax - inmax)])
+
+            dthresh = 0.25                                 # recover parameters to 25%
+            criteria = [last_planet >= self.max_planets,   # check detected
+                        np.abs(per-iper)/iper <= dthresh,  # check periods match
+                        phdiff <= np.pi / 6,               # check that phase is right
+                        np.abs(k - ik)/ik <= dthresh]      # check that K is right
+
+            criteria = np.array(criteria, dtype=bool)
+            if criteria.all():
+                recovered = True
+            else:
+                recovered = False
+        else:
+            recovered = False
+            recovered_orbel = [np.nan for i in range(5)]
+
+        return recovered, recovered_orbel
