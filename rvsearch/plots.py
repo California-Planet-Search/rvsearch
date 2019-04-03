@@ -161,7 +161,6 @@ class PeriodModelPlot(object):
         ticks = ax.yaxis.get_majorticklocs()
         ax.yaxis.set_ticks(ticks[1:])
 
-
     def plot_residuals(self):
         """
         Make a plot of residuals and RV trend in the current Axes.
@@ -185,7 +184,6 @@ class PeriodModelPlot(object):
         pl.xlabel('JD - {:d}'.format(int(np.round(self.epoch))), weight='bold')
         ax.set_ylabel('Residuals', weight='bold')
         ax.yaxis.set_major_locator(MaxNLocator(5, prune='both'))
-
 
     def plot_phasefold(self, pltletter, pnum):
         """
@@ -345,7 +343,91 @@ class PeriodModelPlot(object):
         ax.set_xlim([np.amin(self.pers), 0.5*baseline])
         ax.plot(pers_safe, window_safe)
 
-    def plot_periodograms_orbits(self):
+    def plot_multipanel(self, nophase=False, letter_labels=True):
+        """
+        Provision and plot an RV multipanel plot
+
+        Args:
+            nophase (bool, optional): if True, don't
+                include phase plots. Default: False.
+            letter_labels (bool, optional): if True, include
+                letter labels on orbit and residual plots.
+                Default: True.
+
+        Returns:
+            tuple containing:
+                - current matplotlib Figure object
+                - list of Axes objects
+        """
+
+        if nophase:
+            scalefactor = 1
+        else:
+            scalefactor = self.phase_nrows
+
+        figheight = self.ax_rv_height + self.ax_phase_height * scalefactor
+
+        # provision figure
+        fig = pl.figure(figsize=(self.figwidth, figheight))
+
+        fig.subplots_adjust(left=0.12, right=0.95)
+        gs_rv = gridspec.GridSpec(2, 1, height_ratios=[1., 0.5])
+
+        divide = 1 - self.ax_rv_height / figheight
+        gs_rv.update(left=0.12, right=0.93, top=0.93,
+                     bottom=divide+self.rv_phase_space*0.5, hspace=0.)
+
+        # orbit plot
+        ax_rv = pl.subplot(gs_rv[0, 0])
+        self.ax_list += [ax_rv]
+
+        pl.sca(ax_rv)
+        self.plot_timeseries()
+        if letter_labels:
+            pltletter = ord('a')
+            plot.labelfig(pltletter)
+            pltletter += 1
+
+        # residuals
+        ax_resid = pl.subplot(gs_rv[1, 0])
+        self.ax_list += [ax_resid]
+
+        pl.sca(ax_resid)
+        self.plot_residuals()
+        if letter_labels:
+            plot.labelfig(pltletter)
+            pltletter += 1
+
+        # phase-folded plots
+        if not nophase:
+            gs_phase = gridspec.GridSpec(self.phase_nrows, self.phase_ncols)
+
+            if self.phase_ncols == 1:
+                gs_phase.update(left=0.12, right=0.93,
+                                top=divide - self.rv_phase_space * 0.5,
+                                bottom=0.07, hspace=0.003)
+            else:
+                gs_phase.update(left=0.12, right=0.93,
+                                top=divide - self.rv_phase_space * 0.5,
+                                bottom=0.07, hspace=0.25, wspace=0.25)
+
+            for i in range(self.num_planets):
+                i_row = int(i / self.phase_ncols)
+                i_col = int(i - i_row * self.phase_ncols)
+                ax_phase = pl.subplot(gs_phase[i_row, i_col])
+                self.ax_list += [ax_phase]
+
+                pl.sca(ax_phase)
+                self.plot_phasefold(pltletter, i+1)
+                pltletter += 1
+
+        if self.saveplot is not None:
+            pl.savefig(self.saveplot, dpi=150)
+            print("RV multi-panel plot saved to %s" % self.saveplot)
+
+        return fig, self.ax_list
+
+    def plot_summary(self):
         """Call everything above to construct a multipanel plot.
         """
         fig = plt.figure()
