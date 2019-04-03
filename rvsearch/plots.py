@@ -287,6 +287,8 @@ class PeriodModelPlot(object):
         )
 
     def plot_periodogram(self, pltletter, pnum=0):
+        """Plot periodogram for a given search iteration.
+        """
 
         ax = pl.gca()
 
@@ -323,6 +325,25 @@ class PeriodModelPlot(object):
         ax.set_xlabel('Period (days)')
         ax.set_ylabel(r'$\Delta$BIC')  # TO-DO: WORK IN AIC/BIC OPTION
         ax.set_title('Planet {} vs. planet {}'.format(self.num_known_planets+1, self.num_known_planets))
+
+    def plot_window(self, pltletter):
+        """Plot the window function of the data.
+        """
+        ax = pl.gca()
+
+        times       = self.post.likelihood.x
+        baseline    = np.amax(times) - np.amin(times)
+        window      = window(times, np.flip(1/self.pers))
+        window_safe = window[np.where(self.pers < baseline/2)]
+        pers_safe   = self.pers[np.where(self.pers < baseline/2)]
+
+        ax.set_title('Window function')
+        ax.set_xlabel('Period (day)')
+        ax.set_ylabel('Power')
+        ax.set_xscale('log')
+        ax.set_ylim([0, 0.4])
+        ax.set_xlim([np.amin(self.pers), 0.5*baseline])
+        ax.plot(pers_safe, window_safe)
 
     def plot_periodograms_orbits(self):
         """Call everything above to construct a multipanel plot.
