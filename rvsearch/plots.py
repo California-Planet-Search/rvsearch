@@ -1,6 +1,8 @@
 import numpy as np
 import pylab as pl
 from matplotlib import pyplot as plt
+from matplotlib import rcParams, gridspec
+import gridspec
 import radvel
 
 
@@ -116,8 +118,8 @@ class PeriodModelPlot(object):
         self.ax_list = []
 
     def plot_timeseries(self):
-        """
-        Make a plot of the RV data and model in the current Axes.
+        """Make a plot of the RV data and model in the current Axes.
+
         """
 
         ax = pl.gca()
@@ -162,8 +164,8 @@ class PeriodModelPlot(object):
         ax.yaxis.set_ticks(ticks[1:])
 
     def plot_residuals(self):
-        """
-        Make a plot of residuals and RV trend in the current Axes.
+        """Make a plot of residuals and RV trend in the current Axes.
+
         """
 
         ax = pl.gca()
@@ -186,8 +188,7 @@ class PeriodModelPlot(object):
         ax.yaxis.set_major_locator(MaxNLocator(5, prune='both'))
 
     def plot_phasefold(self, pltletter, pnum):
-        """
-        Plot phased orbit plots for each planet in the fit.
+        """Plot phased orbit plots for each planet in the fit.
 
         Args:
             pltletter (int): integer representation of
@@ -286,6 +287,7 @@ class PeriodModelPlot(object):
 
     def plot_periodogram(self, pltletter, pnum=0):
         """Plot periodogram for a given search iteration.
+
         """
 
         ax = pl.gca()
@@ -344,8 +346,7 @@ class PeriodModelPlot(object):
         ax.plot(pers_safe, window_safe)
 
     def plot_multipanel(self, nophase=False, letter_labels=True):
-        """
-        Provision and plot an RV multipanel plot
+        """Provision and plot an RV multipanel plot
 
         Args:
             nophase (bool, optional): if True, don't
@@ -427,11 +428,50 @@ class PeriodModelPlot(object):
 
         return fig, self.ax_list
 
-    def plot_summary(self):
-        """Call everything above to construct a multipanel plot.
-        """
-        fig = plt.figure()
+    def plot_summary(self, letter_labels=True):
+        """Provision and plot a search summary plot
 
+        Args:
+            letter_labels (bool, optional): if True, include
+                letter labels on orbit and residual plots.
+                Default: True.
+
+        Returns:
+            tuple containing:
+                - current matplotlib Figure object
+                - list of Axes objects
+        """
+        scalefactor = self.phase_nrows
+
+        figheight = self.ax_rv_height + self.ax_phase_height * scalefactor
+
+        # provision figure
+        fig = pl.figure(figsize=(self.figwidth, figheight))
+
+        # Plot a row (phase and periodogram) for each planet in the model.
+        gs_phase = gridspec.GridSpec(self.phase_nrows, self.phase_ncols)
+
+        if self.phase_ncols == 1:
+            gs_phase.update(left=0.12, right=0.93,
+                            top=divide - self.rv_phase_space * 0.5,
+                            bottom=0.07, hspace=0.003)
+        else:
+            gs_phase.update(left=0.12, right=0.93,
+                            top=divide - self.rv_phase_space * 0.5,
+                            bottom=0.07, hspace=0.25, wspace=0.25)
+
+        for i in range(self.num_planets):
+            i_row = int(i / self.phase_ncols)
+            i_col = int(i - i_row * self.phase_ncols)
+            ax_phase = pl.subplot(gs_phase[i_row, i_col])
+            self.ax_list += [ax_phase]
+
+            pl.sca(ax_phase)
+            self.plot_phasefold(pltletter, i+1)
+            pltletter += 1
+
+
+        return fig, self.ax_list
 
 class CompletenessPlots(object):
     """Class to plot results of injection/recovery tests
