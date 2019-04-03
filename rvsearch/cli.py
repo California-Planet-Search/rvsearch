@@ -38,7 +38,7 @@ def main():
 
 
     # Search
-    psr_search = subpsr.add_parser('search', parents=[psr_parent], )
+    psr_search = subpsr.add_parser('find', parents=[psr_parent], )
     psr_search.add_argument('-s', '--setupfn', metavar="RadVel setup file", type=str,
                             help="Path to RadVel setup file.")
     psr_search.add_argument('--minP',
