@@ -2,7 +2,6 @@ import numpy as np
 import pylab as pl
 from matplotlib import pyplot as plt
 from matplotlib import rcParams, gridspec
-import gridspec
 import radvel
 
 
