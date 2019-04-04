@@ -32,8 +32,14 @@ class PeriodModelPlot(object):
 
         self.saveplot = saveplot
         self.epoch = epoch
-        self.phase_nrows = phase_nrows
-        self.phase_ncols = phase_ncols
+        if phase_nrows is None:
+            self.phase_nrows = self.post.likelihood.model.num_planets
+        else:
+            self.phase_nrows = phase_nrows
+        if phase_ncols is None:
+            self.phase_ncols = 1
+        else:
+            self.phase_ncols = phase_ncols
         self.uparams = None
         self.telfmts = telfmts
         self.legend = legend
@@ -472,7 +478,7 @@ class PeriodModelPlot(object):
             pltletter += 1
 
         # phase-folded plots and periodograms
-        gs_phase = gridspec.GridSpec(self.phase_nrows, self.phase_ncols)
+        gs_phase = gridspec.GridSpec(self.phase_nrows+1, self.summary_ncols)
 
         if self.summary_ncols == 1:
             gs_phase.update(left=0.12, right=0.93,
@@ -484,14 +490,16 @@ class PeriodModelPlot(object):
                             bottom=0.07, hspace=0.25, wspace=0.25)
 
         for i in range(self.num_planets):
-            i_row = int(i / self.phase_ncols)
-            i_col = int(i - i_row * self.phase_ncols)
+            i_row = int(i / self.summary_ncols)
+            i_col = int(i - i_row * self.summary_ncols)
             ax_phase = pl.subplot(gs_phase[i_row, i_col])
             self.ax_list += [ax_phase]
 
             pl.sca(ax_phase)
             self.plot_phasefold(pltletter, i+1)
             pltletter += 1
+
+        # Plot final row, window functino & non-detection.
 
         if self.saveplot is not None:
             pl.savefig(self.saveplot, dpi=150)
