@@ -20,7 +20,7 @@ class PeriodModelPlot(object):
                  yscale_auto=False, yscale_sigma=3.0, phase_ncols=None,
                  uparams=None, telfmts={}, legend=True, nobin=False,
                  phasetext_size='large', rv_phase_space=0.08, figwidth=7.5,
-                 fit_linewidth=2.0, set_xlim=None, text_size=9,
+                 summary_ncols=2, fit_linewidth=2.0, set_xlim=None, text_size=9,
                  legend_kwards=dict(loc='best')):
 
         self.search = search
@@ -40,6 +40,7 @@ class PeriodModelPlot(object):
         self.nobin = nobin
         self.phasetext_size = phasetext_size
         self.rv_phase_space = rv_phase_space
+        self.summary_ncols = sum_ncols #Number of columns for phas & pers, def. 2
         self.figwidth = figwidth
         self.fit_linewidth = fit_linewidth
         self.set_lim = set_xlim
@@ -121,7 +122,6 @@ class PeriodModelPlot(object):
         """Make a plot of the RV data and model in the current Axes.
 
         """
-
         ax = pl.gca()
 
         ax.axhline(0, color='0.5', linestyle='--')
@@ -149,7 +149,6 @@ class PeriodModelPlot(object):
         axyrs = ax.twiny()
         xl = np.array(list(ax.get_xlim())) + self.epoch
         decimalyear = Time(xl, format='jd', scale='utc').decimalyear
-#        axyrs.plot(decimalyear, decimalyear)
         axyrs.get_xaxis().get_major_formatter().set_useOffset(False)
         axyrs.set_xlim(*decimalyear)
         axyrs.set_xlabel('Year', fontweight='bold')
@@ -167,7 +166,6 @@ class PeriodModelPlot(object):
         """Make a plot of residuals and RV trend in the current Axes.
 
         """
-
         ax = pl.gca()
 
         ax.plot(self.mplttimes, self.slope, 'b-', lw=self.fit_linewidth)
@@ -200,7 +198,6 @@ class PeriodModelPlot(object):
                 Parameter objects (e.g. 'per1' is for planet #1)
 
         """
-
         ax = pl.gca()
 
         if len(self.post.likelihood.x) < 20:
@@ -360,7 +357,6 @@ class PeriodModelPlot(object):
                 - current matplotlib Figure object
                 - list of Axes objects
         """
-
         if nophase:
             scalefactor = 1
         else:
@@ -441,17 +437,44 @@ class PeriodModelPlot(object):
                 - current matplotlib Figure object
                 - list of Axes objects
         """
-        scalefactor = self.phase_nrows
-
+        scalefactor = self.phase_nrows + 1
         figheight = self.ax_rv_height + self.ax_phase_height * scalefactor
 
         # provision figure
         fig = pl.figure(figsize=(self.figwidth, figheight))
 
-        # Plot a row (phase and periodogram) for each planet in the model.
+        fig.subplots_adjust(left=0.12, right=0.95)
+        gs_rv = gridspec.GridSpec(2, 1, height_ratios=[1., 0.5])
+
+        divide = 1 - self.ax_rv_height / figheight
+        gs_rv.update(left=0.12, right=0.93, top=0.93,
+                     bottom=divide+self.rv_phase_space*0.5, hspace=0.)
+
+        # orbit plot
+        ax_rv = pl.subplot(gs_rv[0, 0])
+        self.ax_list += [ax_rv]
+
+        pl.sca(ax_rv)
+        self.plot_timeseries()
+        if letter_labels:
+            pltletter = ord('a')
+            plot.labelfig(pltletter)
+            pltletter += 1
+
+        # residuals
+        ax_resid = pl.subplot(gs_rv[1, 0])
+        self.ax_list += [ax_resid]
+
+        pl.sca(ax_resid)
+        self.plot_residuals()
+        if letter_labels:
+            plot.labelfig(pltletter)
+            pltletter += 1
+
+        # phase-folded plots and periodograms
         gs_phase = gridspec.GridSpec(self.phase_nrows, self.phase_ncols)
 
-        if self.phase_ncols == 1:
+        if self.summary_ncols == 1:
             gs_phase.update(left=0.12, right=0.93,
                             top=divide - self.rv_phase_space * 0.5,
                             bottom=0.07, hspace=0.003)
@@ -470,6 +493,9 @@ class PeriodModelPlot(object):
             self.plot_phasefold(pltletter, i+1)
             pltletter += 1
 
+        if self.saveplot is not None:
+            pl.savefig(self.saveplot, dpi=150)
+            print("Search summary plot saved to %s" % self.saveplot)
 
         return fig, self.ax_list
 
