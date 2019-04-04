@@ -1,9 +1,14 @@
 import numpy as np
 import pylab as pl
-from matplotlib import pyplot as plt
+from matplotlib import pyplot as pl
 from matplotlib import rcParams, gridspec
-import radvel
+from matplotlib.ticker import MaxNLocator
+from astropy.time import Time
 
+import radvel
+from radvel import plot
+from radvel.utils import t_to_phase, fastbin, sigfig
+# IMPORTANT: AT SOME POINT, REDEFINE AS CLASS INHERITING FROM RADVEL MULTIPLOT.
 
 class PeriodModelPlot(object):
     """Class to jointly plot the periodograms, best model phaseplots, and
@@ -15,40 +20,52 @@ class PeriodModelPlot(object):
             posteriors for each added planet.
 
     """
-    def __init__(self, search, saveplot=None, epoch=2450000, phase_nrows=None,
-                 yscale_auto=False, yscale_sigma=3.0, phase_ncols=None,
-                 uparams=None, telfmts={}, legend=True, nobin=False,
-                 phasetext_size='large', rv_phase_space=0.08, figwidth=7.5,
-                 summary_ncols=2, fit_linewidth=2.0, set_xlim=None, text_size=9,
-                 legend_kwards=dict(loc='best')):
-
+    def __init__(self, search, saveplot=None, epoch=2450000, yscale_auto=False,
+                 yscale_sigma=3.0, phase_nrows=None, phase_ncols=None,
+                 summary_ncols=2, uparams=None, telfmts={}, legend=True,
+                 phase_limits=[], nobin=False, phasetext_size='small',
+                 rv_phase_space=0.08, figwidth=7.5, fit_linewidth=2.0,
+                 set_xlim=None, text_size=9, legend_kwargs=dict(loc='best')):
+        '''
+        self, search, saveplot=None, epoch=2450000, phase_nrows=None,
+        yscale_auto=False, yscale_sigma=3.0, phase_ncols=None,
+        uparams=None, telfmts={}, legend=True, nobin=False,
+        phasetext_size='large', rv_phase_space=0.08, figwidth=7.5,
+        summary_ncols=2, fit_linewidth=2.0, set_xlim=None, text_size=9,
+        legend_kwargs=dict(loc='best')):
+       '''
         self.search = search
+        self.starname = self.search.starname
         self.post = self.search.post
         self.num_known_planets = self.search.num_planets
         self.pers = self.search.pers
         self.periodograms = self.search.periodograms
         self.bic_threshes = self.search.bic_threshes
+        self.fap = self.search.fap
 
         self.saveplot = saveplot
         self.epoch = epoch
+        self.yscale_auto = yscale_auto
+        self.yscale_sigma = yscale_sigma
         if phase_nrows is None:
             self.phase_nrows = self.post.likelihood.model.num_planets
         if phase_ncols is None:
             self.phase_ncols = 1
+        self.summary_ncols = summary_ncols #Number of columns for phas & pers, def. 2
         self.uparams = None
         self.telfmts = telfmts
         self.legend = legend
+        self.phase_limits = phase_limits
         self.nobin = nobin
         self.phasetext_size = phasetext_size
         self.rv_phase_space = rv_phase_space
-        self.summary_ncols = sum_ncols #Number of columns for phas & pers, def. 2
         self.figwidth = figwidth
         self.fit_linewidth = fit_linewidth
-        self.set_lim = set_xlim
-        self.text_size =etext_size
+        self.set_xlim = set_xlim
+        self.text_size =text_size
         self.legend_kwargs = legend_kwargs
 
-        if isinstance(self.post.likelihood, radvel,likelihood.CompositeLikelihood):
+        if isinstance(self.post.likelihood, radvel.likelihood.CompositeLikelihood):
             self.like_list = self.post.likelihood.like_list
         else:
             self.like_list = [ self.post.likelihood ]
@@ -283,55 +300,68 @@ class PeriodModelPlot(object):
             bbox=dict(ec='none', fc='w', alpha=0.8)
         )
 
-    def plot_periodogram(self, pltletter, pnum=0):
+    def plot_periodogram(self, pltletter, pnum=0, alias=True, floor=True):
         """Plot periodogram for a given search iteration.
 
         """
 
         ax = pl.gca()
 
+        #Put axis and label on the right side of the plot.
+        ax.yaxis.tick_right()
+        ax.yaxis.set_label_position('right')
+
         # TO-DO: WORK IN AIC/BIC OPTION, INCLUDE IN PLOT TITLE
         peak = np.argmax(self.periodograms[pnum])
         f_real = 1/self.pers[peak]
 
+        # Plot periodogram, and maximum value.
         ax.plot(self.pers, self.periodograms[pnum])
         ax.scatter(self.pers[peak], self.periodograms[pnum][peak],
                    label='{} days'.format(np.round(self.pers[peak], decimals=1)))
 
-        # If D-BIC threshold has been calculated, plot.
-        if self.bic_thresh[pnum] is not None:
-            ax.axhline(self.bic_thresh[pnum ], ls=':', c='y', label=r'$\Delta$BIC threshold')
-            upper = 1.05*max(np.amax(self.periodograms[pnum]), self.bic_thresh)
-            ax.set_ylim([np.amin(self.periodograms[pnum]), upper])
+        # Plot DBIC threshold, set floor periodogram floor
+        ax.axhline(self.bic_threshes[pnum], ls=':', c='y', label='{} FAP'.format(self.fap))
+        upper = 1.1*max(np.amax(self.periodograms[pnum]), self.bic_threshes[pnum])
+
+        if floor:
+            # Set periodogram plot floor according to circular-fit BIC min.
+            lower = -2*np.log(len(self.rvtimes))
         else:
-            ax.set_ylim([np.amin(self.periodograms[pnum]), 1.05*np.amax(self.periodograms[pnum])])
+            lower = np.amin(self.power['bic'])
+
+        ax.set_ylim([lower, upper])
         ax.set_xlim([self.pers[0], self.pers[-1]])
 
         if alias:
             # Plot sidereal day, lunation period, and sidereal year aliases.
             colors = ['r', 'b', 'g']
-            alias = [0.997, 29.531, 365.256]
-            for i in np.arange(3):
-                f_ap = 1./alias[i] + f_real
-                f_am = 1./alias[i] - f_real
-                ax.axvline(1./f_am, linestyle='--', c=colors[i], alpha=0.5,
-                           label='{} day alias'.format(np.round(alias[i], decimals=1)))
-                ax.axvline(1./f_ap, linestyle='--', c=colors[i], alpha=0.5)
+            alias_preset = [0.997, 29.531, 365.256]
+            for j in np.arange(3):
+                f_ap = 1./alias_preset[j] + f_real
+                f_am = 1./alias_preset[j] - f_real
+                ax.axvline(1./f_am, linestyle='--', c=colors[j], alpha=0.5,
+                           label='{} day alias'.format(np.round(alias_preset[j], decimals=1)))
+                ax.axvline(1./f_ap, linestyle='--', c=colors[j], alpha=0.5)
 
         ax.legend(loc=0)
         ax.set_xscale('log')
-        ax.set_xlabel('Period (days)')
-        ax.set_ylabel(r'$\Delta$BIC')  # TO-DO: WORK IN AIC/BIC OPTION
-        ax.set_title('Planet {} vs. planet {}'.format(self.num_known_planets+1, self.num_known_planets))
+        #ax.set_ylabel(r'$\Delta$BIC')  # TO-DO: WORK IN AIC/BIC OPTION
+        ax.set_ylabel(r'$\Delta$BIC_{}-{}'.format(pnum+1, pnum)) # TO-DO: WORK IN AIC/BIC OPTION
+        if pnum == 0:
+            ax.set_title('Planet {} vs. planet {}'.format(self.num_known_planets+1, self.num_known_planets))
+        if pnum < self.num_known_planets - 1:
+            ax.tick_params(axis='x', which='both', direction='in', bottom='on', top='off', labelbottom='off')
+        else:
+            ax.set_xlabel('Period (days)')
 
     def plot_window(self, pltletter):
         """Plot the window function of the data.
         """
         ax = pl.gca()
 
-        times       = self.post.likelihood.x
-        baseline    = np.amax(times) - np.amin(times)
-        window      = window(times, np.flip(1/self.pers))
+        baseline    = np.amax(self.rvtimes) - np.amin(self.rvtimes)
+        window      = window(self.rvtimes, np.flip(1/self.pers))
         window_safe = window[np.where(self.pers < baseline/2)]
         pers_safe   = self.pers[np.where(self.pers < baseline/2)]
 
@@ -482,11 +512,12 @@ class PeriodModelPlot(object):
         else:
             gs_phase.update(left=0.12, right=0.93,
                             top=divide - self.rv_phase_space * 0.5,
-                            bottom=0.07, hspace=0.25, wspace=0.25)
+                            bottom=0.07, hspace=0.003, wspace=0.05)#hspace=0.25, wspace=0.25)
 
         for i in range(self.num_planets):
             #Plot phase.
-            i_row = int(i / self.summary_ncols)
+            #i_row = int(i / self.summary_ncols)
+            i_row = i
             #i_col = int(i - i_row * self.summary_ncols)
             i_col = 0
             ax_phase = pl.subplot(gs_phase[i_row, i_col])
@@ -497,7 +528,7 @@ class PeriodModelPlot(object):
             pltletter += 1
 
             #Plot periodogram.
-            i_row = int(i / self.summary_ncols)
+            i_row = i
             i_col = 1
             ax_per = pl.subplot(gs_phase[i_row, i_col])
             self.ax_list += [ax_per]
