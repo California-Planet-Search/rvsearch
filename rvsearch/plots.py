@@ -361,10 +361,17 @@ class PeriodModelPlot(object):
         #    ax.set_title('Iterative Periodogram')
         if pnum == 0:
             ax.legend(loc=0)
-        if pnum < self.num_known_planets - 1:
-            ax.tick_params(axis='x', which='both', direction='in', bottom='on', top='off', labelbottom='off')
-        else:
+
+        # Set tick mark formatting based on gridspec location.
+        if pnum == 0:
             ax.set_xlabel('Period (days)')
+            ax.xaxis.set_label_position('top')
+            ax.tick_params(axis='x', which='both', direction='in', bottom='on', top='on', labeltop='on', labelbottom='off')
+        elif pnum < self.num_known_planets:
+            ax.tick_params(axis='x', which='both', direction='in', bottom='on', top='on', labelbottom='off')
+        elif pnum == self.num_known_planets:
+            ax.set_xlabel('Period (days)')
+            ax.tick_params(axis='x', which='both', direction='out', bottom='on', top='off', labelbottom='on')
 
     def plot_window(self, pltletter):
         """Plot the window function of the data.
@@ -379,7 +386,7 @@ class PeriodModelPlot(object):
         pers_safe   = self.pers[np.where(np.logical_and(self.pers < baseline/2, self.pers > 3))]
 
         #ax.set_title('Window function')
-        ax.set_xlabel('Period (day)')
+        ax.set_xlabel('Period (days)')
         ax.set_ylabel('Window function power')
         ax.set_xscale('log')
         ax.set_ylim([0, 1.1*np.amax(window_safe)])
