@@ -1,3 +1,4 @@
+import pdb
 import numpy as np
 import pylab as pl
 from matplotlib import pyplot as pl
@@ -8,6 +9,8 @@ from astropy.time import Time
 import radvel
 from radvel import plot
 from radvel.utils import t_to_phase, fastbin, sigfig
+
+import rvsearch.utils as utils
 # IMPORTANT: AT SOME POINT, REDEFINE AS CLASS INHERITING FROM RADVEL MULTIPLOT.
 
 class PeriodModelPlot(object):
@@ -73,6 +76,8 @@ class PeriodModelPlot(object):
         # FIGURE PROVISIONING
         self.ax_rv_height = self.figwidth * 0.6
         self.ax_phase_height = self.ax_rv_height / 1.4
+        # Make shorter/wider panels for summary plot with periodograms.
+        self.ax_summary_height = self.ax_rv_height / 2
 
         # convert params to synth basis
         synthparams = self.post.params.basis.to_synth(self.post.params)
@@ -316,8 +321,8 @@ class PeriodModelPlot(object):
         f_real = 1/self.pers[peak]
 
         # Plot periodogram, and maximum value.
-        ax.plot(self.pers, self.periodograms[pnum])
-        ax.scatter(self.pers[peak], self.periodograms[pnum][peak],
+        ax.plot(self.pers, self.periodograms[pnum], c='b')
+        ax.scatter(self.pers[peak], self.periodograms[pnum][peak], c='black',
                    label='{} days'.format(np.round(self.pers[peak], decimals=1)))
 
         # Plot DBIC threshold, set floor periodogram floor
@@ -348,8 +353,8 @@ class PeriodModelPlot(object):
         ax.set_xscale('log')
         #ax.set_ylabel(r'$\Delta$BIC')  # TO-DO: WORK IN AIC/BIC OPTION
         ax.set_ylabel(r'$\Delta$BIC_{}-{}'.format(pnum+1, pnum)) # TO-DO: WORK IN AIC/BIC OPTION
-        if pnum == 0:
-            ax.set_title('Planet {} vs. planet {}'.format(self.num_known_planets+1, self.num_known_planets))
+        #if pnum == 0:
+        #    ax.set_title('Iterative Periodogram')
         if pnum < self.num_known_planets - 1:
             ax.tick_params(axis='x', which='both', direction='in', bottom='on', top='off', labelbottom='off')
         else:
@@ -361,17 +366,17 @@ class PeriodModelPlot(object):
         ax = pl.gca()
 
         baseline    = np.amax(self.rvtimes) - np.amin(self.rvtimes)
-        window      = window(self.rvtimes, np.flip(1/self.pers))
+        window      = utils.window(self.rvtimes, np.flip(1/self.pers))
         window_safe = window[np.where(self.pers < baseline/2)]
         pers_safe   = self.pers[np.where(self.pers < baseline/2)]
 
-        ax.set_title('Window function')
+        #ax.set_title('Window function')
         ax.set_xlabel('Period (day)')
-        ax.set_ylabel('Power')
+        ax.set_ylabel('Window function power')
         ax.set_xscale('log')
-        ax.set_ylim([0, 0.4])
-        ax.set_xlim([np.amin(self.pers), 0.5*baseline])
-        ax.plot(pers_safe, window_safe)
+        ax.set_ylim([0, 1.1*np.amax(window_safe)])
+        ax.set_xlim([np.amin(self.pers), np.amax(self.pers)])
+        ax.plot(pers_safe, window_safe, c='g')
 
     def plot_multipanel(self, nophase=False, letter_labels=True):
         """Provision and plot an RV multipanel plot
@@ -469,7 +474,8 @@ class PeriodModelPlot(object):
                 - list of Axes objects
         """
         scalefactor = self.phase_nrows + 1
-        figheight = self.ax_rv_height + self.ax_phase_height * scalefactor
+        #figheight = self.ax_rv_height + self.ax_phase_height * scalefactor
+        figheight = self.ax_rv_height + self.ax_summary_height * scalefactor
 
         # provision figure
         fig = pl.figure(figsize=(self.figwidth, figheight))
@@ -507,12 +513,12 @@ class PeriodModelPlot(object):
 
         if self.summary_ncols == 1:
             gs_phase.update(left=0.12, right=0.93,
-                            top=divide - self.rv_phase_space * 0.5,
+                            top=divide - self.rv_phase_space * 0.2,
                             bottom=0.07, hspace=0.003)
         else:
             gs_phase.update(left=0.12, right=0.93,
-                            top=divide - self.rv_phase_space * 0.5,
-                            bottom=0.07, hspace=0.003, wspace=0.05)#hspace=0.25, wspace=0.25)
+                            top=divide - self.rv_phase_space * 0.2,
+                            bottom=0.07, hspace=0.003, wspace=0.05)
 
         for i in range(self.num_planets):
             #Plot phase.
@@ -538,6 +544,22 @@ class PeriodModelPlot(object):
             pltletter += 1
 
         # Plot final row, window function & non-detection.
+        '''
+        gs_phase.update(left=0.12, right=0.93,
+                        top=divide - self.rv_phase_space * 0.2,
+                        bottom=0.07, hspace=0.003, wspace=0.05)
+        '''
+        ax_window = pl.subplot(gs_phase[self.num_planets, 0])
+        self.ax_list += [ax_window]
+        pl.sca(ax_window)
+        self.plot_window(pltletter)
+        pltletter += 1
+
+        ax_non = pl.subplot(gs_phase[self.num_planets, 1])
+        self.ax_list += [ax_non]
+        pl.sca(ax_non)
+        self.plot_periodogram(pltletter, self.num_planets)
+        pltletter += 1
 
         if self.saveplot is not None:
             pl.savefig(self.saveplot, dpi=150)
