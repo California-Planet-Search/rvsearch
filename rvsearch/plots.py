@@ -55,7 +55,10 @@ class PeriodModelPlot(object):
         if phase_ncols is None:
             self.phase_ncols = 1
         self.summary_ncols = summary_ncols #Number of columns for phas & pers, def. 2
-        self.uparams = None
+        if self.post.uparams is not None:
+            self.uparams = self.post.uparams
+        else:
+            self.uparams = uparams
         self.telfmts = telfmts
         self.legend = legend
         self.phase_limits = phase_limits
@@ -174,7 +177,7 @@ class PeriodModelPlot(object):
         decimalyear = Time(xl, format='jd', scale='utc').decimalyear
         axyrs.get_xaxis().get_major_formatter().set_useOffset(False)
         axyrs.set_xlim(*decimalyear)
-        axyrs.set_xlabel('Year', fontweight='bold')
+        axyrs.set_xlabel('Year of observing {}'.format(self.starname), fontweight='bold')
         pl.locator_params(axis='x', nbins=5)
 
         if not self.yscale_auto:
@@ -316,6 +319,8 @@ class PeriodModelPlot(object):
         ax.yaxis.tick_right()
         ax.yaxis.set_label_position('right')
 
+        plot.labelfig(pltletter)
+
         # TO-DO: WORK IN AIC/BIC OPTION, INCLUDE IN PLOT TITLE
         peak = np.argmax(self.periodograms[pnum])
         f_real = 1/self.pers[peak]
@@ -349,12 +354,13 @@ class PeriodModelPlot(object):
                            label='{} day alias'.format(np.round(alias_preset[j], decimals=1)))
                 ax.axvline(1./f_ap, linestyle='--', c=colors[j], alpha=0.5)
 
-        ax.legend(loc=0)
         ax.set_xscale('log')
         #ax.set_ylabel(r'$\Delta$BIC')  # TO-DO: WORK IN AIC/BIC OPTION
         ax.set_ylabel(r'$\Delta$BIC_{}-{}'.format(pnum+1, pnum)) # TO-DO: WORK IN AIC/BIC OPTION
         #if pnum == 0:
         #    ax.set_title('Iterative Periodogram')
+        if pnum == 0:
+            ax.legend(loc=0)
         if pnum < self.num_known_planets - 1:
             ax.tick_params(axis='x', which='both', direction='in', bottom='on', top='off', labelbottom='off')
         else:
@@ -365,10 +371,12 @@ class PeriodModelPlot(object):
         """
         ax = pl.gca()
 
+        plot.labelfig(pltletter)
+
         baseline    = np.amax(self.rvtimes) - np.amin(self.rvtimes)
         window      = utils.window(self.rvtimes, np.flip(1/self.pers))
-        window_safe = window[np.where(self.pers < baseline/2)]
-        pers_safe   = self.pers[np.where(self.pers < baseline/2)]
+        window_safe = window[np.where(np.logical_and(self.pers < baseline/2, self.pers > 3))]
+        pers_safe   = self.pers[np.where(np.logical_and(self.pers < baseline/2, self.pers > 3))]
 
         #ax.set_title('Window function')
         ax.set_xlabel('Period (day)')
