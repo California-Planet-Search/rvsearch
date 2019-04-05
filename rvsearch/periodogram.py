@@ -320,7 +320,7 @@ class Periodogram(object):
             except:
                 print('Have not generated a Lomb-Scargle periodogram.')
 
-    def plot_per(self, alias=True, floor=False, save=False):
+    def plot_per(self, alias=True, floor=True, save=False):
         """Plot periodogram.
 
         Args:
@@ -345,11 +345,13 @@ class Periodogram(object):
             upper = 1.1*max(np.amax(self.power['bic']), self.bic_thresh)
         else:
             upper = 1.1*np.amax(self.power['bic'])
+            
         if floor:
             # Set periodogram plot floor according to circular-fit BIC min.
             lower = -2*np.log(len(self.times))
         else:
             lower = np.amin(self.power['bic'])
+
         ax.set_ylim([lower, upper])
         ax.set_xlim([self.pers[0], self.pers[-1]])
 
