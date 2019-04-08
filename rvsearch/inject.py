@@ -157,7 +157,7 @@ class Completeness(object):
         recoveries (DataFrame): DataFrame with injection/recovery tests from Injections.save
     """
 
-    def __init__(self, recoveries, xcol='inj_period', ycol='inj_k', mstar=1.0):
+    def __init__(self, recoveries, xcol='inj_au', ycol='inj_msini', mstar=1.0):
         """Object to handle a suite of injection/recovery tests
 
         Args:
@@ -191,6 +191,7 @@ class Completeness(object):
     def from_csv(cls, recovery_file, *args, **kwargs):
         """Read recoveries and create Completeness object"""
         recoveries = pd.read_csv(recovery_file)
+
         return cls(recoveries, *args, **kwargs)
 
     def completeness_grid(self, xlim, ylim, resolution=40, xlogwin=0.5, ylogwin=0.5):
