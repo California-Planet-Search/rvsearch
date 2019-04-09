@@ -30,7 +30,44 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
         search (rvsearch.Search): rvsearch.Search object.
             This includes the periodograms and best-fit RadVel
             posteriors for each added planet.
-
+        saveplot (string): path to save plot
+        epoch (int, optional): epoch to subtract off of all time measurements
+        yscale_auto (bool, optional): Use matplotlib auto y-axis
+             scaling (default: False)
+        yscale_sigma (float, optional): Scale y-axis limits for all panels to be +/-
+             yscale_sigma*(RMS of data plotted) if yscale_auto==False
+        phase_nrows (int, optional): number of columns in the phase
+            folded plots. Default is nplanets.
+        phase_ncols (int, optional): number of columns in the phase
+            folded plots. Default is 1.
+        uparams (dict, optional): parameter uncertainties, must
+           contain 'per', 'k', and 'e' keys.
+        telfmts (dict, optional): dictionary of dictionaries mapping
+            instrument suffix to plotting format code. Example:
+                telfmts = {
+                     'hires': dict(fmt='o',label='HIRES'),
+                     'harps-n' dict(fmt='s')
+                }
+        legend (bool, optional): include legend on plot? Default: True.
+        phase_limits (list, optional): two element list specifying
+            pyplot.xlim bounds for phase-folded plots. Useful for
+            partial orbits.
+        nobin (bool, optional): If True do not show binned data on
+            phase plots. Will default to True if total number of
+            measurements is less then 20.
+        phasetext_size (string, optional): fontsize for text in phase plots.
+            Choice of {'xx-small', 'x-small', 'small', 'medium', 'large',
+            'x-large', 'xx-large'}. Default: 'x-small'.
+        rv_phase_space (float, optional): amount of space to leave between orbit/residual plot
+            and phase plots.
+        figwidth (float, optional): width of the figures to be produced.
+            Default: 7.5 (spans a page with 0.5 in margins)
+        fit_linewidth (float, optional): linewidth to use for orbit model lines in phase-folded
+            plots and residuals plots.
+        set_xlim (list of float): limits to use for x-axes of the timeseries and residuals plots, in
+            JD - `epoch`. Ex: [7000., 70005.]
+        text_size (int): set matplotlib.rcParams['font.size'] (default: 9)
+        legend_kwargs (dict): dict of options to pass to legend (plotted in top panel)
     """
     def __init__(self, search, saveplot=None, epoch=2450000, yscale_auto=False,
                  yscale_sigma=3.0, phase_nrows=None, phase_ncols=None,
@@ -341,6 +378,8 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
         pl.sca(ax_window)
         self.plot_window(pltletter)
         pltletter += 1
+
+        pl.suptitle(self.search.starname, fontsize=self.text_size+6, weight='bold')
 
         if self.saveplot is not None:
             pl.savefig(self.saveplot, dpi=150)
