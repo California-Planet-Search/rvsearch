@@ -92,15 +92,16 @@ def plots(args):
             print("No search file found in {}".format(sdir))
             os._exit(1)
 
-        rfile = os.path.abspath('recoveries.csv')
-        if not os.path.exists(rfile):
-            print("No recovery file found in {}".format(sdir))
-            os._exit(1)
-
         for ptype in args.type:
             print("Creating {} plot for {}".format(ptype, run_name))
 
             if ptype == 'recovery':
+
+                rfile = os.path.abspath('recoveries.csv')
+                if not os.path.exists(rfile):
+                    print("No recovery file found in {}".format(sdir))
+                    os._exit(1)
+
                 xcol = 'inj_au'
                 ycol = 'inj_msini'
                 xlabel = '$a$ [AU]'
@@ -109,7 +110,8 @@ def plots(args):
 
                 mstar = args.mstar
 
-                comp = rvsearch.Completeness.from_csv(rfile, xcol=xcol, ycol=ycol, mstar=mstar)
+                comp = rvsearch.Completeness.from_csv(rfile, xcol=xcol,
+                                                      ycol=ycol, mstar=mstar)
                 cplt = rvsearch.plots.CompletenessPlots(comp)
 
                 fig = cplt.completeness_plot(title=run_name,
@@ -119,4 +121,11 @@ def plots(args):
                 saveto = os.path.join(run_name+'_recoveries.pdf')
 
                 fig.savefig(saveto)
-                print("Recovery plot saved to {}".format(os.path.abspath(saveto)))
+                print("Recovery plot saved to {}".format(
+                      os.path.abspath(saveto)))
+
+            if ptype == 'summary':
+                searcher = pickle.load(open(sfile, 'rb'))
+                plotter = rvsearch.plots.PeriodModelPlot(searcher,
+                    saveplot='{}_summary.pdf'.format(searcher.starname))
+                plotter.plot_summary()
