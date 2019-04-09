@@ -171,12 +171,14 @@ class Completeness(object):
         """
         self.recoveries = recoveries
 
+        self.mstar = np.zeros_like(self.recoveries['inj_period']) + mstar
+
         self.recoveries['inj_msini'] = radvel.utils.Msini(self.recoveries['inj_k'],
                                                           self.recoveries['inj_period'],
-                                                          mstar, self.recoveries['inj_e'])
+                                                          self.mstar, self.recoveries['inj_e'])
         self.recoveries['rec_msini'] = radvel.utils.Msini(self.recoveries['rec_k'],
                                                           self.recoveries['rec_period'],
-                                                          mstar, self.recoveries['rec_e'])
+                                                          self.mstar, self.recoveries['rec_e'])
 
         self.recoveries['inj_au'] = radvel.utils.semi_major_axis(self.recoveries['inj_period'], mstar)
         self.recoveries['rec_au'] = radvel.utils.semi_major_axis(self.recoveries['rec_period'], mstar)
