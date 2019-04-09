@@ -29,14 +29,7 @@ class PeriodModelPlot(object):
                  phase_limits=[], nobin=False, phasetext_size='small',
                  rv_phase_space=0.08, figwidth=8.5, fit_linewidth=2.0,
                  set_xlim=None, text_size=9, legend_kwargs=dict(loc='best')):
-        '''
-        self, search, saveplot=None, epoch=2450000, phase_nrows=None,
-        yscale_auto=False, yscale_sigma=3.0, phase_ncols=None,
-        uparams=None, telfmts={}, legend=True, nobin=False,
-        phasetext_size='large', rv_phase_space=0.08, figwidth=7.5,
-        summary_ncols=2, fit_linewidth=2.0, set_xlim=None, text_size=9,
-        legend_kwargs=dict(loc='best')):
-       '''
+
         self.search = search
         self.starname = self.search.starname
         self.post = self.search.post
@@ -54,7 +47,7 @@ class PeriodModelPlot(object):
             self.phase_nrows = self.post.likelihood.model.num_planets
         if phase_ncols is None:
             self.phase_ncols = 1
-        self.summary_ncols = summary_ncols #Number of columns for phas & pers, def. 2
+        self.summary_ncols = summary_ncols  # Number of columns for phas & pers, def. 2
         if self.post.uparams is not None:
             self.uparams = self.post.uparams
         else:
@@ -357,7 +350,7 @@ class PeriodModelPlot(object):
 
         ax.set_xscale('log')
         #ax.set_ylabel(r'$\Delta$BIC')  # TO-DO: WORK IN AIC/BIC OPTION
-        ax.set_ylabel(r'$\Delta$BIC$_{}$'.format(pnum+1), fontweight='bold') # TO-DO: WORK IN AIC/BIC OPTION
+        ax.set_ylabel(r'$\Delta$BIC$_{}$'.format(pnum+1), fontweight='bold')  # TO-DO: WORK IN AIC/BIC OPTION
         #if pnum == 0:
         #    ax.set_title('Iterative Periodogram')
         #if pnum == 0:

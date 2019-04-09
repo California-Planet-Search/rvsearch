@@ -126,5 +126,5 @@ def plots(args):
             if ptype == 'summary':
                 searcher = pickle.load(open(sfile, 'rb'))
                 plotter = rvsearch.plots.PeriodModelPlot(searcher,
-                    saveplot=sdir+'{}_summary.pdf'.format(searcher.starname))
+                                                         saveplot='{}_summary.pdf'.format(searcher.starname))
                 plotter.plot_summary()
