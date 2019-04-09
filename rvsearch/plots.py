@@ -27,7 +27,7 @@ class PeriodModelPlot(object):
                  yscale_sigma=3.0, phase_nrows=None, phase_ncols=None,
                  summary_ncols=2, uparams=None, telfmts={}, legend=True,
                  phase_limits=[], nobin=False, phasetext_size='small',
-                 rv_phase_space=0.08, figwidth=7.5, fit_linewidth=2.0,
+                 rv_phase_space=0.08, figwidth=8.5, fit_linewidth=2.0,
                  set_xlim=None, text_size=9, legend_kwargs=dict(loc='best')):
         '''
         self, search, saveplot=None, epoch=2450000, phase_nrows=None,
@@ -177,7 +177,7 @@ class PeriodModelPlot(object):
         decimalyear = Time(xl, format='jd', scale='utc').decimalyear
         axyrs.get_xaxis().get_major_formatter().set_useOffset(False)
         axyrs.set_xlim(*decimalyear)
-        axyrs.set_xlabel('Year of observing {}'.format(self.starname), fontweight='bold')
+        axyrs.set_xlabel('{}\nYear'.format(self.starname), fontweight='bold')
         pl.locator_params(axis='x', nbins=5)
 
         if not self.yscale_auto:
@@ -356,21 +356,22 @@ class PeriodModelPlot(object):
 
         ax.set_xscale('log')
         #ax.set_ylabel(r'$\Delta$BIC')  # TO-DO: WORK IN AIC/BIC OPTION
-        ax.set_ylabel(r'$\Delta$BIC_{}-{}'.format(pnum+1, pnum)) # TO-DO: WORK IN AIC/BIC OPTION
+        ax.set_ylabel(r'$\Delta$BIC$_{}$'.format(pnum+1), fontweight='bold') # TO-DO: WORK IN AIC/BIC OPTION
         #if pnum == 0:
         #    ax.set_title('Iterative Periodogram')
         if pnum == 0:
-            ax.legend(loc=0)
+            ax.legend(loc=0, prop=dict(size=self.phasetext_size, weight='bold'))
+                      #bbox=dict(ec='none', fc='w', alpha=0.8))
 
         # Set tick mark formatting based on gridspec location.
-        if pnum == 0:
-            ax.set_xlabel('Period (days)')
-            ax.xaxis.set_label_position('top')
-            ax.tick_params(axis='x', which='both', direction='in', bottom='on', top='on', labeltop='on', labelbottom='off')
-        elif pnum < self.num_known_planets:
+        #if pnum == 0:
+        #    ax.set_xlabel('Period (days)')
+        #    ax.xaxis.set_label_position('top')
+        #    ax.tick_params(axis='x', which='both', direction='in', bottom='on', top='on', labeltop='on', labelbottom='off')
+        if pnum < self.num_known_planets:
             ax.tick_params(axis='x', which='both', direction='in', bottom='on', top='on', labelbottom='off')
         elif pnum == self.num_known_planets:
-            ax.set_xlabel('Period (days)')
+            ax.set_xlabel('Period [days]', fontweight='bold')
             ax.tick_params(axis='x', which='both', direction='out', bottom='on', top='off', labelbottom='on')
 
     def plot_window(self, pltletter):
@@ -386,8 +387,8 @@ class PeriodModelPlot(object):
         pers_safe   = self.pers[np.where(np.logical_and(self.pers < baseline/2, self.pers > 3))]
 
         #ax.set_title('Window function')
-        ax.set_xlabel('Period (days)')
-        ax.set_ylabel('Window function power')
+        ax.set_xlabel('Period [day]', fontweight='bold')
+        ax.set_ylabel('Window function power', fontweight='bold')
         ax.set_xscale('log')
         ax.set_ylim([0, 1.1*np.amax(window_safe)])
         ax.set_xlim([np.amin(self.pers), np.amax(self.pers)])

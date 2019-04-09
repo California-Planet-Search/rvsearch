@@ -103,6 +103,7 @@ class Search(object):
         self.periodograms = []
         self.bic_threshes = []
         self.best_bics = []
+        self.eFAPs = []
 
     def trend_test(self):
         """Perform zero-planet baseline fit, test for significant trend.
@@ -378,7 +379,8 @@ class Search(object):
                 self.pers = perioder.pers
 
             if fixed_threshold is None:
-                perioder.eFAP_thresh()
+                perioder.eFAP()
+                self.eFAPs.append(perioder.fap_min)
             else:
                 perioder.bic_thresh = fixed_threshold
             self.bic_threshes.append(perioder.bic_thresh)
@@ -502,9 +504,11 @@ class Search(object):
                 np.savetxt(outdir+'/pers_periodograms.csv', periodograms_plus_pers,
                            header='period  BIC_array')
 
-            threshs_and_pks = np.append([self.bic_threshes], [self.best_bics], axis=0).T
-            np.savetxt(outdir+'/thresholds_and_peaks.csv', threshs_and_pks,
-                       header='threshold  best_bic')
+            #threshs_bics_faps = np.append([self.bic_threshes], [self.best_bics], axis=0).T
+            threshs_bics_faps = np.append([self.bic_threshes],
+                                          [self.best_bics, self.eFAPs], axis=0).T
+            np.savetxt(outdir+'/thresholds_bics_faps.csv', threshs_bics_faps,
+                       header='threshold  best_bic  fap')
 
     def continue_search(self):
         """Continue a search by trying to add one more planet
