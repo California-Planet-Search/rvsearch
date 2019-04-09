@@ -7,3 +7,4 @@ PyAstronomy
 radvel>=1.2
 pathos
 tqdm
+sphinx_rtd_theme

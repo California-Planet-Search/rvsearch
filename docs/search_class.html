@@ -17,34 +17,36 @@
   
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Injection and Recovery Tests" href="inject.html" />
     <link rel="prev" title="Periodograms" href="periodogram.html" /> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -188,30 +190,26 @@
 <dt id="rvsearch.search.Search">
 <em class="property">class </em><code class="descclassname">rvsearch.search.</code><code class="descname">Search</code><span class="sig-paren">(</span><em>data</em>, <em>post=None</em>, <em>starname='star'</em>, <em>max_planets=8</em>, <em>priors=[]</em>, <em>crit='bic'</em>, <em>fap=0.01</em>, <em>min_per=3</em>, <em>manual_grid=None</em>, <em>oversampling=1.0</em>, <em>trend=False</em>, <em>fix=False</em>, <em>polish=True</em>, <em>mcmc=True</em>, <em>workers=1</em>, <em>verbose=True</em>, <em>save_outputs=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class to initialize and modify posteriors as planet search runs.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>data</strong> (<em>DataFrame</em>) – pandas dataframe containing times, vel, err, and insts.</li>
-<li><strong>post</strong> (<em>radvel.Posterior</em>) – Optional posterior with known planet params.</li>
-<li><strong>starname</strong> (<em>str</em>) – String, used to name the output directory.</li>
-<li><strong>max_planets</strong> (<em>int</em>) – Integer, limit on iterative planet search.</li>
-<li><strong>priors</strong> (<em>list</em>) – List of radvel prior objects to use.</li>
-<li><strong>crit</strong> (<em>str</em>) – Either ‘bic’ or ‘aic’, depending on which criterion to use.</li>
-<li><strong>fap</strong> (<em>float</em>) – False-alarm-probability to pass to the periodogram object.</li>
-<li><strong>min_per</strong> (<em>float</em>) – Minimum search period, to pass to the periodogram object.</li>
-<li><strong>dvdt</strong> (<em>bool</em>) – Whether to include a linear trend in the search.</li>
-<li><strong>curv</strong> (<em>bool</em>) – Whether to include a quadratic trend in the search.</li>
-<li><strong>fix</strong> (<em>bool</em>) – Whether to fix known planet parameters during search.</li>
-<li><strong>polish</strong> (<em>bool</em>) – Whether to create finer period grid after planet is found.</li>
-<li><strong>verbose</strong> (<em>bool</em>) – </li>
-<li><strong>save_outputs</strong> (<em>bool</em>) – Save output plots and files? [default = True]</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>DataFrame</em>) – pandas dataframe containing times, vel, err, and insts.</p></li>
+<li><p><strong>post</strong> (<em>radvel.Posterior</em>) – Optional posterior with known planet params.</p></li>
+<li><p><strong>starname</strong> (<em>str</em>) – String, used to name the output directory.</p></li>
+<li><p><strong>max_planets</strong> (<em>int</em>) – Integer, limit on iterative planet search.</p></li>
+<li><p><strong>priors</strong> (<em>list</em>) – List of radvel prior objects to use.</p></li>
+<li><p><strong>crit</strong> (<em>str</em>) – Either ‘bic’ or ‘aic’, depending on which criterion to use.</p></li>
+<li><p><strong>fap</strong> (<em>float</em>) – False-alarm-probability to pass to the periodogram object.</p></li>
+<li><p><strong>min_per</strong> (<em>float</em>) – Minimum search period, to pass to the periodogram object.</p></li>
+<li><p><strong>dvdt</strong> (<em>bool</em>) – Whether to include a linear trend in the search.</p></li>
+<li><p><strong>curv</strong> (<em>bool</em>) – Whether to include a quadratic trend in the search.</p></li>
+<li><p><strong>fix</strong> (<em>bool</em>) – Whether to fix known planet parameters during search.</p></li>
+<li><p><strong>polish</strong> (<em>bool</em>) – Whether to create finer period grid after planet is found.</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>save_outputs</strong> (<em>bool</em>) – Save output plots and files? [default = True]</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 <dl class="method">
 <dt id="rvsearch.search.Search.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><em>data</em>, <em>post=None</em>, <em>starname='star'</em>, <em>max_planets=8</em>, <em>priors=[]</em>, <em>crit='bic'</em>, <em>fap=0.01</em>, <em>min_per=3</em>, <em>manual_grid=None</em>, <em>oversampling=1.0</em>, <em>trend=False</em>, <em>fix=False</em>, <em>polish=True</em>, <em>mcmc=True</em>, <em>workers=1</em>, <em>verbose=True</em>, <em>save_outputs=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.__init__" title="Permalink to this definition">¶</a></dt>
@@ -249,17 +247,33 @@
 </dd></dl>
 
 <dl class="method">
+<dt id="rvsearch.search.Search.inject_recover">
+<code class="descname">inject_recover</code><span class="sig-paren">(</span><em>injected_orbel</em>, <em>num_cpus=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.inject_recover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.inject_recover" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inject and recover
+Inject and attempt to recover a synthetic planet signal
+:param injected_orbel: array of orbital elements sent to radvel.kepler.rv_drive
+:type injected_orbel: array
+:param num_cpus: Number of CPUs to utilize. Will default to self.workers
+:type num_cpus: int</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(recovered? (T/F), recovered_orbel)</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="rvsearch.search.Search.run_search">
 <code class="descname">run_search</code><span class="sig-paren">(</span><em>fixed_threshold=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.run_search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.run_search" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run an iterative search for planets not given in posterior.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fixed_threshold</strong> (<em>float</em>) – (optional) use a fixed delta BIC threshold</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>fixed_threshold</strong> (<em>float</em>) – (optional) use a fixed delta BIC threshold</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -301,7 +315,7 @@
         <a href="inject.html" class="btn btn-neutral float-right" title="Injection and Recovery Tests" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="periodogram.html" class="btn btn-neutral" title="Periodograms" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="periodogram.html" class="btn btn-neutral float-left" title="Periodograms" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -310,7 +324,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Lee Rosenthal and BJ Fulton.
+        &copy; Copyright 2019, Lee Rosenthal and BJ Fulton
 
     </p>
   </div>
@@ -327,33 +341,16 @@
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'0.1.0',
-            LANGUAGE:'None',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="_static/language_data.js"></script>
-
-  
-
-  <script type="text/javascript" src="_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

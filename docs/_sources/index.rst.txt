@@ -7,11 +7,12 @@ RVsearch: |br| For All Your Planet-Hunting Needs
 
 Blind RV planet search pipeline based on `RadVel <http://radvel.readthedocs.org>`_.
 
-Use RadVel setup files to load:
-   - parameters for "known" planets
-   - data and instruments
-   - fix/vary within search
-   - fitting (search) basis
+- Use RadVel setup files to load:
+ + parameters for "known" planets
+ + data and instruments
+ + fix/vary within search
+ + fitting (search) basis
+
 
 Installation
 ++++++++++++

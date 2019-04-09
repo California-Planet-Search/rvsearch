@@ -84,7 +84,6 @@ def plots(args):
     """
     sdir = args.search_dir
 
-
     with working_directory(sdir):
         sfile = os.path.abspath('search.pkl')
         run_name = sfile.split('/')[-2]

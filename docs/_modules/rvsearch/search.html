@@ -17,32 +17,34 @@
   
 
   
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
-
-  
-  <script src="../../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -249,7 +251,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">pers</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">periodograms</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bic_threshes</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">best_bics</span> <span class="o">=</span> <span class="p">[]</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_bics</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eFAPs</span> <span class="o">=</span> <span class="p">[]</span></div>
 
 <div class="viewcode-block" id="Search.trend_test"><a class="viewcode-back" href="../../search_class.html#rvsearch.search.Search.trend_test">[docs]</a>    <span class="k">def</span> <span class="nf">trend_test</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Perform zero-planet baseline fit, test for significant trend.</span>
@@ -525,7 +528,8 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">pers</span> <span class="o">=</span> <span class="n">perioder</span><span class="o">.</span><span class="n">pers</span>
 
             <span class="k">if</span> <span class="n">fixed_threshold</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">perioder</span><span class="o">.</span><span class="n">eFAP_thresh</span><span class="p">()</span>
+                <span class="n">perioder</span><span class="o">.</span><span class="n">eFAP</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">eFAPs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">perioder</span><span class="o">.</span><span class="n">fap_min</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">perioder</span><span class="o">.</span><span class="n">bic_thresh</span> <span class="o">=</span> <span class="n">fixed_threshold</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">bic_threshes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">perioder</span><span class="o">.</span><span class="n">bic_thresh</span><span class="p">)</span>
@@ -649,9 +653,11 @@
                 <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">outdir</span><span class="o">+</span><span class="s1">&#39;/pers_periodograms.csv&#39;</span><span class="p">,</span> <span class="n">periodograms_plus_pers</span><span class="p">,</span>
                            <span class="n">header</span><span class="o">=</span><span class="s1">&#39;period  BIC_array&#39;</span><span class="p">)</span>
 
-            <span class="n">threshs_and_pks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">bic_threshes</span><span class="p">],</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">best_bics</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">outdir</span><span class="o">+</span><span class="s1">&#39;/thresholds_and_peaks.csv&#39;</span><span class="p">,</span> <span class="n">threshs_and_pks</span><span class="p">,</span>
-                       <span class="n">header</span><span class="o">=</span><span class="s1">&#39;threshold  best_bic&#39;</span><span class="p">)</span></div>
+            <span class="c1">#threshs_bics_faps = np.append([self.bic_threshes], [self.best_bics], axis=0).T</span>
+            <span class="n">threshs_bics_faps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">bic_threshes</span><span class="p">],</span>
+                                          <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">best_bics</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eFAPs</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">outdir</span><span class="o">+</span><span class="s1">&#39;/thresholds_bics_faps.csv&#39;</span><span class="p">,</span> <span class="n">threshs_bics_faps</span><span class="p">,</span>
+                       <span class="n">header</span><span class="o">=</span><span class="s1">&#39;threshold  best_bic  fap&#39;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Search.continue_search"><a class="viewcode-back" href="../../search_class.html#rvsearch.search.Search.continue_search">[docs]</a>    <span class="k">def</span> <span class="nf">continue_search</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Continue a search by trying to add one more planet</span>
@@ -661,7 +667,77 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">add_planet</span><span class="p">()</span>
         <span class="n">fixed_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bic_threshes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">run_search</span><span class="p">(</span><span class="n">fixed_threshold</span><span class="o">=</span><span class="n">fixed_threshold</span><span class="p">)</span></div></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run_search</span><span class="p">(</span><span class="n">fixed_threshold</span><span class="o">=</span><span class="n">fixed_threshold</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Search.inject_recover"><a class="viewcode-back" href="../../search_class.html#rvsearch.search.Search.inject_recover">[docs]</a>    <span class="k">def</span> <span class="nf">inject_recover</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">injected_orbel</span><span class="p">,</span> <span class="n">num_cpus</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Inject and recover</span>
+<span class="sd">        Inject and attempt to recover a synthetic planet signal</span>
+<span class="sd">        Args:</span>
+<span class="sd">            injected_orbel (array): array of orbital elements sent to radvel.kepler.rv_drive</span>
+<span class="sd">            num_cpus (int): Number of CPUs to utilize. Will default to self.workers</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple: (recovered? (T/F), recovered_orbel)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">num_cpus</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">workers</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_cpus</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_planets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_planets</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mcmc</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_outputs</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">manual_grid</span> <span class="o">=</span> <span class="p">[</span><span class="n">injected_orbel</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+
+        <span class="n">mod</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">kepler</span><span class="o">.</span><span class="n">rv_drive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">injected_orbel</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;mnvel&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">mod</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">continue_search</span><span class="p">()</span>
+
+        <span class="c1"># Determine successful recovery</span>
+        <span class="n">last_planet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_planets</span>
+        <span class="n">pl</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">last_planet</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">last_planet</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_planets</span><span class="p">:</span>
+            <span class="n">synth_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">to_synth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
+            <span class="n">recovered_orbel</span> <span class="o">=</span> <span class="p">[</span><span class="n">synth_params</span><span class="p">[</span><span class="s1">&#39;per&#39;</span><span class="o">+</span><span class="n">pl</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                               <span class="n">synth_params</span><span class="p">[</span><span class="s1">&#39;tp&#39;</span><span class="o">+</span><span class="n">pl</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                               <span class="n">synth_params</span><span class="p">[</span><span class="s1">&#39;e&#39;</span><span class="o">+</span><span class="n">pl</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                               <span class="n">synth_params</span><span class="p">[</span><span class="s1">&#39;w&#39;</span><span class="o">+</span><span class="n">pl</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                               <span class="n">synth_params</span><span class="p">[</span><span class="s1">&#39;k&#39;</span><span class="o">+</span><span class="n">pl</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">]</span>
+            <span class="n">per</span><span class="p">,</span> <span class="n">tp</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="n">recovered_orbel</span>
+            <span class="n">iper</span><span class="p">,</span> <span class="n">itp</span><span class="p">,</span> <span class="n">ie</span><span class="p">,</span> <span class="n">iw</span><span class="p">,</span> <span class="n">ik</span> <span class="o">=</span> <span class="n">injected_orbel</span>
+
+            <span class="c1"># calculate output model to check for phase mismatch</span>
+            <span class="c1"># probably not most efficient way to do this</span>
+            <span class="n">xmod</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">tp</span><span class="p">,</span> <span class="n">tp</span><span class="o">+</span><span class="n">iper</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+            <span class="n">inmod</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">kepler</span><span class="o">.</span><span class="n">rv_drive</span><span class="p">(</span><span class="n">xmod</span><span class="p">,</span> <span class="n">injected_orbel</span><span class="p">)</span>
+            <span class="n">outmod</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">xmod</span><span class="p">)</span>
+            <span class="n">xph1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">xmod</span> <span class="o">-</span> <span class="n">itp</span><span class="p">,</span> <span class="n">iper</span><span class="p">)</span>
+            <span class="n">xph1</span> <span class="o">/=</span> <span class="n">iper</span>
+            <span class="n">xph2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">xmod</span> <span class="o">-</span> <span class="n">tp</span><span class="p">,</span> <span class="n">per</span><span class="p">)</span>
+            <span class="n">xph2</span> <span class="o">/=</span> <span class="n">per</span>
+            <span class="n">inmin</span> <span class="o">=</span> <span class="n">xph1</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">inmod</span><span class="p">)]</span>
+            <span class="n">outmin</span> <span class="o">=</span> <span class="n">xph2</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">outmod</span><span class="p">)]</span>
+            <span class="n">inmax</span> <span class="o">=</span> <span class="n">xph1</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">inmod</span><span class="p">)]</span>
+            <span class="n">outmax</span> <span class="o">=</span> <span class="n">xph2</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">outmod</span><span class="p">)]</span>
+            <span class="n">phdiff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="nb">abs</span><span class="p">(</span><span class="n">inmin</span> <span class="o">-</span> <span class="n">outmin</span><span class="p">),</span> <span class="nb">abs</span><span class="p">(</span><span class="n">outmax</span> <span class="o">-</span> <span class="n">inmax</span><span class="p">)])</span>
+
+            <span class="n">dthresh</span> <span class="o">=</span> <span class="mf">0.25</span>                                 <span class="c1"># recover parameters to 25%</span>
+            <span class="n">criteria</span> <span class="o">=</span> <span class="p">[</span><span class="n">last_planet</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_planets</span><span class="p">,</span>   <span class="c1"># check detected</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">per</span><span class="o">-</span><span class="n">iper</span><span class="p">)</span><span class="o">/</span><span class="n">iper</span> <span class="o">&lt;=</span> <span class="n">dthresh</span><span class="p">,</span>  <span class="c1"># check periods match</span>
+                        <span class="n">phdiff</span> <span class="o">&lt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">6</span><span class="p">,</span>               <span class="c1"># check that phase is right</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="n">ik</span><span class="p">)</span><span class="o">/</span><span class="n">ik</span> <span class="o">&lt;=</span> <span class="n">dthresh</span><span class="p">]</span>      <span class="c1"># check that K is right</span>
+
+            <span class="n">criteria</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">criteria</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">criteria</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+                <span class="n">recovered</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">recovered</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">recovered</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">recovered_orbel</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)]</span>
+
+        <span class="k">return</span> <span class="n">recovered</span><span class="p">,</span> <span class="n">recovered_orbel</span></div></div>
 </pre></div>
 
            </div>
@@ -674,7 +750,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Lee Rosenthal and BJ Fulton.
+        &copy; Copyright 2019, Lee Rosenthal and BJ Fulton
 
     </p>
   </div>
@@ -691,33 +767,16 @@
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'../../',
-            VERSION:'0.1.0',
-            LANGUAGE:'None',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="../../_static/jquery.js"></script>
-      <script type="text/javascript" src="../../_static/underscore.js"></script>
-      <script type="text/javascript" src="../../_static/doctools.js"></script>
-      <script type="text/javascript" src="../../_static/language_data.js"></script>
-
-  
-
-  <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>
