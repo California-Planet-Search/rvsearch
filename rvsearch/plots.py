@@ -1,14 +1,12 @@
-import pdb
+
 import numpy as np
 import pylab as pl
 from matplotlib import pyplot as pl
 from matplotlib import rcParams, gridspec
 from matplotlib.ticker import MaxNLocator, LogFormatterSciNotation, FuncFormatter
-from astropy.time import Time
 
 import radvel
 from radvel import plot
-from radvel.utils import t_to_phase, fastbin, sigfig
 
 import rvsearch.utils as utils
 # IMPORTANT: AT SOME POINT, REDEFINE AS CLASS INHERITING FROM RADVEL MULTIPLOT.
