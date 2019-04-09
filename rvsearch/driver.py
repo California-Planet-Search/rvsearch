@@ -91,12 +91,13 @@ def plots(args):
         if not os.path.exists(sfile):
             print("No search file found in {}".format(sdir))
             os._exit(1)
+        else:
+            searcher = pickle.load(open(sfile, 'rb'))
 
         for ptype in args.type:
             print("Creating {} plot for {}".format(ptype, run_name))
 
             if ptype == 'recovery':
-
                 rfile = os.path.abspath('recoveries.csv')
                 if not os.path.exists(rfile):
                     print("No recovery file found in {}".format(sdir))
@@ -125,7 +126,6 @@ def plots(args):
                       os.path.abspath(saveto)))
 
             if ptype == 'summary':
-                searcher = pickle.load(open(sfile, 'rb'))
                 plotter = rvsearch.plots.PeriodModelPlot(searcher,
                                                          saveplot='{}_summary.pdf'.format(searcher.starname))
                 plotter.plot_summary()
