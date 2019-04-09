@@ -71,7 +71,7 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
                  yscale_sigma=3.0, phase_nrows=None, phase_ncols=None,
                  summary_ncols=2, uparams=None, telfmts={}, legend=True,
                  phase_limits=[], nobin=False, phasetext_size='small',
-                 rv_phase_space=0.08, figwidth=8.5, fit_linewidth=2.0,
+                 rv_phase_space=0.06, figwidth=8.5, fit_linewidth=2.0,
                  set_xlim=None, text_size=9, legend_kwargs=dict(loc='best')):
 
         self.search = search
@@ -295,12 +295,22 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
         # provision figure
         fig = pl.figure(figsize=(self.figwidth, figheight))
         right_edge = 0.90
+        top_edge = 0.92
+        bottom_edge = 0.05
 
         fig.subplots_adjust(left=0.12, right=right_edge)
         gs_rv = gridspec.GridSpec(2, 1, height_ratios=[1., 0.5])
 
-        divide = 1 - self.ax_rv_height / figheight
-        gs_rv.update(left=0.12, right=right_edge, top=0.93,
+        divide = 0.95 - self.ax_rv_height / figheight
+        ipl = 5 - self.num_known_planets
+        while ipl > 0:
+            print(ipl)
+            top_edge -= 0.01
+            bottom_edge += 0.005
+            divide += 0.015
+            self.rv_phase_space += 0.012
+            ipl -= 1
+        gs_rv.update(left=0.12, right=right_edge, top=top_edge,
                      bottom=divide+self.rv_phase_space*0.5, hspace=0.)
 
         # orbit plot
@@ -330,11 +340,11 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
         if self.summary_ncols == 1:
             gs_phase.update(left=0.12, right=right_edge,
                             top=divide - self.rv_phase_space * 0.2,
-                            bottom=0.07, hspace=0.003)
+                            bottom=bottom_edge, hspace=0.003)
         else:
             gs_phase.update(left=0.12, right=right_edge,
                             top=divide - self.rv_phase_space * 0.2,
-                            bottom=0.07, hspace=0.003, wspace=0.05)
+                            bottom=bottom_edge, hspace=0.003, wspace=0.05)
 
         for i in range(self.num_planets):
             # Plot phase.
