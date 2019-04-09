@@ -275,9 +275,10 @@ class Periodogram(object):
         power = periodogram.power(np.flip(self.freqs))
         self.power['ls'] = power
 
-    def eFAP_thresh(self):
+    def eFAP(self):
         """Calculate the threshold for significance based on BJ's empirical
-            false-alarm-probability algorithm.
+            false-alarm-probability algorithm, and estimate the
+            false-alarm-probability of the DBIC global maximum.
 
         """
         # select out intermediate values of BIC, median - 95%
@@ -299,6 +300,8 @@ class Periodogram(object):
         thresh = xmod[np.where(np.abs(lfit-self.fap/self.num_pers) ==
                         np.min(np.abs(lfit-self.fap/self.num_pers)))]
         self.bic_thresh = thresh[0]
+        # Save the empirical-FAP of the DBIC global maximum.
+        self.fap_min = fap_min
 
     def save_per(self, ls=False):
         """Save BIC periodogram as csv.
@@ -345,7 +348,7 @@ class Periodogram(object):
             upper = 1.1*max(np.amax(self.power['bic']), self.bic_thresh)
         else:
             upper = 1.1*np.amax(self.power['bic'])
-            
+
         if floor:
             # Set periodogram plot floor according to circular-fit BIC min.
             lower = -2*np.log(len(self.times))
