@@ -92,15 +92,16 @@ def plots(args):
             print("No search file found in {}".format(sdir))
             os._exit(1)
 
-        rfile = os.path.abspath('recoveries.csv')
-        if not os.path.exists(rfile):
-            print("No recovery file found in {}".format(sdir))
-            os._exit(1)
-
         for ptype in args.type:
             print("Creating {} plot for {}".format(ptype, run_name))
 
             if ptype == 'recovery':
+
+                rfile = os.path.abspath('recoveries.csv')
+                if not os.path.exists(rfile):
+                    print("No recovery file found in {}".format(sdir))
+                    os._exit(1)
+
                 xcol = 'inj_au'
                 ycol = 'inj_msini'
                 xlabel = '$a$ [AU]'
@@ -126,5 +127,5 @@ def plots(args):
             if ptype == 'summary':
                 searcher = pickle.load(open(sfile, 'rb'))
                 plotter = rvsearch.plots.PeriodModelPlot(searcher,
-                    saveplot=sdir+'{}_summary.pdf'.format(searcher.starname))
+                    saveplot='{}_summary.pdf'.format(searcher.starname))
                 plotter.plot_summary()
