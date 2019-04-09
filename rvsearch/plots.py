@@ -315,9 +315,10 @@ class PeriodModelPlot(object):
 
         ax = pl.gca()
 
-        #Put axis and label on the right side of the plot.
-        ax.yaxis.tick_right()
-        ax.yaxis.set_label_position('right')
+        if pnum < self.num_known_planets:
+            #Put axis and label on the right side of the plot, unless non-detection.
+            ax.yaxis.tick_right()
+            ax.yaxis.set_label_position('right')
 
         plot.labelfig(pltletter)
 
@@ -359,8 +360,8 @@ class PeriodModelPlot(object):
         ax.set_ylabel(r'$\Delta$BIC$_{}$'.format(pnum+1), fontweight='bold') # TO-DO: WORK IN AIC/BIC OPTION
         #if pnum == 0:
         #    ax.set_title('Iterative Periodogram')
-        if pnum == 0:
-            ax.legend(loc=0, prop=dict(size=self.phasetext_size, weight='bold'))
+        #if pnum == 0:
+        ax.legend(loc=0, prop=dict(size=self.phasetext_size, weight='bold'))
                       #bbox=dict(ec='none', fc='w', alpha=0.8))
 
         # Set tick mark formatting based on gridspec location.
@@ -371,13 +372,18 @@ class PeriodModelPlot(object):
         if pnum < self.num_known_planets:
             ax.tick_params(axis='x', which='both', direction='in', bottom='on', top='on', labelbottom='off')
         elif pnum == self.num_known_planets:
-            ax.set_xlabel('Period [days]', fontweight='bold')
+            # Print unitsl and axis label at the bottom.
+            ax.set_xlabel('Period [day]', fontweight='bold')
             ax.tick_params(axis='x', which='both', direction='out', bottom='on', top='off', labelbottom='on')
 
     def plot_window(self, pltletter):
         """Plot the window function of the data.
         """
         ax = pl.gca()
+
+        #Put axis and label on the right side of the plot.
+        ax.yaxis.tick_right()
+        ax.yaxis.set_label_position('right')
 
         plot.labelfig(pltletter)
 
@@ -565,16 +571,16 @@ class PeriodModelPlot(object):
                         top=divide - self.rv_phase_space * 0.2,
                         bottom=0.07, hspace=0.003, wspace=0.05)
         '''
-        ax_window = pl.subplot(gs_phase[self.num_planets, 0])
-        self.ax_list += [ax_window]
-        pl.sca(ax_window)
-        self.plot_window(pltletter)
-        pltletter += 1
-
-        ax_non = pl.subplot(gs_phase[self.num_planets, 1])
+        ax_non = pl.subplot(gs_phase[self.num_planets, 0])
         self.ax_list += [ax_non]
         pl.sca(ax_non)
         self.plot_periodogram(pltletter, self.num_planets)
+        pltletter += 1
+
+        ax_window = pl.subplot(gs_phase[self.num_planets, 1])
+        self.ax_list += [ax_window]
+        pl.sca(ax_window)
+        self.plot_window(pltletter)
         pltletter += 1
 
         if self.saveplot is not None:
