@@ -109,7 +109,8 @@ def plots(args):
 
                 mstar = args.mstar
 
-                comp = rvsearch.Completeness.from_csv(rfile, xcol=xcol, ycol=ycol, mstar=mstar)
+                comp = rvsearch.Completeness.from_csv(rfile, xcol=xcol,
+                                                      ycol=ycol, mstar=mstar)
                 cplt = rvsearch.plots.CompletenessPlots(comp)
 
                 fig = cplt.completeness_plot(title=run_name,
@@ -119,4 +120,11 @@ def plots(args):
                 saveto = os.path.join(run_name+'_recoveries.pdf')
 
                 fig.savefig(saveto)
-                print("Recovery plot saved to {}".format(os.path.abspath(saveto)))
+                print("Recovery plot saved to {}".format(
+                      os.path.abspath(saveto)))
+
+            if ptype == 'summary':
+                searcher = pickle.load(open(sfile, 'rb'))
+                plotter = rvsearch.plots.PeriodModelPlot(searcher,
+                    saveplot=sdir+'{}_summary.pdf'.format(searcher.starname))
+                plotter.plot_summary()

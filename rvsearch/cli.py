@@ -97,7 +97,7 @@ def main():
     psr_plot = subpsr.add_parser('plot', parents=[psr_parent],)
     psr_plot.add_argument('-t', '--type',
                           type=str, nargs='+',
-                          choices=['recovery'],
+                          choices=['recovery', 'summary'],
                           help="type of plot(s) to generate"
                           )
     psr_plot.add_argument('--mstar',
