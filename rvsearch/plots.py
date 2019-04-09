@@ -304,7 +304,6 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
         divide = 0.95 - self.ax_rv_height / figheight
         ipl = 5 - self.num_known_planets
         while ipl > 0:
-            print(ipl)
             top_edge -= 0.01
             bottom_edge += 0.005
             divide += 0.015
