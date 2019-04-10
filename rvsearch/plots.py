@@ -356,13 +356,10 @@ class PeriodModelPlot(object):
                 ax.axvline(1./f_ap, linestyle='--', c=colors[j], alpha=0.5)
 
         ax.set_xscale('log')
-        #ax.set_ylabel(r'$\Delta$BIC')  # TO-DO: WORK IN AIC/BIC OPTION
-        ax.set_ylabel(r'$\Delta$BIC$_{}$'.format(pnum+1), fontweight='bold') # TO-DO: WORK IN AIC/BIC OPTION
-        #if pnum == 0:
-        #    ax.set_title('Iterative Periodogram')
-        #if pnum == 0:
-        ax.legend(loc=0, prop=dict(size=self.phasetext_size, weight='bold'))
-                      #bbox=dict(ec='none', fc='w', alpha=0.8))
+        # TO-DO: WORK IN AIC/BIC OPTION
+        ax.set_ylabel(r'$\Delta$BIC$_{}$'.format(pnum+1), fontweight='bold')
+        ax.legend(loc=0, prop=dict(size=self.phasetext_size, weight='bold'),
+                  frameon=False, framealpha=0.8)
 
         # Set tick mark formatting based on gridspec location.
         #if pnum == 0:
