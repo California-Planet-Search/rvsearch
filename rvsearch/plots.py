@@ -27,7 +27,7 @@ class PeriodModelPlot(object):
                  yscale_sigma=3.0, phase_nrows=None, phase_ncols=None,
                  summary_ncols=2, uparams=None, telfmts={}, legend=True,
                  phase_limits=[], nobin=False, phasetext_size='small',
-                 rv_phase_space=0.08, figwidth=8.5, fit_linewidth=2.0,
+                 rv_phase_space=0.08, figwidth=9.5, fit_linewidth=2.0,
                  set_xlim=None, text_size=9, legend_kwargs=dict(loc='best')):
         '''
         self, search, saveplot=None, epoch=2450000, phase_nrows=None,
@@ -304,7 +304,8 @@ class PeriodModelPlot(object):
 
         anotext = '\n'.join(anotext)
         plot.add_anchored(
-            anotext, loc=1, frameon=True, prop=dict(size=self.phasetext_size, weight='bold'),
+            anotext, loc=1, frameon=True, prop=dict(size=self.phasetext_size,
+                                                    weight='bold'),
             bbox=dict(ec='none', fc='w', alpha=0.8)
         )
 
@@ -316,7 +317,7 @@ class PeriodModelPlot(object):
         ax = pl.gca()
 
         if pnum < self.num_known_planets:
-            #Put axis and label on the right side of the plot, unless non-detection.
+            #Put axis and label on the right side, unless non-detection.
             ax.yaxis.tick_right()
             ax.yaxis.set_label_position('right')
 
@@ -332,8 +333,13 @@ class PeriodModelPlot(object):
                    label='{} days'.format(np.round(self.pers[peak], decimals=1)))
 
         # Plot DBIC threshold, set floor periodogram floor
-        ax.axhline(self.bic_threshes[pnum], ls=':', c='y', label='{} FAP'.format(self.fap))
-        upper = 1.1*max(np.amax(self.periodograms[pnum]), self.bic_threshes[pnum])
+        if pnum == 0:
+            fap_label = '{} FAP'.format(self.fap)
+        else:
+            fap_label = None
+        ax.axhline(self.bic_threshes[pnum], ls=':', c='y', label=fap_label)
+        upper = 1.1*(max(np.amax(self.periodograms[pnum]),
+                         self.bic_threshes[pnum]))
 
         if floor:
             # Set periodogram plot floor according to circular-fit BIC min.
@@ -346,32 +352,43 @@ class PeriodModelPlot(object):
 
         if alias:
             # Plot sidereal day, lunation period, and sidereal year aliases.
-            colors = ['r', 'b', 'g']
-            alias_preset = [0.997, 29.531, 365.256]
-            for j in np.arange(3):
+            if self.pers[0] <= 1:
+                colors = ['r', 'g', 'b']
+                alias_preset = [365.256, 29.531, 0.997]
+            else:
+                colors = ['r', 'g']
+                alias_preset = [365.256, 29.531]
+            for j in np.arange(len(alias_preset)):
                 f_ap = 1./alias_preset[j] + f_real
                 f_am = 1./alias_preset[j] - f_real
-                ax.axvline(1./f_am, linestyle='--', c=colors[j], alpha=0.5,
-                           label='{} day alias'.format(np.round(alias_preset[j], decimals=1)))
-                ax.axvline(1./f_ap, linestyle='--', c=colors[j], alpha=0.5)
+                if pnum == 0:
+                    label = '{} day alias'.format(np.round(
+                                                  alias_preset[j], decimals=1))
+                else:
+                    label = None
+                ax.axvline(1./f_am, linestyle='--', c=colors[j], alpha=0.66,
+                           label=label)
+                ax.axvline(1./f_ap, linestyle='--', c=colors[j], alpha=0.66)
+                # Annotate each alias with the associated timescale.
+                #ax.text(0.66/f_ap, 0.5*(lower + upper), label, rotation=90,
+                #        size=self.phasetext_size, weight='bold',
+                #        verticalalignment='bottom') # 0.5*(lower + upper)
 
         ax.set_xscale('log')
         # TO-DO: WORK IN AIC/BIC OPTION
         ax.set_ylabel(r'$\Delta$BIC$_{}$'.format(pnum+1), fontweight='bold')
-        ax.legend(loc=0, prop=dict(size=self.phasetext_size, weight='bold'),
-                  frameon=False, framealpha=0.8)
+        ax.legend(loc=0, prop=dict(size=self.phasetext_size, weight='bold'))
+        #          frameon=False, framealpha=0.8)
 
         # Set tick mark formatting based on gridspec location.
-        #if pnum == 0:
-        #    ax.set_xlabel('Period (days)')
-        #    ax.xaxis.set_label_position('top')
-        #    ax.tick_params(axis='x', which='both', direction='in', bottom='on', top='on', labeltop='on', labelbottom='off')
         if pnum < self.num_known_planets:
-            ax.tick_params(axis='x', which='both', direction='in', bottom='on', top='on', labelbottom='off')
+            ax.tick_params(axis='x', which='both', direction='in',
+                           bottom='on', top='on', labelbottom='off')
         elif pnum == self.num_known_planets:
             # Print unitsl and axis label at the bottom.
             ax.set_xlabel('Period [day]', fontweight='bold')
-            ax.tick_params(axis='x', which='both', direction='out', bottom='on', top='off', labelbottom='on')
+            ax.tick_params(axis='x', which='both', direction='out',
+                           bottom='on', top='off', labelbottom='on')
 
     def plot_window(self, pltletter):
         """Plot the window function of the data.
@@ -386,16 +403,24 @@ class PeriodModelPlot(object):
 
         baseline    = np.amax(self.rvtimes) - np.amin(self.rvtimes)
         window      = utils.window(self.rvtimes, np.flip(1/self.pers))
-        window_safe = window[np.where(np.logical_and(self.pers < baseline/2, self.pers > 3))]
-        pers_safe   = self.pers[np.where(np.logical_and(self.pers < baseline/2, self.pers > 3))]
 
-        #ax.set_title('Window function')
+        min = 3
+        max = baseline/2
+
+        window_safe = window[np.where(np.logical_and(
+                                      self.pers < max, self.pers > min))]
+        pers_safe   = self.pers[np.where(np.logical_and(
+                                         self.pers < max, self.pers > min))]
+
         ax.set_xlabel('Period [day]', fontweight='bold')
         ax.set_ylabel('Window function power', fontweight='bold')
         ax.set_xscale('log')
         ax.set_ylim([0, 1.1*np.amax(window_safe)])
         ax.set_xlim([np.amin(self.pers), np.amax(self.pers)])
         ax.plot(pers_safe, window_safe, c='g')
+
+        ax.axvspan(np.amin(self.pers), min, alpha=0.25, color='purple')
+        ax.axvspan(max, np.amax(self.pers), alpha=0.25, color='purple')
 
     def plot_multipanel(self, nophase=False, letter_labels=True):
         """Provision and plot an RV multipanel plot
@@ -411,6 +436,7 @@ class PeriodModelPlot(object):
             tuple containing:
                 - current matplotlib Figure object
                 - list of Axes objects
+
         """
         if nophase:
             scalefactor = 1
@@ -491,6 +517,7 @@ class PeriodModelPlot(object):
             tuple containing:
                 - current matplotlib Figure object
                 - list of Axes objects
+
         """
         scalefactor = self.phase_nrows + 1
         #figheight = self.ax_rv_height + self.ax_phase_height * scalefactor
