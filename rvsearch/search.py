@@ -100,10 +100,10 @@ class Search(object):
         self.basebic = None
 
         self.pers = None
-        self.periodograms = []
-        self.bic_threshes = []
-        self.best_bics = []
-        self.eFAPs = []
+        self.periodograms = dict()
+        self.bic_threshes = dict()
+        self.best_bics = dict()
+        self.eFAPs = dict()
 
     def trend_test(self):
         """Perform zero-planet baseline fit, test for significant trend.
@@ -162,7 +162,7 @@ class Search(object):
 
         new_num_planets = current_num_planets + 1
 
-        default_pars = utils.initialize_default_pars(instnames=self.tels)
+        default_pars = utils.initialize_default_pars(instnames=self.tels, fitting_basis=fitting_basis)
         new_params = radvel.Parameters(new_num_planets, basis=fitting_basis)
 
         for planet in np.arange(1, new_num_planets):
@@ -174,7 +174,7 @@ class Search(object):
             new_params[par] = self.post.params[par]  # For gamma and jitter
 
         # Set default parameters for n+1th planet
-        default_params = utils.initialize_default_pars(self.tels)
+        default_params = utils.initialize_default_pars(self.tels, fitting_basis=fitting_basis)
         for par in param_list:
             parkey = par + str(new_num_planets)
             onepar = par + '1'  # MESSY, FIX THIS 10/22/18
@@ -278,14 +278,14 @@ class Search(object):
                 default_pdict[k] = self.post.params[k].value
             polish_params = []
             polish_bics = []
-            peak = np.argmax(self.periodograms[-1])
+            peak = np.argmax(self.periodograms[self.num_planets-1])
             if self.manual_grid is not None:
                 # Polish around 1% of period value if manual grid specified
                 # especially useful in the case that len(manual_grid) == 1
                 subgrid = np.linspace(0.99*self.manual_grid[peak], 1.01*self.manual_grid[peak], 9)
-            elif peak == len(self.periodograms[-1]) - 1:
+            elif peak == len(self.periodograms[self.num_planets-1]) - 1:
                 subgrid = np.linspace(self.pers[peak-1], 2*self.pers[peak] - self.pers[peak-1], 9)
-            else: #TO-DO: JUSTIFY 9 GRID POINTS, OR TAKE AS ARGUMENT
+            else:  # TO-DO: JUSTIFY 9 GRID POINTS, OR TAKE AS ARGUMENT
                 subgrid = np.linspace(self.pers[peak-1], self.pers[peak+1], 9)
 
             fit_params = []
@@ -374,17 +374,17 @@ class Search(object):
                                                verbose=self.verbose)
 
             perioder.per_bic()
-            self.periodograms.append(perioder.power[self.crit])
-            if self.num_planets == 0:
+            self.periodograms[self.num_planets] = perioder.power[self.crit]
+            if self.num_planets == 0 or self.pers is None:
                 self.pers = perioder.pers
 
             if fixed_threshold is None:
                 perioder.eFAP()
-                self.eFAPs.append(perioder.fap_min)
+                self.eFAPs[self.num_planets] = perioder.fap_min
             else:
                 perioder.bic_thresh = fixed_threshold
-            self.bic_threshes.append(perioder.bic_thresh)
-            self.best_bics.append(perioder.best_bic)
+            self.bic_threshes[self.num_planets] = perioder.bic_thresh
+            self.best_bics[self.num_planets] = perioder.best_bic
 
             if self.save_outputs:
                 perioder.plot_per()
@@ -421,9 +421,13 @@ class Search(object):
             self.post.maxparams = {}
             # Use minimal recommended parameters for mcmc.
             chains = radvel.mcmc(self.post, thin=5, nwalkers=50, nrun=10000)
-            quants = chains.quantile([0.159, 0.5, 0.841])
             # Convert chains to e, w basis.
+            for par in self.post.params.keys():
+                if not self.post.params[par].vary:
+                    chains[par] = self.post.params[par].value
             synthchains = self.post.params.basis.to_synth(chains)
+
+            quants = chains.quantile([0.159, 0.5, 0.841])
             synthquants = synthchains.quantile([0.159, 0.5, 0.841])
 
             # Compress, thin, and save chain, in fitting basis.
@@ -464,20 +468,19 @@ class Search(object):
 
             # Retrieve medians & uncertainties for the fitting basis parameters.
             for par in self.post.params.keys():
-                if self.post.params[par].vary:
-                    med = quants[par][0.5]
-                    high = quants[par][0.841] - med
-                    low = med - quants[par][0.159]
-                    err = np.mean([high,low])
-                    err = radvel.utils.round_sig(err)
-                    med, err, errhigh = radvel.utils.sigfig(med, err)
-                    max, err, errhigh = radvel.utils.sigfig(
-                                        self.post.params[par].value, err)
+                med = quants[par][0.5]
+                high = quants[par][0.841] - med
+                low = med - quants[par][0.159]
+                err = np.mean([high,low])
+                err = radvel.utils.round_sig(err)
+                med, err, errhigh = radvel.utils.sigfig(med, err)
+                max, err, errhigh = radvel.utils.sigfig(
+                                    self.post.params[par].value, err)
 
-                    # self.post.params[par].value = med
-                    self.post.uparams[par] = err
-                    self.post.medparams[par] = med
-                    self.post.maxparams[par] = max
+                # self.post.params[par].value = med
+                self.post.uparams[par] = err
+                self.post.medparams[par] = med
+                self.post.maxparams[par] = max
 
             if self.save_outputs:
                 # Generate a corner plot for the synthetic chains.
@@ -499,14 +502,15 @@ class Search(object):
             pickle.dump(self, pickle_out)
             pickle_out.close()
 
-            if len(self.pers) == len(self.periodograms):
-                periodograms_plus_pers = np.append([self.pers], self.periodograms, axis=0).T
-                np.savetxt(outdir+'/pers_periodograms.csv', periodograms_plus_pers,
-                           header='period  BIC_array')
+            # if len(self.pers) == len(self.periodograms.values()):
+            periodograms_plus_pers = np.append([self.pers], list(self.periodograms.values()), axis=0).T
+            np.savetxt(outdir+'/pers_periodograms.csv', periodograms_plus_pers,
+                       header='period  BIC_array')
 
             #threshs_bics_faps = np.append([self.bic_threshes], [self.best_bics], axis=0).T
-            threshs_bics_faps = np.append([self.bic_threshes],
-                                          [self.best_bics, self.eFAPs], axis=0).T
+            threshs_bics_faps = np.append([list(self.bic_threshes.values())],
+                                          [list(self.best_bics.values()), list(self.eFAPs.values())], axis=0).T
+
             np.savetxt(outdir+'/thresholds_bics_faps.csv', threshs_bics_faps,
                        header='threshold  best_bic  fap')
 
