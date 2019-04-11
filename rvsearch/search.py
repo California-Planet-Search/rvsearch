@@ -6,6 +6,8 @@ import pdb
 import pickle
 
 import numpy as np
+import matplotlib.pyplot as pl
+import corner
 import radvel
 import radvel.fitting
 from radvel.plot import orbit_plots, mcmc_plots
@@ -483,10 +485,28 @@ class Search(object):
                 self.post.maxparams[par] = max
 
             if self.save_outputs:
-                # Generate a corner plot for the synthetic chains.
+                # Generate a corner plot, sans nuisance parameters.
+                labels = []
+                for n in np.arange(1, self.num_planets+1):
+                    labels.append('per{}'.format(n))
+                    labels.append('tp{}'.format(n))
+                    labels.append('k{}'.format(n))
+                    labels.append('e{}'.format(n))
+                    #labels.append('w{}'.format(n))
+                texlabels = [self.post.params.tex_labels().get(l, l)
+                             for l in labels]
+                plot = corner.corner(synthchains[labels], labels=texlabels,
+                                     label_kwargs={"fontsize": 14},
+                                     plot_datapoints=False, bins=30,
+                                     quantiles=[0.16, 0.5, 0.84],
+                                     title_kwargs={"fontsize": 14},
+                                     show_titles=True, smooth=True)
+                pl.savefig(outdir+'/{}_corner_plot.pdf'.format(self.starname))
+                '''
                 Corner = mcmc_plots.CornerPlot(self.post, synthchains,
                                                saveplot=outdir+'/corner_plot_{}.pdf'.format(self.starname))
                 Corner.plot()
+                '''
 
                 # Generate an orbit plot wth median parameters and uncertainties.
                 rvplot = orbit_plots.MultipanelPlot(self.post,
