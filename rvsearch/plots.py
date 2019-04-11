@@ -324,7 +324,16 @@ class PeriodModelPlot(object):
         plot.labelfig(pltletter)
 
         # TO-DO: WORK IN AIC/BIC OPTION, INCLUDE IN PLOT TITLE
-        peak = np.argmax(self.periodograms[pnum])
+        try:
+            peak = np.argmax(self.periodograms[pnum])
+        except KeyError:
+            # periodogram for this planet doesn't exist, assume it was previously-known
+            ax = pl.gca()
+            ax.annotate('Pre-defined Planet', xy=(0.5, 0.5), xycoords='axes fraction',
+                        horizontalalignment='center', verticalalignment='center',
+                        fontsize=self.text_size+8)
+            return
+
         f_real = 1/self.pers[peak]
 
         # Plot periodogram, and maximum value.
