@@ -156,6 +156,8 @@
 <span class="kn">import</span> <span class="nn">pickle</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">pl</span>
+<span class="kn">import</span> <span class="nn">corner</span>
 <span class="kn">import</span> <span class="nn">radvel</span>
 <span class="kn">import</span> <span class="nn">radvel.fitting</span>
 <span class="kn">from</span> <span class="nn">radvel.plot</span> <span class="k">import</span> <span class="n">orbit_plots</span><span class="p">,</span> <span class="n">mcmc_plots</span>
@@ -492,15 +494,15 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Search.run_search"><a class="viewcode-back" href="../../search_class.html#rvsearch.search.Search.run_search">[docs]</a>    <span class="k">def</span> <span class="nf">run_search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fixed_threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Search.run_search"><a class="viewcode-back" href="../../search_class.html#rvsearch.search.Search.run_search">[docs]</a>    <span class="k">def</span> <span class="nf">run_search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fixed_threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mkoutdir</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Run an iterative search for planets not given in posterior.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            fixed_threshold (float): (optional) use a fixed delta BIC threshold</span>
-
+<span class="sd">            mkoutdir (bool): create the output directory?</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">outdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">starname</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">outdir</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">mkoutdir</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">outdir</span><span class="p">):</span>
             <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trend</span><span class="p">:</span>
@@ -633,10 +635,28 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">maxparams</span><span class="p">[</span><span class="n">par</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_outputs</span><span class="p">:</span>
-                <span class="c1"># Generate a corner plot for the synthetic chains.</span>
-                <span class="n">Corner</span> <span class="o">=</span> <span class="n">mcmc_plots</span><span class="o">.</span><span class="n">CornerPlot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="p">,</span> <span class="n">synthchains</span><span class="p">,</span>
-                                               <span class="n">saveplot</span><span class="o">=</span><span class="n">outdir</span><span class="o">+</span><span class="s1">&#39;/corner_plot_</span><span class="si">{}</span><span class="s1">.pdf&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">starname</span><span class="p">))</span>
-                <span class="n">Corner</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+                <span class="c1"># Generate a corner plot, sans nuisance parameters.</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;per</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+                    <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;tp</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+                    <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;k</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+                    <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;e</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+                    <span class="c1">#labels.append(&#39;w{}&#39;.format(n))</span>
+                <span class="n">texlabels</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">tex_labels</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span>
+                             <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">]</span>
+                <span class="n">plot</span> <span class="o">=</span> <span class="n">corner</span><span class="o">.</span><span class="n">corner</span><span class="p">(</span><span class="n">synthchains</span><span class="p">[</span><span class="n">labels</span><span class="p">],</span> <span class="n">labels</span><span class="o">=</span><span class="n">texlabels</span><span class="p">,</span>
+                                     <span class="n">label_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;fontsize&quot;</span><span class="p">:</span> <span class="mi">14</span><span class="p">},</span>
+                                     <span class="n">plot_datapoints</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+                                     <span class="n">quantiles</span><span class="o">=</span><span class="p">[</span><span class="mf">0.16</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.84</span><span class="p">],</span>
+                                     <span class="n">title_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;fontsize&quot;</span><span class="p">:</span> <span class="mi">14</span><span class="p">},</span>
+                                     <span class="n">show_titles</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">smooth</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">pl</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">outdir</span><span class="o">+</span><span class="s1">&#39;/</span><span class="si">{}</span><span class="s1">_corner_plot.pdf&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">starname</span><span class="p">))</span>
+                <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">                Corner = mcmc_plots.CornerPlot(self.post, synthchains,</span>
+<span class="sd">                                               saveplot=outdir+&#39;/corner_plot_{}.pdf&#39;.format(self.starname))</span>
+<span class="sd">                Corner.plot()</span>
+<span class="sd">                &#39;&#39;&#39;</span>
 
                 <span class="c1"># Generate an orbit plot wth median parameters and uncertainties.</span>
                 <span class="n">rvplot</span> <span class="o">=</span> <span class="n">orbit_plots</span><span class="o">.</span><span class="n">MultipanelPlot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="p">,</span>
@@ -672,7 +692,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">add_planet</span><span class="p">()</span>
         <span class="n">fixed_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bic_threshes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">run_search</span><span class="p">(</span><span class="n">fixed_threshold</span><span class="o">=</span><span class="n">fixed_threshold</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run_search</span><span class="p">(</span><span class="n">fixed_threshold</span><span class="o">=</span><span class="n">fixed_threshold</span><span class="p">,</span> <span class="n">mkoutdir</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Search.inject_recover"><a class="viewcode-back" href="../../search_class.html#rvsearch.search.Search.inject_recover">[docs]</a>    <span class="k">def</span> <span class="nf">inject_recover</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">injected_orbel</span><span class="p">,</span> <span class="n">num_cpus</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Inject and recover</span>
