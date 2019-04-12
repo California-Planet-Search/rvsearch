@@ -83,6 +83,7 @@
             
             
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorial_api.html">API Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
 </ul>
 
@@ -345,7 +346,16 @@
         <span class="n">plot</span><span class="o">.</span><span class="n">labelfig</span><span class="p">(</span><span class="n">pltletter</span><span class="p">)</span>
 
         <span class="c1"># TO-DO: WORK IN AIC/BIC OPTION, INCLUDE IN PLOT TITLE</span>
-        <span class="n">peak</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">periodograms</span><span class="p">[</span><span class="n">pnum</span><span class="p">])</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">peak</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">periodograms</span><span class="p">[</span><span class="n">pnum</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="c1"># periodogram for this planet doesn&#39;t exist, assume it was previously-known</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="s1">&#39;Pre-defined Planet&#39;</span><span class="p">,</span> <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="n">xycoords</span><span class="o">=</span><span class="s1">&#39;axes fraction&#39;</span><span class="p">,</span>
+                        <span class="n">horizontalalignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">verticalalignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
+                        <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">text_size</span><span class="o">+</span><span class="mi">8</span><span class="p">)</span>
+            <span class="k">return</span>
+
         <span class="n">f_real</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">pers</span><span class="p">[</span><span class="n">peak</span><span class="p">]</span>
 
         <span class="c1"># Plot periodogram, and maximum value.</span>
@@ -453,7 +463,6 @@
         <span class="n">divide</span> <span class="o">=</span> <span class="mf">0.95</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax_rv_height</span> <span class="o">/</span> <span class="n">figheight</span>
         <span class="n">ipl</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span>
         <span class="k">while</span> <span class="n">ipl</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">ipl</span><span class="p">)</span>
             <span class="n">top_edge</span> <span class="o">-=</span> <span class="mf">0.01</span>
             <span class="n">bottom_edge</span> <span class="o">+=</span> <span class="mf">0.005</span>
             <span class="n">divide</span> <span class="o">+=</span> <span class="mf">0.015</span>
