@@ -344,15 +344,15 @@ class Search(object):
         """
         self.post.writeto(filename)
 
-    def run_search(self, fixed_threshold=None):
+    def run_search(self, fixed_threshold=None, mkoutdir=True):
         """Run an iterative search for planets not given in posterior.
 
         Args:
             fixed_threshold (float): (optional) use a fixed delta BIC threshold
-
+            mkoutdir (bool): create the output directory?
         """
         outdir = os.path.join(os.getcwd(), self.starname)
-        if not os.path.exists(outdir):
+        if mkoutdir and not os.path.exists(outdir):
             os.mkdir(outdir)
 
         if self.trend:
@@ -542,7 +542,7 @@ class Search(object):
             self.add_planet()
         fixed_threshold = self.bic_threshes[-1]
 
-        self.run_search(fixed_threshold=fixed_threshold)
+        self.run_search(fixed_threshold=fixed_threshold, mkoutdir=False)
 
     def inject_recover(self, injected_orbel, num_cpus=None):
         """Inject and recover

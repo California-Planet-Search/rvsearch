@@ -196,7 +196,7 @@ class Completeness(object):
 
         return cls(recoveries, *args, **kwargs)
 
-    def completeness_grid(self, xlim, ylim, resolution=40, xlogwin=0.5, ylogwin=0.5):
+    def completeness_grid(self, xlim, ylim, resolution=30, xlogwin=0.5, ylogwin=0.5):
         """Calculate completeness on a fine grid
 
         Compute a 2D moving average in loglog space
