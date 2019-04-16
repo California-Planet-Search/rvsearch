@@ -95,6 +95,10 @@ def initialize_post(data, params=None, priors=[]):
 
         likes[inst].params['gamma_'+inst] = iparams['gamma_'+inst]
         likes[inst].params['jit_'+inst] = iparams['jit_'+inst]
+        # Use linearized gamma solution
+        likes[inst].params['gamma_'+inst].vary = False
+        likes[inst].params['gamma_'+inst].linear = True
+
     # Can this be cleaner? like = radvel.likelihood.CompositeLikelihood(likes)
     like = radvel.likelihood.CompositeLikelihood(list(likes.values()))
 
