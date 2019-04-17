@@ -409,6 +409,12 @@ class PeriodModelPlot(object):
         ax.yaxis.set_label_position('right')
 
         plot.labelfig(pltletter)
+
+        ax.set_xlabel('Period [day]', fontweight='bold')
+        ax.set_ylabel('Window function power', fontweight='bold')
+        ax.set_xscale('log')
+        ax.set_xlim([np.amin(self.pers), np.amax(self.pers)])
+        ax.set_ylim(bottom=0)
         '''
         baseline    = np.amax(self.rvtimes) - np.amin(self.rvtimes)
         window      = utils.window(self.rvtimes, np.flip(1/self.pers))
@@ -421,18 +427,16 @@ class PeriodModelPlot(object):
         pers_safe   = self.pers[np.where(np.logical_and(
                                          self.pers < max, self.pers > min))]
         '''
-        window, freqs_safe, fap_min, window_thresh = utils.window(self.rvtimes,
-                                                        np.flip(1/self.pers))
+        # Plot separate window function for each instrument.
+        for like in self.like_list:
+            inst = like.telvec[0]
+            window, f_safe, fap_min, thresh = utils.window(like.x,
+                                                   np.flip(1/self.pers))
+            ax.plot(1/f_safe, window, alpha=0.5, label=inst)
+        ax.legend(loc=0, prop=dict(size=self.phasetext_size, weight='bold'))
 
-        ax.set_xlabel('Period [day]', fontweight='bold')
-        ax.set_ylabel('Window function power', fontweight='bold')
-        ax.set_xscale('log')
-        ax.set_ylim([0, 1.1*np.amax(window_safe)])
-        ax.set_xlim([np.amin(self.pers), np.amax(self.pers)])
-        ax.plot(1/freqs_safe, window_safe, c='g')
-
-        ax.axvspan(np.amin(self.pers), min, alpha=0.25, color='purple')
-        ax.axvspan(max, np.amax(self.pers), alpha=0.25, color='purple')
+        #ax.axvspan(np.amin(self.pers), 1/np.amax(f_safe), alpha=0.25, color='purple')
+        #ax.axvspan(1/np.amin(f_safe), np.amax(self.pers), alpha=0.25, color='purple')
 
     def plot_multipanel(self, nophase=False, letter_labels=True):
         """Provision and plot an RV multipanel plot
