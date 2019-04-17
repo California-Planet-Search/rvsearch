@@ -85,6 +85,7 @@
             
             
               <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="tutorial_api.html">API Tutorials</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="periodogram.html">Periodograms</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Blind Search</a></li>
@@ -267,11 +268,14 @@ Inject and attempt to recover a synthetic planet signal
 
 <dl class="method">
 <dt id="rvsearch.search.Search.run_search">
-<code class="descname">run_search</code><span class="sig-paren">(</span><em>fixed_threshold=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.run_search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.run_search" title="Permalink to this definition">¶</a></dt>
+<code class="descname">run_search</code><span class="sig-paren">(</span><em>fixed_threshold=None</em>, <em>mkoutdir=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.run_search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.run_search" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run an iterative search for planets not given in posterior.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>fixed_threshold</strong> (<em>float</em>) – (optional) use a fixed delta BIC threshold</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fixed_threshold</strong> (<em>float</em>) – (optional) use a fixed delta BIC threshold</p></li>
+<li><p><strong>mkoutdir</strong> (<em>bool</em>) – create the output directory?</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>

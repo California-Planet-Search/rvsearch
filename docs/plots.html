@@ -85,6 +85,7 @@
             
             
               <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="tutorial_api.html">API Tutorials</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="periodogram.html">Periodograms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="search_class.html">Blind Search</a></li>
@@ -224,86 +225,92 @@
 </dd></dl>
 
 <dl class="class">
-<dt id="rvsearch.plots.CustomTicker">
-<em class="property">class </em><code class="descclassname">rvsearch.plots.</code><code class="descname">CustomTicker</code><span class="sig-paren">(</span><em>base=10.0</em>, <em>labelOnlyBase=False</em>, <em>minor_thresholds=None</em>, <em>linthresh=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#CustomTicker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.CustomTicker" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="rvsearch.plots.CustomTicker.__call__">
-<code class="descname">__call__</code><span class="sig-paren">(</span><em>x</em>, <em>pos=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#CustomTicker.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.CustomTicker.__call__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the format for tick value <em>x</em>.</p>
-<p>The position <em>pos</em> is ignored.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
 <dt id="rvsearch.plots.PeriodModelPlot">
-<em class="property">class </em><code class="descclassname">rvsearch.plots.</code><code class="descname">PeriodModelPlot</code><span class="sig-paren">(</span><em>search</em>, <em>saveplot=None</em>, <em>epoch=2450000</em>, <em>yscale_auto=False</em>, <em>yscale_sigma=3.0</em>, <em>phase_nrows=None</em>, <em>phase_ncols=None</em>, <em>summary_ncols=2</em>, <em>uparams=None</em>, <em>telfmts={}</em>, <em>legend=True</em>, <em>phase_limits=[]</em>, <em>nobin=False</em>, <em>phasetext_size='small'</em>, <em>rv_phase_space=0.06</em>, <em>figwidth=8.5</em>, <em>fit_linewidth=2.0</em>, <em>set_xlim=None</em>, <em>text_size=9</em>, <em>legend_kwargs={'loc': 'best'}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">rvsearch.plots.</code><code class="descname">PeriodModelPlot</code><span class="sig-paren">(</span><em>search</em>, <em>saveplot=None</em>, <em>epoch=2450000</em>, <em>yscale_auto=False</em>, <em>yscale_sigma=3.0</em>, <em>phase_nrows=None</em>, <em>phase_ncols=None</em>, <em>summary_ncols=2</em>, <em>uparams=None</em>, <em>telfmts={}</em>, <em>legend=True</em>, <em>phase_limits=[]</em>, <em>nobin=False</em>, <em>phasetext_size='small'</em>, <em>rv_phase_space=0.08</em>, <em>figwidth=9.5</em>, <em>fit_linewidth=2.0</em>, <em>set_xlim=None</em>, <em>text_size=9</em>, <em>legend_kwargs={'loc': 'best'}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>Class to jointly plot the periodograms, best model phaseplots, and</dt><dd><p>window function for each search iteration.</p>
 </dd>
 </dl>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>search</strong> (<em>rvsearch.Search</em>) – rvsearch.Search object.
+<dd class="field-odd"><p><strong>search</strong> (<em>rvsearch.Search</em>) – rvsearch.Search object.
 This includes the periodograms and best-fit RadVel
-posteriors for each added planet.</p></li>
-<li><p><strong>saveplot</strong> (<em>string</em>) – path to save plot</p></li>
-<li><p><strong>epoch</strong> (<em>int</em><em>, </em><em>optional</em>) – epoch to subtract off of all time measurements</p></li>
-<li><p><strong>yscale_auto</strong> (<em>bool</em><em>, </em><em>optional</em>) – Use matplotlib auto y-axis
-scaling (default: False)</p></li>
-<li><p><strong>yscale_sigma</strong> (<em>float</em><em>, </em><em>optional</em>) – Scale y-axis limits for all panels to be +/-
-yscale_sigma*(RMS of data plotted) if yscale_auto==False</p></li>
-<li><p><strong>phase_nrows</strong> (<em>int</em><em>, </em><em>optional</em>) – number of columns in the phase
-folded plots. Default is nplanets.</p></li>
-<li><p><strong>phase_ncols</strong> (<em>int</em><em>, </em><em>optional</em>) – number of columns in the phase
-folded plots. Default is 1.</p></li>
-<li><p><strong>uparams</strong> (<em>dict</em><em>, </em><em>optional</em>) – parameter uncertainties, must
-contain ‘per’, ‘k’, and ‘e’ keys.</p></li>
-<li><p><strong>telfmts</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>dictionary of dictionaries mapping
-instrument suffix to plotting format code. Example:</p>
-<blockquote>
-<div><dl class="simple">
-<dt>telfmts = {</dt><dd><p>‘hires’: dict(fmt=’o’,label=’HIRES’),
-‘harps-n’ dict(fmt=’s’)</p>
-</dd>
-</dl>
-<p>}</p>
-</div></blockquote>
-</p></li>
-<li><p><strong>legend</strong> (<em>bool</em><em>, </em><em>optional</em>) – include legend on plot? Default: True.</p></li>
-<li><p><strong>phase_limits</strong> (<em>list</em><em>, </em><em>optional</em>) – two element list specifying
-pyplot.xlim bounds for phase-folded plots. Useful for
-partial orbits.</p></li>
-<li><p><strong>nobin</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True do not show binned data on
-phase plots. Will default to True if total number of
-measurements is less then 20.</p></li>
-<li><p><strong>phasetext_size</strong> (<em>string</em><em>, </em><em>optional</em>) – fontsize for text in phase plots.
-Choice of {‘xx-small’, ‘x-small’, ‘small’, ‘medium’, ‘large’,
-‘x-large’, ‘xx-large’}. Default: ‘x-small’.</p></li>
-<li><p><strong>rv_phase_space</strong> (<em>float</em><em>, </em><em>optional</em>) – amount of space to leave between orbit/residual plot
-and phase plots.</p></li>
-<li><p><strong>figwidth</strong> (<em>float</em><em>, </em><em>optional</em>) – width of the figures to be produced.
-Default: 7.5 (spans a page with 0.5 in margins)</p></li>
-<li><p><strong>fit_linewidth</strong> (<em>float</em><em>, </em><em>optional</em>) – linewidth to use for orbit model lines in phase-folded
-plots and residuals plots.</p></li>
-<li><p><strong>set_xlim</strong> (<em>list of float</em>) – limits to use for x-axes of the timeseries and residuals plots, in
-JD - <cite>epoch</cite>. Ex: [7000., 70005.]</p></li>
-<li><p><strong>text_size</strong> (<em>int</em>) – set matplotlib.rcParams[‘font.size’] (default: 9)</p></li>
-<li><p><strong>legend_kwargs</strong> (<em>dict</em>) – dict of options to pass to legend (plotted in top panel)</p></li>
-</ul>
+posteriors for each added planet.</p>
 </dd>
 </dl>
 <dl class="method">
 <dt id="rvsearch.plots.PeriodModelPlot.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>search</em>, <em>saveplot=None</em>, <em>epoch=2450000</em>, <em>yscale_auto=False</em>, <em>yscale_sigma=3.0</em>, <em>phase_nrows=None</em>, <em>phase_ncols=None</em>, <em>summary_ncols=2</em>, <em>uparams=None</em>, <em>telfmts={}</em>, <em>legend=True</em>, <em>phase_limits=[]</em>, <em>nobin=False</em>, <em>phasetext_size='small'</em>, <em>rv_phase_space=0.06</em>, <em>figwidth=8.5</em>, <em>fit_linewidth=2.0</em>, <em>set_xlim=None</em>, <em>text_size=9</em>, <em>legend_kwargs={'loc': 'best'}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>search</em>, <em>saveplot=None</em>, <em>epoch=2450000</em>, <em>yscale_auto=False</em>, <em>yscale_sigma=3.0</em>, <em>phase_nrows=None</em>, <em>phase_ncols=None</em>, <em>summary_ncols=2</em>, <em>uparams=None</em>, <em>telfmts={}</em>, <em>legend=True</em>, <em>phase_limits=[]</em>, <em>nobin=False</em>, <em>phasetext_size='small'</em>, <em>rv_phase_space=0.08</em>, <em>figwidth=9.5</em>, <em>fit_linewidth=2.0</em>, <em>set_xlim=None</em>, <em>text_size=9</em>, <em>legend_kwargs={'loc': 'best'}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>self, search, saveplot=None, epoch=2450000, phase_nrows=None,
+yscale_auto=False, yscale_sigma=3.0, phase_ncols=None,
+uparams=None, telfmts={}, legend=True, nobin=False,
+phasetext_size=’large’, rv_phase_space=0.08, figwidth=7.5,
+summary_ncols=2, fit_linewidth=2.0, set_xlim=None, text_size=9,
+legend_kwargs=dict(loc=’best’)):</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="rvsearch.plots.PeriodModelPlot.__weakref__">
+<code class="descname">__weakref__</code><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.plots.PeriodModelPlot.plot_multipanel">
+<code class="descname">plot_multipanel</code><span class="sig-paren">(</span><em>nophase=False</em>, <em>letter_labels=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot.plot_multipanel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.plot_multipanel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provision and plot an RV multipanel plot</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nophase</strong> (<em>bool</em><em>, </em><em>optional</em>) – if True, don’t
+include phase plots. Default: False.</p></li>
+<li><p><strong>letter_labels</strong> (<em>bool</em><em>, </em><em>optional</em>) – if True, include
+letter labels on orbit and residual plots.
+Default: True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>current matplotlib Figure object</p></li>
+<li><p>list of Axes objects</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple containing</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="rvsearch.plots.PeriodModelPlot.plot_periodogram">
 <code class="descname">plot_periodogram</code><span class="sig-paren">(</span><em>pltletter</em>, <em>pnum=0</em>, <em>alias=True</em>, <em>floor=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot.plot_periodogram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.plot_periodogram" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot periodogram for a given search iteration.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.plots.PeriodModelPlot.plot_phasefold">
+<code class="descname">plot_phasefold</code><span class="sig-paren">(</span><em>pltletter</em>, <em>pnum</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot.plot_phasefold"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.plot_phasefold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot phased orbit plots for each planet in the fit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pltletter</strong> (<em>int</em>) – integer representation of
+letter to be printed in the corner of the first
+phase plot.
+Ex: ord(“a”) gives 97, so the input should be 97.</p></li>
+<li><p><strong>pnum</strong> (<em>int</em>) – the number of the planet to be plotted. Must be
+the same as the number used to define a planet’s
+Parameter objects (e.g. ‘per1’ is for planet #1)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.plots.PeriodModelPlot.plot_residuals">
+<code class="descname">plot_residuals</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot.plot_residuals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.plot_residuals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a plot of residuals and RV trend in the current Axes.</p>
 </dd></dl>
 
 <dl class="method">
@@ -327,6 +334,12 @@ Default: True.</p>
 <dd class="field-odd"><p>tuple containing</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.plots.PeriodModelPlot.plot_timeseries">
+<code class="descname">plot_timeseries</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot.plot_timeseries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.plot_timeseries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a plot of the RV data and model in the current Axes.</p>
 </dd></dl>
 
 <dl class="method">
