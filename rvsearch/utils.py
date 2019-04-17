@@ -113,18 +113,60 @@ def initialize_post(data, params=None, priors=[]):
     return post
 
 
-def window(times, freqs, plot=False):
-    """Function to generate, and plot, the window function of observations.
+def window(times, freqs, minfrac=0.5, max=0.5, fap=0.01):
+    """Function to generate, and check significace of,
+       the window function of observations.
 
     Args:
-        time: times of observations in a dataset. FOR SEPARATE TELESCOPES?
-
+        time: times of observations in a dataset.
+        freqs: frequencies at which to compute the window function.
+        minfrac: The lower limit on the frequency grid, as determined by
+            1/(minfrac*baseline).
+        max: The maximum frequency to search over (default is 2 days).
+        fap: The false-alarm probability threshold used for signifcance.
     """
+    # Compute the window function
     W = np.zeros(len(freqs))
     for i, freq in enumerate(freqs):
         W[i] = np.absolute(np.sum(np.exp(-2*np.pi*1j*times*freq)))
     W /= float(len(times))
-    return W
+
+    # Cut the window function outside of some fraction of the obs. baseline.
+    baseline = np.amax(times) - np.amin(times)
+    W_safe = window[np.where(np.logical_and(
+                         freqs < max, freqs > 1./(baseline*minfrac)))]
+    freqs_safe = freqs[np.where(np.logical_and(
+                          freqs < max, freqs > 1./(baseline*minfrac)))]
+
+    # Use power-law distribution to check significance of global maximum.
+    nfreqs = len(sort_W)
+    sort_W = np.sort(W_safe)
+    crop_W = sort_W[int(0.5*nfreqs):int(0.95*nfreqs)]
+
+    hist, edge = np.histogram(crop_W, bins=10)
+    cent = (edge[1:]+edge[:-1])/2.
+    norm = float(np.sum(hist))
+    nhist = hist/norm
+    loghist = np.log10(nhist)
+
+    func = np.poly1d(np.polyfit(cent[np.isfinite(loghist)],
+                                loghist[np.isfinite(loghist)], 1))
+    xmod = np.linspace(np.min(sort_W[np.isfinite(sort_W)]),
+                       10.*np.max(sort_W), 10000)
+    lfit = 10.**func(xmod)
+    # Save the empirical-FAP of the window function global maximum.
+    fap_min = 10.**func(sort_W[-1])*nfreqs
+    thresh = xmod[np.where(np.abs(lfit-fap/nfreqs) ==
+                    np.min(np.abs(lfit-fap/nfreqs)))]
+    window_thresh = thresh[0]
+
+    #Check whether the window peak surpasses the FAP threshold.
+    if sort_W[-1] >= window_thresh:
+        significant=True
+    else:
+        significant=False
+
+    return W_safe, freqs_safe, fap_min, window_thresh
 
 def read_from_csv(filename, binsize=0.0, verbose=True):
     """Read radial velocity data from a csv file into a Pandas dataframe.

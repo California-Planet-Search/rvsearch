@@ -409,7 +409,7 @@ class PeriodModelPlot(object):
         ax.yaxis.set_label_position('right')
 
         plot.labelfig(pltletter)
-
+        '''
         baseline    = np.amax(self.rvtimes) - np.amin(self.rvtimes)
         window      = utils.window(self.rvtimes, np.flip(1/self.pers))
 
@@ -420,13 +420,16 @@ class PeriodModelPlot(object):
                                       self.pers < max, self.pers > min))]
         pers_safe   = self.pers[np.where(np.logical_and(
                                          self.pers < max, self.pers > min))]
+        '''
+        window, freqs_safe, fap_min, window_thresh = utils.window(self.rvtimes,
+                                                        np.flip(1/self.pers))
 
         ax.set_xlabel('Period [day]', fontweight='bold')
         ax.set_ylabel('Window function power', fontweight='bold')
         ax.set_xscale('log')
         ax.set_ylim([0, 1.1*np.amax(window_safe)])
         ax.set_xlim([np.amin(self.pers), np.amax(self.pers)])
-        ax.plot(pers_safe, window_safe, c='g')
+        ax.plot(1/freqs_safe, window_safe, c='g')
 
         ax.axvspan(np.amin(self.pers), min, alpha=0.25, color='purple')
         ax.axvspan(max, np.amax(self.pers), alpha=0.25, color='purple')
