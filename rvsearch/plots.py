@@ -14,7 +14,7 @@ import rvsearch.utils as utils
 # IMPORTANT: AT SOME POINT, REDEFINE AS CLASS INHERITING FROM RADVEL MULTIPLOT.
 
 
- class CustomTicker(LogFormatterSciNotation):
+class CustomTicker(LogFormatterSciNotation):
     def __call__(self, x, pos=None):
         if x not in [0.1, 1, 10, 100, 1000, 10000]:
             return LogFormatterSciNotation.__call__(self, x, pos=None)
@@ -22,7 +22,7 @@ import rvsearch.utils as utils
             return "{x:g}".format(x=x)
 
 
- class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
+class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
     """Class to jointly plot the periodograms, best model phaseplots, and
         window function for each search iteration.
 
@@ -242,7 +242,7 @@ import rvsearch.utils as utils
             ax.set_xlabel('Period [day]', fontweight='bold')
             ax.tick_params(axis='x', which='both', direction='out',
                            bottom='on', top='off', labelbottom='on')
-	        ax.xaxis.set_major_formatter(CustomTicker())
+            ax.xaxis.set_major_formatter(CustomTicker())
 
     def plot_window(self, pltletter):
         """Plot the window function of the data.
