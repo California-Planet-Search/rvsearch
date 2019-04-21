@@ -30,22 +30,53 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
         search (rvsearch.Search): rvsearch.Search object.
             This includes the periodograms and best-fit RadVel
             posteriors for each added planet.
+        saveplot (string): path to save plot
+        epoch (int, optional): epoch to subtract off of all time measurements
+        yscale_auto (bool, optional): Use matplotlib auto y-axis
+             scaling (default: False)
+        yscale_sigma (float, optional): Scale y-axis limits for all panels to be +/-
+             yscale_sigma*(RMS of data plotted) if yscale_auto==False
+        phase_nrows (int, optional): number of columns in the phase
+            folded plots. Default is nplanets.
+        phase_ncols (int, optional): number of columns in the phase
+            folded plots. Default is 1.
+        uparams (dict, optional): parameter uncertainties, must
+           contain 'per', 'k', and 'e' keys.
+        telfmts (dict, optional): dictionary of dictionaries mapping
+            instrument suffix to plotting format code. Example:
+                telfmts = {
+                     'hires': dict(fmt='o',label='HIRES'),
+                     'harps-n' dict(fmt='s')
+                }
+        legend (bool, optional): include legend on plot? Default: True.
+        phase_limits (list, optional): two element list specifying
+            pyplot.xlim bounds for phase-folded plots. Useful for
+            partial orbits.
+        nobin (bool, optional): If True do not show binned data on
+            phase plots. Will default to True if total number of
+            measurements is less then 20.
+        phasetext_size (string, optional): fontsize for text in phase plots.
+            Choice of {'xx-small', 'x-small', 'small', 'medium', 'large',
+            'x-large', 'xx-large'}. Default: 'x-small'.
+        rv_phase_space (float, optional): amount of space to leave between orbit/residual plot
+            and phase plots.
+        figwidth (float, optional): width of the figures to be produced.
+            Default: 7.5 (spans a page with 0.5 in margins)
+        fit_linewidth (float, optional): linewidth to use for orbit model lines in phase-folded
+            plots and residuals plots.
+        set_xlim (list of float): limits to use for x-axes of the timeseries and residuals plots, in
+            JD - `epoch`. Ex: [7000., 70005.]
+        text_size (int): set matplotlib.rcParams['font.size'] (default: 9)
+        legend_kwargs (dict): dict of options to pass to legend (plotted in top panel)
 
     """
     def __init__(self, search, saveplot=None, epoch=2450000, yscale_auto=False,
                  yscale_sigma=3.0, phase_nrows=None, phase_ncols=None,
                  summary_ncols=2, uparams=None, telfmts={}, legend=True,
                  phase_limits=[], nobin=False, phasetext_size='small',
-                 rv_phase_space=0.08, figwidth=9.5, fit_linewidth=2.0,
+                 rv_phase_space=0.06, figwidth=9.5, fit_linewidth=2.0,
                  set_xlim=None, text_size=9, legend_kwargs=dict(loc='best')):
-        '''
-        self, search, saveplot=None, epoch=2450000, phase_nrows=None,
-        yscale_auto=False, yscale_sigma=3.0, phase_ncols=None,
-        uparams=None, telfmts={}, legend=True, nobin=False,
-        phasetext_size='large', rv_phase_space=0.08, figwidth=7.5,
-        summary_ncols=2, fit_linewidth=2.0, set_xlim=None, text_size=9,
-        legend_kwargs=dict(loc='best')):
-       '''
+
         self.search = search
         self.starname = self.search.starname
         self.post = self.search.post
@@ -157,7 +188,6 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
         """Plot periodogram for a given search iteration.
 
         """
-
         ax = pl.gca()
 
         if pnum < self.num_known_planets:
@@ -171,11 +201,11 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
         try:
             peak = np.argmax(self.periodograms[pnum])
         except KeyError:
-            # periodogram for this planet doesn't exist, assume it was previously-known
+            # No periodogram for this planet\, assume it was previously-known.
             ax = pl.gca()
-            ax.annotate('Pre-defined Planet', xy=(0.5, 0.5), xycoords='axes fraction',
-                        horizontalalignment='center', verticalalignment='center',
-                        fontsize=self.text_size+8)
+            ax.annotate('Pre-defined Planet', xy=(0.5, 0.5),
+                        xycoords='axes fraction', horizontalalignment='center',
+                        verticalalignment='center', fontsize=self.text_size+8)
             return
 
         f_real = 1/self.pers[peak]
@@ -238,7 +268,7 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
             ax.tick_params(axis='x', which='both', direction='in',
                            bottom='on', top='on', labelbottom='off')
         elif pnum == self.num_known_planets:
-            # Print unitsl and axis label at the bottom.
+            # Print units and axis label at the bottom.
             ax.set_xlabel('Period [day]', fontweight='bold')
             ax.tick_params(axis='x', which='both', direction='out',
                            bottom='on', top='off', labelbottom='on')
@@ -298,12 +328,21 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
         # provision figure
         fig = pl.figure(figsize=(self.figwidth, figheight))
         right_edge = 0.90
+	    top_edge = 0.92
+        bottom_edge = 0.05
 
         fig.subplots_adjust(left=0.12, right=right_edge)
         gs_rv = gridspec.GridSpec(2, 1, height_ratios=[1., 0.5])
 
-        divide = 1 - self.ax_rv_height / figheight
-        gs_rv.update(left=0.12, right=right_edge, top=0.93,
+        divide = 0.95 - self.ax_rv_height / figheight
+        ipl = 5 - self.num_known_planets
+        while ipl > 0:
+            top_edge -= 0.01
+            bottom_edge += 0.005
+            divide += 0.015
+            self.rv_phase_space += 0.012
+            ipl -= 1
+        gs_rv.update(left=0.12, right=right_edge, top=top_edge,
                      bottom=divide+self.rv_phase_space*0.5, hspace=0.)
 
         # orbit plot
@@ -333,11 +372,11 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
         if self.summary_ncols == 1:
             gs_phase.update(left=0.12, right=right_edge,
                             top=divide - self.rv_phase_space * 0.2,
-                            bottom=0.07, hspace=0.003)
+                            bottom=bottom_edge, hspace=0.003)
         else:
             gs_phase.update(left=0.12, right=right_edge,
                             top=divide - self.rv_phase_space * 0.2,
-                            bottom=0.07, hspace=0.003, wspace=0.05)
+                            bottom=bottom_edge, hspace=0.003, wspace=0.05)
 
         for i in range(self.num_planets):
             # Plot phase.
@@ -379,6 +418,8 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
         pl.sca(ax_window)
         self.plot_window(pltletter)
         pltletter += 1
+
+        pl.suptitle(self.search.starname, fontsize=self.text_size+6, weight='bold')
 
         if self.saveplot is not None:
             pl.savefig(self.saveplot, dpi=150)
