@@ -328,7 +328,7 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
         # provision figure
         fig = pl.figure(figsize=(self.figwidth, figheight))
         right_edge = 0.90
-	    top_edge = 0.92
+        top_edge = 0.92
         bottom_edge = 0.05
 
         fig.subplots_adjust(left=0.12, right=right_edge)
