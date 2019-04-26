@@ -72,8 +72,8 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
     """
     def __init__(self, search, saveplot=None, epoch=2450000, yscale_auto=False,
                  yscale_sigma=3.0, phase_nrows=None, phase_ncols=None,
-                 summary_ncols=2, uparams=None, telfmts={}, legend=True,
-                 phase_limits=[], nobin=False, phasetext_size='small',
+                 summary_ncols=2, uparams=None, telfmts=plot.telfmts_default,
+                 legend=True, phase_limits=[], nobin=False, phasetext_size='small',
                  rv_phase_space=0.06, figwidth=9.5, fit_linewidth=2.0,
                  set_xlim=None, text_size=9, legend_kwargs=dict(loc='best')):
 
@@ -201,9 +201,9 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
         try:
             peak = np.argmax(self.periodograms[pnum])
         except KeyError:
-            # No periodogram for this planet\, assume it was previously-known.
+            # No periodogram for this planet, assume it was previously-known.
             ax = pl.gca()
-            ax.annotate('Pre-defined Planet', xy=(0.5, 0.5),
+            ax.annotate('Pre-defined Orbit', xy=(0.5, 0.5),
                         xycoords='axes fraction', horizontalalignment='center',
                         verticalalignment='center', fontsize=self.text_size+8)
             return
@@ -275,7 +275,7 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
             ax.xaxis.set_major_formatter(CustomTicker())
 
     def plot_window(self, pltletter):
-        """Plot the window function of the data.
+        """Plot the window function of the data, for each instrument.
         """
         ax = pl.gca()
 
@@ -283,29 +283,36 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
         ax.yaxis.tick_right()
         ax.yaxis.set_label_position('right')
 
-        plot.labelfig(pltletter)
-
-        baseline    = np.amax(self.rvtimes) - np.amin(self.rvtimes)
-        window      = utils.window(self.rvtimes, np.flip(1/self.pers))
-
-        min = 3
-        max = baseline/2
-
-        window_safe = window[np.where(np.logical_and(
-                                      self.pers < max, self.pers > min))]
-        pers_safe   = self.pers[np.where(np.logical_and(
-                                         self.pers < max, self.pers > min))]
-
         ax.set_xlabel('Period [day]', fontweight='bold')
         ax.set_ylabel('Window function power', fontweight='bold')
         ax.set_xscale('log')
-        ax.set_ylim([0, 1.1*np.amax(window_safe)])
         ax.set_xlim([np.amin(self.pers), np.amax(self.pers)])
-        ax.plot(pers_safe, window_safe, c='g')
-        ax.xaxis.set_major_formatter(CustomTicker())
+        plot.labelfig(pltletter)
 
-        ax.axvspan(np.amin(self.pers), min, alpha=0.25, color='purple')
-        ax.axvspan(max, np.amax(self.pers), alpha=0.25, color='purple')
+        # Loop over all instruments, generate separate window function for each.
+        for like in self.like_list:
+            times    = like.x
+            tel      = like.telvec[0]
+            baseline = np.amax(times) - np.amin(times)
+            window   = utils.window(times, np.flip(1/self.pers))
+            if tel in self.telfmts.keys():
+                tel = self.telfmts[tel]['label']
+
+            min = np.amax([3, np.amin(self.pers)])
+            max = baseline/2
+
+            window_safe = window[np.where(np.logical_and(
+                                          self.pers < max, self.pers > min))]
+            pers_safe   = self.pers[np.where(np.logical_and(
+                                             self.pers < max, self.pers > min))]
+            print(window_safe)
+            print(pers_safe)
+            ax.set_ylim([0, 1.1*np.amax(window_safe)])
+            ax.plot(pers_safe, window_safe, alpha=0.75, label=tel)
+        ax.xaxis.set_major_formatter(CustomTicker())
+        ax.legend()
+        #ax.axvspan(np.amin(self.pers), min, alpha=0.25, color='purple')
+        #ax.axvspan(max, np.amax(self.pers), alpha=0.25, color='purple')
 
     def plot_summary(self, letter_labels=True):
         """Provision and plot a search summary plot
