@@ -357,6 +357,8 @@ class Search(object):
 
         if self.trend:
             self.trend_test()
+            #self.post.params['dvdt'].vary = True
+            #self.post.params['curv'].vary = True
         else:
             self.post.params['dvdt'].vary = False
             self.post.params['curv'].vary = False

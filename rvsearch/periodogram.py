@@ -112,11 +112,12 @@ class Periodogram(object):
             array: Array of test periods
 
         """
-        fmin = 1. / self.maxsearchP
-        fmax = 1. / self.minsearchP
+        fmin = 1./self.maxsearchP
+        fmax = 1./self.minsearchP
 
-        dnu       = 1. / (4. * self.timelen)
-        num_freq  = int((fmax - fmin) / dnu + 1)
+        # Should be 1/(2*pi*baseline), was previously 1/4.
+        dnu       = 1./(2*np.pi*self.timelen)
+        num_freq  = (fmax - fmin)/dnu + 1
         num_freq *= self.oversampling
         num_freq  = int(num_freq)
 
