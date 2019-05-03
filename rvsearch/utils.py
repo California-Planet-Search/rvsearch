@@ -49,7 +49,7 @@ def initialize_default_pars(instnames=['inst'],
     anybasis_params['curv'] = radvel.Parameter(value=0.0)
 
     for inst in instnames:
-        anybasis_params['gamma_'+inst] = radvel.Parameter(value=0.0)
+        anybasis_params['gamma_'+inst] = radvel.Parameter(value=0.0, linear=True, vary=False)
         anybasis_params['jit_'+inst] = radvel.Parameter(value=2.0)
 
     params = anybasis_params.basis.to_any_basis(anybasis_params, fitting_basis)

@@ -424,8 +424,11 @@ class Search(object):
             self.post.medparams = {}
             self.post.maxparams = {}
             # Use minimal recommended parameters for mcmc.
-            chains = radvel.mcmc(self.post, thin=5, nwalkers=50, nrun=10000,
-                                 ensembles=int(np.clip(self.workers, 4, 24)))
+            nensembles = 16
+            if os.cpu_count() < nensembles:
+                nensembles = os.cpu_count()
+            chains = radvel.mcmc(self.post, thin=5, nwalkers=50, nrun=2000,
+                                 ensembles=nensembles)
             # Convert chains to e, w basis.
             for par in self.post.params.keys():
                 if not self.post.params[par].vary:
