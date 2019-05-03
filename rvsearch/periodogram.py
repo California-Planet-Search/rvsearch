@@ -104,20 +104,7 @@ class Periodogram(object):
 
         # Automatically generate a period grid upon initialization.
         self.make_per_grid()
-    '''
-    @classmethod
-    def from_pandas(cls, data):
-        params = utils.initialize_default_pars(instnames=data.tel)
-        post = utils.initialize_post(data, params=params)
-        return cls(post)
 
-    @classmethod
-    def from_csv(cls, filename):
-        data = utils.read_from_csv(filename)
-        params = utils.initialize_default_pars(instnames=data.tel)
-        post = utils.initialize_post(data, params=params)
-        return cls(post)
-    '''
     def per_spacing(self, verbose=True):
         """Get the number of sampled frequencies and return a period grid.
 
@@ -131,11 +118,12 @@ class Periodogram(object):
             array: Array of test periods
 
         """
-        fmin = 1. / self.maxsearchP
-        fmax = 1. / self.minsearchP
+        fmin = 1./self.maxsearchP
+        fmax = 1./self.minsearchP
 
-        dnu       = 1. / (4. * self.timelen)
-        num_freq  = int((fmax - fmin) / dnu + 1)
+        # Should be 1/(2*pi*baseline), was previously 1/4.
+        dnu       = 1./(2*np.pi*self.timelen)
+        num_freq  = (fmax - fmin)/dnu + 1
         num_freq *= self.oversampling
         num_freq  = int(num_freq)
 

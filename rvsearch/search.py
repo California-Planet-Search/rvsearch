@@ -10,7 +10,7 @@ import matplotlib.pyplot as pl
 import corner
 import radvel
 import radvel.fitting
-from radvel.plot import orbit_plots, mcmc_plots
+from radvel.plot import orbit_plots
 
 import rvsearch.periodogram as periodogram
 import rvsearch.utils as utils
@@ -357,6 +357,8 @@ class Search(object):
 
         if self.trend:
             self.trend_test()
+            #self.post.params['dvdt'].vary = True
+            #self.post.params['curv'].vary = True
         else:
             self.post.params['dvdt'].vary = False
             self.post.params['curv'].vary = False
@@ -471,26 +473,27 @@ class Search(object):
 
             # Retrieve medians & uncertainties for the fitting basis parameters.
             for par in self.post.params.keys():
-                med = quants[par][0.5]
-                high = quants[par][0.841] - med
-                low = med - quants[par][0.159]
-                err = np.mean([high,low])
-                err = radvel.utils.round_sig(err)
-                med, err, errhigh = radvel.utils.sigfig(med, err)
-                max, err, errhigh = radvel.utils.sigfig(
-                                    self.post.params[par].value, err)
+                if self.post.params[par].vary:
+                    med = quants[par][0.5]
+                    high = quants[par][0.841] - med
+                    low = med - quants[par][0.159]
+                    err = np.mean([high,low])
+                    err = radvel.utils.round_sig(err)
+                    med, err, errhigh = radvel.utils.sigfig(med, err)
+                    max, err, errhigh = radvel.utils.sigfig(
+                                        self.post.params[par].value, err)
 
-                # self.post.params[par].value = med
-                self.post.uparams[par] = err
-                self.post.medparams[par] = med
-                self.post.maxparams[par] = max
+                    # self.post.params[par].value = med
+                    self.post.uparams[par] = err
+                    self.post.medparams[par] = med
+                    self.post.maxparams[par] = max
 
             if self.save_outputs:
                 # Generate a corner plot, sans nuisance parameters.
                 labels = []
                 for n in np.arange(1, self.num_planets+1):
                     labels.append('per{}'.format(n))
-                    labels.append('tp{}'.format(n))
+                    labels.append('tc{}'.format(n))
                     labels.append('k{}'.format(n))
                     labels.append('e{}'.format(n))
                     #labels.append('w{}'.format(n))
@@ -503,16 +506,11 @@ class Search(object):
                                      title_kwargs={"fontsize": 14},
                                      show_titles=True, smooth=True)
                 pl.savefig(outdir+'/{}_corner_plot.pdf'.format(self.starname))
-                '''
-                Corner = mcmc_plots.CornerPlot(self.post, synthchains,
-                                               saveplot=outdir+'/corner_plot_{}.pdf'.format(self.starname))
-                Corner.plot()
-                '''
 
                 # Generate an orbit plot wth median parameters and uncertainties.
-                rvplot = orbit_plots.MultipanelPlot(self.post,
-                                                    saveplot=outdir+'/orbit_plot_mc_{}.pdf'.format(self.starname),
-                                                    uparams=self.post.uparams)
+                rvplot = orbit_plots.MultipanelPlot(self.post,saveplot=
+                                outdir+'/orbit_plot_mc_{}.pdf'.format(
+                                self.starname), uparams=self.post.uparams)
                 multiplot_fig, ax_list = rvplot.plot_multipanel()
                 multiplot_fig.savefig(outdir+'/orbit_plot_mc_{}.pdf'.format(
                                       self.starname))

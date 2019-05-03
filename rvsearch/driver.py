@@ -127,5 +127,5 @@ def plots(args):
 
             if ptype == 'summary':
                 plotter = rvsearch.plots.PeriodModelPlot(searcher,
-                                                         saveplot='{}_summary.pdf'.format(searcher.starname))
+                            saveplot='{}_summary.pdf'.format(searcher.starname))
                 plotter.plot_summary()
