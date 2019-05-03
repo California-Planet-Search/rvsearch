@@ -69,7 +69,7 @@ def injections(args):
                                                  num_sim=args.num_inject)
                 recoveries = inj.run_injections(num_cpus=args.num_cpus)
                 inj.save()
-            except OSError:
+            except IOError:
                 print("WARNING: Problem with {}".format(sfile))
                 os._exit(1)
         else:
@@ -127,5 +127,5 @@ def plots(args):
 
             if ptype == 'summary':
                 plotter = rvsearch.plots.PeriodModelPlot(searcher,
-                                                         saveplot='{}_summary.pdf'.format(searcher.starname))
+                            saveplot='{}_summary.pdf'.format(searcher.starname))
                 plotter.plot_summary()

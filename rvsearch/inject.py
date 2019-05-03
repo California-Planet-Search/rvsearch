@@ -7,6 +7,7 @@ from scipy.interpolate import interp2d, SmoothBivariateSpline, RegularGridInterp
 import pickle
 import pathos.multiprocessing as mp
 import radvel
+import tqdm
 
 import rvsearch.utils
 
@@ -101,7 +102,8 @@ class Injections(object):
 
             recovered, recovered_orbel = search.inject_recover(orbel, num_cpus=1)
 
-            bic = search.best_bics[-1]
+            last_bic = max(search.best_bics.keys())
+            bic = search.best_bics[last_bic]
 
             return recovered, recovered_orbel, bic
 

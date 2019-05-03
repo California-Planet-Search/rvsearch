@@ -22,7 +22,8 @@ def reset_params(post, default_pdict):
     return post
 
 
-def initialize_default_pars(instnames=['inst'], fitting_basis='per tc secosw sesinw k'):
+def initialize_default_pars(instnames=['inst'],
+                            fitting_basis='per tc secosw sesinw k'):
     """Set up a default Parameters object.
 
     None of the basis values are free params, for the initial 0-planet fit.
@@ -48,7 +49,7 @@ def initialize_default_pars(instnames=['inst'], fitting_basis='per tc secosw ses
     anybasis_params['curv'] = radvel.Parameter(value=0.0)
 
     for inst in instnames:
-        anybasis_params['gamma_'+inst] = radvel.Parameter(value=0.0)
+        anybasis_params['gamma_'+inst] = radvel.Parameter(value=0.0, linear=True, vary=False)
         anybasis_params['jit_'+inst] = radvel.Parameter(value=2.0)
 
     params = anybasis_params.basis.to_any_basis(anybasis_params, fitting_basis)
