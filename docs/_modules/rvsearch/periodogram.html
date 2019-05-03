@@ -17,34 +17,32 @@
   
 
   
-  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
+  
+  
     
 
   
+
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
+
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
+        <div class="wy-side-nav-search">
           
 
           
@@ -159,8 +157,27 @@
 <span class="kn">from</span> <span class="nn">radvel.plot</span> <span class="k">import</span> <span class="n">orbit_plots</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm</span>
 <span class="kn">import</span> <span class="nn">pathos.multiprocessing</span> <span class="k">as</span> <span class="nn">mp</span>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="k">import</span> <span class="n">Value</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">repeat</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span>
 
 <span class="kn">import</span> <span class="nn">rvsearch.utils</span> <span class="k">as</span> <span class="nn">utils</span>
+
+
+<div class="viewcode-block" id="TqdmUpTo"><a class="viewcode-back" href="../../periodogram.html#rvsearch.periodogram.TqdmUpTo">[docs]</a><span class="k">class</span> <span class="nc">TqdmUpTo</span><span class="p">(</span><span class="n">tqdm</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Provides `update_to(n)` which uses `tqdm.update(delta_n)`.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="TqdmUpTo.update_to"><a class="viewcode-back" href="../../periodogram.html#rvsearch.periodogram.TqdmUpTo.update_to">[docs]</a>    <span class="k">def</span> <span class="nf">update_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bsize</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">tsize</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        b  : int, optional</span>
+<span class="sd">            Number of blocks transferred so far [default: 1].</span>
+<span class="sd">        bsize  : int, optional</span>
+<span class="sd">            Size of each block (in tqdm units) [default: 1].</span>
+<span class="sd">        tsize  : int, optional</span>
+<span class="sd">            Total size (in tqdm units). If [default: None] remains unchanged.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">tsize</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">total</span> <span class="o">=</span> <span class="n">tsize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">b</span> <span class="o">*</span> <span class="n">bsize</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>  <span class="c1"># will also set self.n = b * bsize</span></div></div>
 
 
 <div class="viewcode-block" id="Periodogram"><a class="viewcode-back" href="../../periodogram.html#rvsearch.periodogram.Periodogram">[docs]</a><span class="k">class</span> <span class="nc">Periodogram</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -235,20 +252,7 @@
 
         <span class="c1"># Automatically generate a period grid upon initialization.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">make_per_grid</span><span class="p">()</span></div>
-    <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    @classmethod</span>
-<span class="sd">    def from_pandas(cls, data):</span>
-<span class="sd">        params = utils.initialize_default_pars(instnames=data.tel)</span>
-<span class="sd">        post = utils.initialize_post(data, params=params)</span>
-<span class="sd">        return cls(post)</span>
 
-<span class="sd">    @classmethod</span>
-<span class="sd">    def from_csv(cls, filename):</span>
-<span class="sd">        data = utils.read_from_csv(filename)</span>
-<span class="sd">        params = utils.initialize_default_pars(instnames=data.tel)</span>
-<span class="sd">        post = utils.initialize_post(data, params=params)</span>
-<span class="sd">        return cls(post)</span>
-<span class="sd">    &#39;&#39;&#39;</span>
 <div class="viewcode-block" id="Periodogram.per_spacing"><a class="viewcode-back" href="../../periodogram.html#rvsearch.periodogram.Periodogram.per_spacing">[docs]</a>    <span class="k">def</span> <span class="nf">per_spacing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get the number of sampled frequencies and return a period grid.</span>
 
@@ -262,11 +266,12 @@
 <span class="sd">            array: Array of test periods</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">fmin</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxsearchP</span>
-        <span class="n">fmax</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">minsearchP</span>
+        <span class="n">fmin</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">maxsearchP</span>
+        <span class="n">fmax</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">minsearchP</span>
 
-        <span class="n">dnu</span>       <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="p">(</span><span class="mf">4.</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">timelen</span><span class="p">)</span>
-        <span class="n">num_freq</span>  <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">fmax</span> <span class="o">-</span> <span class="n">fmin</span><span class="p">)</span> <span class="o">/</span> <span class="n">dnu</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># Should be 1/(2*pi*baseline), was previously 1/4.</span>
+        <span class="n">dnu</span>       <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">timelen</span><span class="p">)</span>
+        <span class="n">num_freq</span>  <span class="o">=</span> <span class="p">(</span><span class="n">fmax</span> <span class="o">-</span> <span class="n">fmin</span><span class="p">)</span><span class="o">/</span><span class="n">dnu</span> <span class="o">+</span> <span class="mi">1</span>
         <span class="n">num_freq</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">oversampling</span>
         <span class="n">num_freq</span>  <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_freq</span><span class="p">)</span>
 
@@ -303,6 +308,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Calculating BIC periodogram for </span><span class="si">{}</span><span class="s2"> planets vs. </span><span class="si">{}</span><span class="s2"> planets&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">plstr</span><span class="p">,</span> <span class="n">prvstr</span><span class="p">))</span>
         <span class="c1"># This assumes nth planet parameters, and all periods, are fixed.</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">basebic</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;per&#39;</span><span class="o">+</span><span class="n">plstr</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;tc&#39;</span><span class="o">+</span><span class="n">plstr</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
@@ -329,13 +335,8 @@
         <span class="c1"># Divide period grid into as many subgrids as there are parallel workers.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sub_pers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
-            <span class="c1"># Create a separate progress bar for each parallel worker.</span>
-            <span class="n">pbars</span> <span class="o">=</span> <span class="p">[</span><span class="n">tqdm</span><span class="p">(</span><span class="n">total</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sub_pers</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="n">position</span><span class="o">=</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span>
-                     <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="p">)]</span>
-
         <span class="c1"># Define a function to compute periodogram for a given grid section.</span>
-        <span class="k">def</span> <span class="nf">fit_period</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">_fit_period</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
             <span class="n">post</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="p">)</span>
             <span class="n">per_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sub_pers</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
             <span class="sd">&#39;&#39;&#39;</span>
@@ -381,17 +382,25 @@
                 <span class="n">fit_params</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">best_params</span>
 
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
-                    <span class="n">pbars</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">value</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">pbar</span><span class="o">.</span><span class="n">update_to</span><span class="p">(</span><span class="n">counter</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 
-            <span class="k">return</span> <span class="p">[</span><span class="n">bic</span><span class="p">,</span> <span class="n">fit_params</span><span class="p">]</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">bic</span><span class="p">,</span> <span class="n">fit_params</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="k">global</span> <span class="n">pbar</span>
+            <span class="k">global</span> <span class="n">counter</span>
+
+            <span class="n">counter</span> <span class="o">=</span> <span class="n">Value</span><span class="p">(</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">lock</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">pbar</span> <span class="o">=</span> <span class="n">TqdmUpTo</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pers</span><span class="p">),</span> <span class="n">position</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">workers</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="c1"># Call the periodogram loop on one core.</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">bic</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_params</span> <span class="o">=</span> <span class="n">fit_period</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bic</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_params</span> <span class="o">=</span> <span class="n">_fit_period</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Parallelize the loop over sections of the period grid.</span>
             <span class="n">p</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="p">)</span>
-            <span class="n">output</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">fit_period</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="p">))</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">_fit_period</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="p">)))</span>
 
             <span class="c1"># Sort output.</span>
             <span class="n">all_bics</span> <span class="o">=</span> <span class="p">[]</span>
@@ -408,11 +417,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">power</span><span class="p">[</span><span class="s1">&#39;bic&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bic</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
-            <span class="c1"># Clean up the progress bars.</span>
-            <span class="k">for</span> <span class="n">pbar</span> <span class="ow">in</span> <span class="n">pbars</span><span class="p">:</span>
-                <span class="n">pbar</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="p">):</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span></div>
+            <span class="n">pbar</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Periodogram.ls"><a class="viewcode-back" href="../../periodogram.html#rvsearch.periodogram.Periodogram.ls">[docs]</a>    <span class="k">def</span> <span class="nf">ls</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Compute Lomb-Scargle periodogram with astropy.</span>
@@ -543,7 +548,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Lee Rosenthal and BJ Fulton
+        &copy; Copyright 2019, Lee Rosenthal and BJ Fulton.
 
     </p>
   </div>
@@ -560,16 +565,33 @@
   
 
 
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../_static/language_data.js"></script>
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>
