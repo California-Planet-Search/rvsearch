@@ -422,7 +422,8 @@ class Search(object):
             self.post.medparams = {}
             self.post.maxparams = {}
             # Use minimal recommended parameters for mcmc.
-            chains = radvel.mcmc(self.post, thin=5, nwalkers=50, nrun=10000)
+            chains = radvel.mcmc(self.post, thin=5, nwalkers=50, nrun=10000,
+                                 ensembles=int(np.clip(self.workers, 4, 24)))
             # Convert chains to e, w basis.
             for par in self.post.params.keys():
                 if not self.post.params[par].vary:
@@ -540,7 +541,8 @@ class Search(object):
         """
         if self.num_planets == 0:
             self.add_planet()
-        fixed_threshold = self.bic_threshes[-1]
+        last_thresh = max(self.bic_threshes.keys())
+        fixed_threshold = self.bic_threshes[last_thresh]
 
         self.run_search(fixed_threshold=fixed_threshold, mkoutdir=False)
 
@@ -561,7 +563,9 @@ class Search(object):
         self.mcmc = False
         self.save_outputs = False
         self.verbose = False
+        self.basebic = None
         self.manual_grid = [injected_orbel[0]]
+        # self.manual_grid = self.pers[::4]
 
         mod = radvel.kepler.rv_drive(self.data['time'].values, injected_orbel)
 

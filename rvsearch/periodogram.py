@@ -172,6 +172,7 @@ class Periodogram(object):
         if self.verbose:
             print("Calculating BIC periodogram for {} planets vs. {} planets".format(plstr, prvstr))
         # This assumes nth planet parameters, and all periods, are fixed.
+
         if self.basebic is None:
             self.post.params['per'+plstr].vary = False
             self.post.params['tc'+plstr].vary = False
