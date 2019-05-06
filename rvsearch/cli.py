@@ -38,7 +38,7 @@ def main():
 
 
     # Search
-    psr_search = subpsr.add_parser('search', parents=[psr_parent], )
+    psr_search = subpsr.add_parser('find', parents=[psr_parent], )
     psr_search.add_argument('-s', '--setupfn', metavar="RadVel setup file", type=str,
                             help="Path to RadVel setup file.")
     psr_search.add_argument('--minP',
@@ -97,7 +97,7 @@ def main():
     psr_plot = subpsr.add_parser('plot', parents=[psr_parent],)
     psr_plot.add_argument('-t', '--type',
                           type=str, nargs='+',
-                          choices=['recovery'],
+                          choices=['recovery', 'summary'],
                           help="type of plot(s) to generate"
                           )
     psr_plot.add_argument('--mstar',

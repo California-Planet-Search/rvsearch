@@ -6,9 +6,11 @@ import pdb
 import pickle
 
 import numpy as np
+import matplotlib.pyplot as pl
+import corner
 import radvel
 import radvel.fitting
-from radvel.plot import orbit_plots, mcmc_plots
+from radvel.plot import orbit_plots
 
 import rvsearch.periodogram as periodogram
 import rvsearch.utils as utils
@@ -100,9 +102,10 @@ class Search(object):
         self.basebic = None
 
         self.pers = None
-        self.periodograms = []
-        self.bic_threshes = []
-        self.best_bics = []
+        self.periodograms = dict()
+        self.bic_threshes = dict()
+        self.best_bics = dict()
+        self.eFAPs = dict()
 
     def trend_test(self):
         """Perform zero-planet baseline fit, test for significant trend.
@@ -161,7 +164,7 @@ class Search(object):
 
         new_num_planets = current_num_planets + 1
 
-        default_pars = utils.initialize_default_pars(instnames=self.tels)
+        default_pars = utils.initialize_default_pars(instnames=self.tels, fitting_basis=fitting_basis)
         new_params = radvel.Parameters(new_num_planets, basis=fitting_basis)
 
         for planet in np.arange(1, new_num_planets):
@@ -173,7 +176,7 @@ class Search(object):
             new_params[par] = self.post.params[par]  # For gamma and jitter
 
         # Set default parameters for n+1th planet
-        default_params = utils.initialize_default_pars(self.tels)
+        default_params = utils.initialize_default_pars(self.tels, fitting_basis=fitting_basis)
         for par in param_list:
             parkey = par + str(new_num_planets)
             onepar = par + '1'  # MESSY, FIX THIS 10/22/18
@@ -277,14 +280,14 @@ class Search(object):
                 default_pdict[k] = self.post.params[k].value
             polish_params = []
             polish_bics = []
-            peak = np.argmax(self.periodograms[-1])
+            peak = np.argmax(self.periodograms[self.num_planets-1])
             if self.manual_grid is not None:
                 # Polish around 1% of period value if manual grid specified
                 # especially useful in the case that len(manual_grid) == 1
                 subgrid = np.linspace(0.99*self.manual_grid[peak], 1.01*self.manual_grid[peak], 9)
-            elif peak == len(self.periodograms[-1]) - 1:
+            elif peak == len(self.periodograms[self.num_planets-1]) - 1:
                 subgrid = np.linspace(self.pers[peak-1], 2*self.pers[peak] - self.pers[peak-1], 9)
-            else: #TO-DO: JUSTIFY 9 GRID POINTS, OR TAKE AS ARGUMENT
+            else:  # TO-DO: JUSTIFY 9 GRID POINTS, OR TAKE AS ARGUMENT
                 subgrid = np.linspace(self.pers[peak-1], self.pers[peak+1], 9)
 
             fit_params = []
@@ -341,19 +344,21 @@ class Search(object):
         """
         self.post.writeto(filename)
 
-    def run_search(self, fixed_threshold=None):
+    def run_search(self, fixed_threshold=None, mkoutdir=True):
         """Run an iterative search for planets not given in posterior.
 
         Args:
             fixed_threshold (float): (optional) use a fixed delta BIC threshold
-
+            mkoutdir (bool): create the output directory?
         """
         outdir = os.path.join(os.getcwd(), self.starname)
-        if not os.path.exists(outdir):
+        if mkoutdir and not os.path.exists(outdir):
             os.mkdir(outdir)
 
         if self.trend:
             self.trend_test()
+            #self.post.params['dvdt'].vary = True
+            #self.post.params['curv'].vary = True
         else:
             self.post.params['dvdt'].vary = False
             self.post.params['curv'].vary = False
@@ -373,16 +378,17 @@ class Search(object):
                                                verbose=self.verbose)
 
             perioder.per_bic()
-            self.periodograms.append(perioder.power[self.crit])
-            if self.num_planets == 0:
+            self.periodograms[self.num_planets] = perioder.power[self.crit]
+            if self.num_planets == 0 or self.pers is None:
                 self.pers = perioder.pers
 
             if fixed_threshold is None:
-                perioder.eFAP_thresh()
+                perioder.eFAP()
+                self.eFAPs[self.num_planets] = perioder.fap_min
             else:
                 perioder.bic_thresh = fixed_threshold
-            self.bic_threshes.append(perioder.bic_thresh)
-            self.best_bics.append(perioder.best_bic)
+            self.bic_threshes[self.num_planets] = perioder.bic_thresh
+            self.best_bics[self.num_planets] = perioder.best_bic
 
             if self.save_outputs:
                 perioder.plot_per()
@@ -418,10 +424,18 @@ class Search(object):
             self.post.medparams = {}
             self.post.maxparams = {}
             # Use minimal recommended parameters for mcmc.
-            chains = radvel.mcmc(self.post, thin=5, nwalkers=50, nrun=10000)
-            quants = chains.quantile([0.159, 0.5, 0.841])
+            nensembles = 16
+            if os.cpu_count() < nensembles:
+                nensembles = os.cpu_count()
+            chains = radvel.mcmc(self.post, thin=5, nwalkers=50, nrun=2000,
+                                 ensembles=nensembles)
             # Convert chains to e, w basis.
+            for par in self.post.params.keys():
+                if not self.post.params[par].vary:
+                    chains[par] = self.post.params[par].value
             synthchains = self.post.params.basis.to_synth(chains)
+
+            quants = chains.quantile([0.159, 0.5, 0.841])
             synthquants = synthchains.quantile([0.159, 0.5, 0.841])
 
             # Compress, thin, and save chain, in fitting basis.
@@ -478,15 +492,28 @@ class Search(object):
                     self.post.maxparams[par] = max
 
             if self.save_outputs:
-                # Generate a corner plot for the synthetic chains.
-                Corner = mcmc_plots.CornerPlot(self.post, synthchains,
-                                               saveplot=outdir+'/corner_plot_{}.pdf'.format(self.starname))
-                Corner.plot()
+                # Generate a corner plot, sans nuisance parameters.
+                labels = []
+                for n in np.arange(1, self.num_planets+1):
+                    labels.append('per{}'.format(n))
+                    labels.append('tc{}'.format(n))
+                    labels.append('k{}'.format(n))
+                    labels.append('e{}'.format(n))
+                    #labels.append('w{}'.format(n))
+                texlabels = [self.post.params.tex_labels().get(l, l)
+                             for l in labels]
+                plot = corner.corner(synthchains[labels], labels=texlabels,
+                                     label_kwargs={"fontsize": 14},
+                                     plot_datapoints=False, bins=30,
+                                     quantiles=[0.16, 0.5, 0.84],
+                                     title_kwargs={"fontsize": 14},
+                                     show_titles=True, smooth=True)
+                pl.savefig(outdir+'/{}_corner_plot.pdf'.format(self.starname))
 
                 # Generate an orbit plot wth median parameters and uncertainties.
-                rvplot = orbit_plots.MultipanelPlot(self.post,
-                                                    saveplot=outdir+'/orbit_plot_mc_{}.pdf'.format(self.starname),
-                                                    uparams=self.post.uparams)
+                rvplot = orbit_plots.MultipanelPlot(self.post,saveplot=
+                                outdir+'/orbit_plot_mc_{}.pdf'.format(
+                                self.starname), uparams=self.post.uparams)
                 multiplot_fig, ax_list = rvplot.plot_multipanel()
                 multiplot_fig.savefig(outdir+'/orbit_plot_mc_{}.pdf'.format(
                                       self.starname))
@@ -497,14 +524,17 @@ class Search(object):
             pickle.dump(self, pickle_out)
             pickle_out.close()
 
-            if len(self.pers) == len(self.periodograms):
-                periodograms_plus_pers = np.append([self.pers], self.periodograms, axis=0).T
-                np.savetxt(outdir+'/pers_periodograms.csv', periodograms_plus_pers,
-                           header='period  BIC_array')
+            # if len(self.pers) == len(self.periodograms.values()):
+            periodograms_plus_pers = np.append([self.pers], list(self.periodograms.values()), axis=0).T
+            np.savetxt(outdir+'/pers_periodograms.csv', periodograms_plus_pers,
+                       header='period  BIC_array')
 
-            threshs_and_pks = np.append([self.bic_threshes], [self.best_bics], axis=0).T
-            np.savetxt(outdir+'/thresholds_and_peaks.csv', threshs_and_pks,
-                       header='threshold  best_bic')
+            #threshs_bics_faps = np.append([self.bic_threshes], [self.best_bics], axis=0).T
+            threshs_bics_faps = np.append([list(self.bic_threshes.values())],
+                                          [list(self.best_bics.values()), list(self.eFAPs.values())], axis=0).T
+
+            np.savetxt(outdir+'/thresholds_bics_faps.csv', threshs_bics_faps,
+                       header='threshold  best_bic  fap')
 
     def continue_search(self):
         """Continue a search by trying to add one more planet
@@ -512,9 +542,10 @@ class Search(object):
         """
         if self.num_planets == 0:
             self.add_planet()
-        fixed_threshold = self.bic_threshes[-1]
+        last_thresh = max(self.bic_threshes.keys())
+        fixed_threshold = self.bic_threshes[last_thresh]
 
-        self.run_search(fixed_threshold=fixed_threshold)
+        self.run_search(fixed_threshold=fixed_threshold, mkoutdir=False)
 
     def inject_recover(self, injected_orbel, num_cpus=None):
         """Inject and recover
@@ -533,7 +564,9 @@ class Search(object):
         self.mcmc = False
         self.save_outputs = False
         self.verbose = False
+        self.basebic = None
         self.manual_grid = [injected_orbel[0]]
+        # self.manual_grid = self.pers[::4]
 
         mod = radvel.kepler.rv_drive(self.data['time'].values, injected_orbel)
 

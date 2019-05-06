@@ -83,6 +83,7 @@
             
             
               <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="tutorial_api.html">API Tutorials</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="periodogram.html">Periodograms</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Blind Search</a></li>
@@ -249,14 +250,39 @@
 </dd></dl>
 
 <dl class="method">
+<dt id="rvsearch.search.Search.inject_recover">
+<code class="descname">inject_recover</code><span class="sig-paren">(</span><em>injected_orbel</em>, <em>num_cpus=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.inject_recover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.inject_recover" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inject and recover
+Inject and attempt to recover a synthetic planet signal
+:param injected_orbel: array of orbital elements sent to radvel.kepler.rv_drive
+:type injected_orbel: array
+:param num_cpus: Number of CPUs to utilize. Will default to self.workers
+:type num_cpus: int</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(recovered? (T/F), recovered_orbel)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="rvsearch.search.Search.run_search">
-<code class="descname">run_search</code><span class="sig-paren">(</span><em>fixed_threshold=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.run_search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.run_search" title="Permalink to this definition">¶</a></dt>
+<code class="descname">run_search</code><span class="sig-paren">(</span><em>fixed_threshold=None</em>, <em>mkoutdir=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.run_search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.run_search" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run an iterative search for planets not given in posterior.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fixed_threshold</strong> (<em>float</em>) – (optional) use a fixed delta BIC threshold</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>fixed_threshold</strong> (<em>float</em>) – (optional) use a fixed delta BIC threshold</li>
+<li><strong>mkoutdir</strong> (<em>bool</em>) – create the output directory?</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>

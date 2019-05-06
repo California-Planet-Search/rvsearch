@@ -83,6 +83,7 @@
             
             
               <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="tutorial_api.html">API Tutorials</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="periodogram.html">Periodograms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="search_class.html">Blind Search</a></li>
@@ -185,6 +186,105 @@
 <span id="injection-and-recovery-tests"></span><span id="inject"></span><h1>Injection and Recovery Tests<a class="headerlink" href="#module-rvsearch" title="Permalink to this headline">¶</a></h1>
 <span class="target" id="module-rvsearch.inject"></span><p>Injection and recovery class</p>
 <dl class="class">
+<dt id="rvsearch.inject.Completeness">
+<em class="property">class </em><code class="descclassname">rvsearch.inject.</code><code class="descname">Completeness</code><span class="sig-paren">(</span><em>recoveries</em>, <em>xcol='inj_au'</em>, <em>ycol='inj_msini'</em>, <em>mstar=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/inject.html#Completeness"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.inject.Completeness" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate completeness surface from a suite of injections</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>recoveries</strong> (<em>DataFrame</em>) – DataFrame with injection/recovery tests from Injections.save</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="rvsearch.inject.Completeness.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>recoveries</em>, <em>xcol='inj_au'</em>, <em>ycol='inj_msini'</em>, <em>mstar=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/inject.html#Completeness.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.inject.Completeness.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Object to handle a suite of injection/recovery tests</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>recoveries</strong> (<em>DataFrame</em>) – DataFrame of injection/recovery tests from Injections class</li>
+<li><strong>mstar</strong> (<em>float</em>) – (optional) stellar mass to use in conversion from p, k to au, msini</li>
+<li><strong>xcol</strong> (<em>string</em>) – (optional) column name for independent variable. Completeness grids and
+interpolator will work in these axes</li>
+<li><strong>ycol</strong> (<em>string</em>) – (optional) column name for dependent variable. Completeness grids and
+interpolator will work in these axes</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="rvsearch.inject.Completeness.__weakref__">
+<code class="descname">__weakref__</code><a class="headerlink" href="#rvsearch.inject.Completeness.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.inject.Completeness.completeness_grid">
+<code class="descname">completeness_grid</code><span class="sig-paren">(</span><em>xlim</em>, <em>ylim</em>, <em>resolution=30</em>, <em>xlogwin=0.5</em>, <em>ylogwin=0.5</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/inject.html#Completeness.completeness_grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.inject.Completeness.completeness_grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate completeness on a fine grid</p>
+<p>Compute a 2D moving average in loglog space</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>xcol</strong> (<em>string</em>) – x column label from self.recoveries</li>
+<li><strong>ycol</strong> (<em>string</em>) – y column label from self.recoveries</li>
+<li><strong>xlim</strong> (<em>tuple</em>) – min and max x limits</li>
+<li><strong>ylim</strong> (<em>tuple</em>) – min and max y limits</li>
+<li><strong>resolution</strong> (<em>int</em>) – (optional) grid is sampled at this resolution</li>
+<li><strong>xlogwin</strong> (<em>float</em>) – (optional) x width of moving average</li>
+<li><strong>ylogwin</strong> (<em>float</em>) – (optional) y width of moving average</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="rvsearch.inject.Completeness.from_csv">
+<em class="property">classmethod </em><code class="descname">from_csv</code><span class="sig-paren">(</span><em>recovery_file</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/inject.html#Completeness.from_csv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.inject.Completeness.from_csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read recoveries and create Completeness object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.inject.Completeness.interpolate">
+<code class="descname">interpolate</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>refresh=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/inject.html#Completeness.interpolate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.inject.Completeness.interpolate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interpolate completeness surface</p>
+<p>Interpolate completeness surface at x, y. X, y should be in the same
+units as self.xcol and self.ycol</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x</strong> (<em>array</em>) – x points to interpolate to</li>
+<li><strong>y</strong> (<em>array</em>) – y points to interpolate to</li>
+<li><strong>refresh</strong> (<em>bool</em>) – (optional) refresh the interpolator?</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">completeness value at x and y</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="rvsearch.inject.Injections">
 <em class="property">class </em><code class="descclassname">rvsearch.inject.</code><code class="descname">Injections</code><span class="sig-paren">(</span><em>searchpath</em>, <em>plim</em>, <em>klim</em>, <em>elim</em>, <em>num_sim=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/inject.html#Injections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.inject.Injections" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class to perform and record injection and recovery tests for a planetary system.</p>
@@ -254,22 +354,6 @@ on a separate CPU. Individual injections are forced to be single-threaded</td>
 </table>
 </dd></dl>
 
-</dd></dl>
-
-<dl class="function">
-<dt id="rvsearch.inject.plot_recoveries">
-<code class="descclassname">rvsearch.inject.</code><code class="descname">plot_recoveries</code><span class="sig-paren">(</span><em>recoveries</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/inject.html#plot_recoveries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.inject.plot_recoveries" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plot injection/recovery results</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>recoveries</strong> (<em>DataFrame</em>) – injection/recovery results as output by self.run_injections</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">matplotlib.figure</td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 </div>

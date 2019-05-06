@@ -81,6 +81,7 @@
             
             
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorial_api.html">API Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
 </ul>
 
@@ -150,9 +151,13 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">pl</span>
+<span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="k">import</span> <span class="n">interp2d</span><span class="p">,</span> <span class="n">SmoothBivariateSpline</span><span class="p">,</span> <span class="n">RegularGridInterpolator</span>
 <span class="kn">import</span> <span class="nn">pickle</span>
 <span class="kn">import</span> <span class="nn">pathos.multiprocessing</span> <span class="k">as</span> <span class="nn">mp</span>
+<span class="kn">import</span> <span class="nn">radvel</span>
+<span class="kn">import</span> <span class="nn">tqdm</span>
+
+<span class="kn">import</span> <span class="nn">rvsearch.utils</span>
 
 
 <div class="viewcode-block" id="Injections"><a class="viewcode-back" href="../../inject.html#rvsearch.inject.Injections">[docs]</a><span class="k">class</span> <span class="nc">Injections</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -245,7 +250,8 @@
 
             <span class="n">recovered</span><span class="p">,</span> <span class="n">recovered_orbel</span> <span class="o">=</span> <span class="n">search</span><span class="o">.</span><span class="n">inject_recover</span><span class="p">(</span><span class="n">orbel</span><span class="p">,</span> <span class="n">num_cpus</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-            <span class="n">bic</span> <span class="o">=</span> <span class="n">search</span><span class="o">.</span><span class="n">best_bics</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">last_bic</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">search</span><span class="o">.</span><span class="n">best_bics</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="n">bic</span> <span class="o">=</span> <span class="n">search</span><span class="o">.</span><span class="n">best_bics</span><span class="p">[</span><span class="n">last_bic</span><span class="p">]</span>
 
             <span class="k">return</span> <span class="n">recovered</span><span class="p">,</span> <span class="n">recovered_orbel</span><span class="p">,</span> <span class="n">bic</span>
 
@@ -294,39 +300,131 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">recoveries</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;recoveries.csv&#39;</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="plot_recoveries"><a class="viewcode-back" href="../../inject.html#rvsearch.inject.plot_recoveries">[docs]</a><span class="k">def</span> <span class="nf">plot_recoveries</span><span class="p">(</span><span class="n">recoveries</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Plot injection/recovery results</span>
+<div class="viewcode-block" id="Completeness"><a class="viewcode-back" href="../../inject.html#rvsearch.inject.Completeness">[docs]</a><span class="k">class</span> <span class="nc">Completeness</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculate completeness surface from a suite of injections</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        recoveries (DataFrame): injection/recovery results as output by self.run_injections</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        matplotlib.figure</span>
+<span class="sd">        recoveries (DataFrame): DataFrame with injection/recovery tests from Injections.save</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">good</span> <span class="o">=</span> <span class="n">recoveries</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">&#39;recovered == True&#39;</span><span class="p">)</span>
-    <span class="n">bad</span> <span class="o">=</span> <span class="n">recoveries</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">&#39;recovered == False&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="Completeness.__init__"><a class="viewcode-back" href="../../inject.html#rvsearch.inject.Completeness.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">recoveries</span><span class="p">,</span> <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;inj_au&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;inj_msini&#39;</span><span class="p">,</span> <span class="n">mstar</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Object to handle a suite of injection/recovery tests</span>
 
-    <span class="n">pl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">good</span><span class="p">[</span><span class="s1">&#39;rec_period&#39;</span><span class="p">],</span> <span class="n">good</span><span class="p">[</span><span class="s1">&#39;rec_k&#39;</span><span class="p">],</span> <span class="s1">&#39;bo&#39;</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;recovered&#39;</span><span class="p">)</span>
-    <span class="n">pl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">bad</span><span class="p">[</span><span class="s1">&#39;inj_period&#39;</span><span class="p">],</span> <span class="n">bad</span><span class="p">[</span><span class="s1">&#39;inj_k&#39;</span><span class="p">],</span> <span class="s1">&#39;ro&#39;</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;missed&#39;</span><span class="p">)</span>
-    <span class="n">pl</span><span class="o">.</span><span class="n">loglog</span><span class="p">()</span>
+<span class="sd">        Args:</span>
+<span class="sd">            recoveries (DataFrame): DataFrame of injection/recovery tests from Injections class</span>
+<span class="sd">            mstar (float): (optional) stellar mass to use in conversion from p, k to au, msini</span>
+<span class="sd">            xcol (string): (optional) column name for independent variable. Completeness grids and</span>
+<span class="sd">                interpolator will work in these axes</span>
+<span class="sd">            ycol (string): (optional) column name for dependent variable. Completeness grids and</span>
+<span class="sd">                interpolator will work in these axes</span>
 
-    <span class="n">xt</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">xticks</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">pl</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">xt</span><span class="p">,</span> <span class="n">xt</span><span class="p">)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recoveries</span> <span class="o">=</span> <span class="n">recoveries</span>
 
-    <span class="n">yt</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">yticks</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">pl</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">yt</span><span class="p">,</span> <span class="n">yt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mstar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">recoveries</span><span class="p">[</span><span class="s1">&#39;inj_period&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="n">mstar</span>
 
-    <span class="n">pl</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Period [days]&#39;</span><span class="p">)</span>
-    <span class="n">pl</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;K [m/s]&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recoveries</span><span class="p">[</span><span class="s1">&#39;inj_msini&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">Msini</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">recoveries</span><span class="p">[</span><span class="s1">&#39;inj_k&#39;</span><span class="p">],</span>
+                                                          <span class="bp">self</span><span class="o">.</span><span class="n">recoveries</span><span class="p">[</span><span class="s1">&#39;inj_period&#39;</span><span class="p">],</span>
+                                                          <span class="bp">self</span><span class="o">.</span><span class="n">mstar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">recoveries</span><span class="p">[</span><span class="s1">&#39;inj_e&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recoveries</span><span class="p">[</span><span class="s1">&#39;rec_msini&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">Msini</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">recoveries</span><span class="p">[</span><span class="s1">&#39;rec_k&#39;</span><span class="p">],</span>
+                                                          <span class="bp">self</span><span class="o">.</span><span class="n">recoveries</span><span class="p">[</span><span class="s1">&#39;rec_period&#39;</span><span class="p">],</span>
+                                                          <span class="bp">self</span><span class="o">.</span><span class="n">mstar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">recoveries</span><span class="p">[</span><span class="s1">&#39;rec_e&#39;</span><span class="p">])</span>
 
-    <span class="n">pl</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">recoveries</span><span class="p">[</span><span class="s1">&#39;inj_period&#39;</span><span class="p">]),</span> <span class="nb">max</span><span class="p">(</span><span class="n">recoveries</span><span class="p">[</span><span class="s1">&#39;inj_period&#39;</span><span class="p">]))</span>
-    <span class="n">pl</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">recoveries</span><span class="p">[</span><span class="s1">&#39;inj_k&#39;</span><span class="p">]),</span> <span class="nb">max</span><span class="p">(</span><span class="n">recoveries</span><span class="p">[</span><span class="s1">&#39;inj_k&#39;</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recoveries</span><span class="p">[</span><span class="s1">&#39;inj_au&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">semi_major_axis</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">recoveries</span><span class="p">[</span><span class="s1">&#39;inj_period&#39;</span><span class="p">],</span> <span class="n">mstar</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recoveries</span><span class="p">[</span><span class="s1">&#39;rec_au&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">semi_major_axis</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">recoveries</span><span class="p">[</span><span class="s1">&#39;rec_period&#39;</span><span class="p">],</span> <span class="n">mstar</span><span class="p">)</span>
 
-    <span class="n">pl</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xcol</span> <span class="o">=</span> <span class="n">xcol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ycol</span> <span class="o">=</span> <span class="n">ycol</span>
 
-    <span class="n">fig</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">fig</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grid</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interpolator</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Completeness.from_csv"><a class="viewcode-back" href="../../inject.html#rvsearch.inject.Completeness.from_csv">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_csv</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">recovery_file</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Read recoveries and create Completeness object&quot;&quot;&quot;</span>
+        <span class="n">recoveries</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">recovery_file</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">recoveries</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Completeness.completeness_grid"><a class="viewcode-back" href="../../inject.html#rvsearch.inject.Completeness.completeness_grid">[docs]</a>    <span class="k">def</span> <span class="nf">completeness_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xlim</span><span class="p">,</span> <span class="n">ylim</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">xlogwin</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">ylogwin</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate completeness on a fine grid</span>
+
+<span class="sd">        Compute a 2D moving average in loglog space</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            xcol (string): x column label from self.recoveries</span>
+<span class="sd">            ycol (string): y column label from self.recoveries</span>
+<span class="sd">            xlim (tuple): min and max x limits</span>
+<span class="sd">            ylim (tuple): min and max y limits</span>
+<span class="sd">            resolution (int): (optional) grid is sampled at this resolution</span>
+<span class="sd">            xlogwin (float): (optional) x width of moving average</span>
+<span class="sd">            ylogwin (float): (optional) y width of moving average</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xgrid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">xlim</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">xlim</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                            <span class="n">resolution</span><span class="p">)</span>
+        <span class="n">ygrid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">ylim</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">ylim</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                            <span class="n">resolution</span><span class="p">)</span>
+
+        <span class="n">xinj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">recoveries</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">xcol</span><span class="p">]</span>
+        <span class="n">yinj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">recoveries</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ycol</span><span class="p">]</span>
+
+        <span class="n">good</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">recoveries</span><span class="p">[</span><span class="s1">&#39;recovered&#39;</span><span class="p">]</span>
+
+        <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">ygrid</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">xgrid</span><span class="p">)))</span>
+        <span class="n">last</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">xgrid</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span><span class="n">y</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ygrid</span><span class="p">):</span>
+                <span class="n">xlow</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">xlogwin</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+                <span class="n">xhigh</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">xlogwin</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+                <span class="n">ylow</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">-</span> <span class="n">ylogwin</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+                <span class="n">yhigh</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">ylogwin</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+
+                <span class="n">xbox</span> <span class="o">=</span> <span class="n">yinj</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">xinj</span> <span class="o">&lt;=</span> <span class="n">xhigh</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">xinj</span> <span class="o">&gt;=</span> <span class="n">xlow</span><span class="p">))[</span><span class="mi">0</span><span class="p">]]</span>
+                <span class="k">if</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="nb">max</span><span class="p">(</span><span class="n">xbox</span><span class="p">)</span> <span class="ow">or</span> <span class="n">y</span> <span class="o">&lt;</span> <span class="nb">min</span><span class="p">(</span><span class="n">xbox</span><span class="p">):</span>
+                    <span class="n">z</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+                    <span class="k">continue</span>
+
+                <span class="n">boxall</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">xinj</span> <span class="o">&lt;=</span> <span class="n">xhigh</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">xinj</span> <span class="o">&gt;=</span> <span class="n">xlow</span><span class="p">)</span> <span class="o">&amp;</span>
+                                  <span class="p">(</span><span class="n">yinj</span> <span class="o">&lt;=</span> <span class="n">yhigh</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">yinj</span> <span class="o">&gt;=</span> <span class="n">ylow</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">boxgood</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">xinj</span><span class="p">[</span><span class="n">good</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">xhigh</span><span class="p">)</span> <span class="o">&amp;</span>
+                                   <span class="p">(</span><span class="n">xinj</span><span class="p">[</span><span class="n">good</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">xlow</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">yinj</span><span class="p">[</span><span class="n">good</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">yhigh</span><span class="p">)</span> <span class="o">&amp;</span>
+                                   <span class="p">(</span><span class="n">yinj</span><span class="p">[</span><span class="n">good</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">ylow</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="c1"># print(x, y, xlow, xhigh, ylow, yhigh, len(boxgood), len(boxall))</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">boxall</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
+                    <span class="n">z</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">boxgood</span><span class="p">))</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">boxall</span><span class="p">)</span>
+                    <span class="n">last</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">boxgood</span><span class="p">))</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">boxall</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">z</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">grid</span> <span class="o">=</span> <span class="p">(</span><span class="n">xgrid</span><span class="p">,</span> <span class="n">ygrid</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">xgrid</span><span class="p">,</span> <span class="n">ygrid</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Completeness.interpolate"><a class="viewcode-back" href="../../inject.html#rvsearch.inject.Completeness.interpolate">[docs]</a>    <span class="k">def</span> <span class="nf">interpolate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">refresh</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Interpolate completeness surface</span>
+
+<span class="sd">        Interpolate completeness surface at x, y. X, y should be in the same</span>
+<span class="sd">        units as self.xcol and self.ycol</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x (array): x points to interpolate to</span>
+<span class="sd">            y (array): y points to interpolate to</span>
+<span class="sd">            refresh (bool): (optional) refresh the interpolator?</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            array : completeness value at x and y</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolator</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">refresh</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Must run Completeness.completeness_grid before interpolating.&quot;</span>
+            <span class="n">gi</span> <span class="o">=</span> <span class="n">rvsearch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">cartesian_product</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">zi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">interpolator</span> <span class="o">=</span> <span class="n">RegularGridInterpolator</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">zi</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolator</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span></div></div>
 </pre></div>
 
            </div>

@@ -7,6 +7,7 @@ from scipy.interpolate import interp2d, SmoothBivariateSpline, RegularGridInterp
 import pickle
 import pathos.multiprocessing as mp
 import radvel
+import tqdm
 
 import rvsearch.utils
 
@@ -101,7 +102,8 @@ class Injections(object):
 
             recovered, recovered_orbel = search.inject_recover(orbel, num_cpus=1)
 
-            bic = search.best_bics[-1]
+            last_bic = max(search.best_bics.keys())
+            bic = search.best_bics[last_bic]
 
             return recovered, recovered_orbel, bic
 
@@ -157,7 +159,7 @@ class Completeness(object):
         recoveries (DataFrame): DataFrame with injection/recovery tests from Injections.save
     """
 
-    def __init__(self, recoveries, xcol='inj_period', ycol='inj_k', mstar=1.0):
+    def __init__(self, recoveries, xcol='inj_au', ycol='inj_msini', mstar=1.0):
         """Object to handle a suite of injection/recovery tests
 
         Args:
@@ -171,12 +173,14 @@ class Completeness(object):
         """
         self.recoveries = recoveries
 
+        self.mstar = np.zeros_like(self.recoveries['inj_period']) + mstar
+
         self.recoveries['inj_msini'] = radvel.utils.Msini(self.recoveries['inj_k'],
                                                           self.recoveries['inj_period'],
-                                                          mstar, self.recoveries['inj_e'])
+                                                          self.mstar, self.recoveries['inj_e'])
         self.recoveries['rec_msini'] = radvel.utils.Msini(self.recoveries['rec_k'],
                                                           self.recoveries['rec_period'],
-                                                          mstar, self.recoveries['rec_e'])
+                                                          self.mstar, self.recoveries['rec_e'])
 
         self.recoveries['inj_au'] = radvel.utils.semi_major_axis(self.recoveries['inj_period'], mstar)
         self.recoveries['rec_au'] = radvel.utils.semi_major_axis(self.recoveries['rec_period'], mstar)
@@ -191,9 +195,10 @@ class Completeness(object):
     def from_csv(cls, recovery_file, *args, **kwargs):
         """Read recoveries and create Completeness object"""
         recoveries = pd.read_csv(recovery_file)
+
         return cls(recoveries, *args, **kwargs)
 
-    def completeness_grid(self, xlim, ylim, resolution=40, xlogwin=0.5, ylogwin=0.5):
+    def completeness_grid(self, xlim, ylim, resolution=30, xlogwin=0.5, ylogwin=0.5):
         """Calculate completeness on a fine grid
 
         Compute a 2D moving average in loglog space

@@ -9,8 +9,27 @@ import radvel.fitting
 from radvel.plot import orbit_plots
 from tqdm import tqdm
 import pathos.multiprocessing as mp
+from multiprocessing import Value
+from itertools import repeat
+from functools import partial
 
 import rvsearch.utils as utils
+
+
+class TqdmUpTo(tqdm):
+    """Provides `update_to(n)` which uses `tqdm.update(delta_n)`."""
+    def update_to(self, b=1, bsize=1, tsize=None):
+        """
+        b  : int, optional
+            Number of blocks transferred so far [default: 1].
+        bsize  : int, optional
+            Size of each block (in tqdm units) [default: 1].
+        tsize  : int, optional
+            Total size (in tqdm units). If [default: None] remains unchanged.
+        """
+        if tsize is not None:
+            self.total = tsize
+        self.update(b * bsize - self.n)  # will also set self.n = b * bsize
 
 
 class Periodogram(object):
@@ -85,20 +104,7 @@ class Periodogram(object):
 
         # Automatically generate a period grid upon initialization.
         self.make_per_grid()
-    '''
-    @classmethod
-    def from_pandas(cls, data):
-        params = utils.initialize_default_pars(instnames=data.tel)
-        post = utils.initialize_post(data, params=params)
-        return cls(post)
 
-    @classmethod
-    def from_csv(cls, filename):
-        data = utils.read_from_csv(filename)
-        params = utils.initialize_default_pars(instnames=data.tel)
-        post = utils.initialize_post(data, params=params)
-        return cls(post)
-    '''
     def per_spacing(self, verbose=True):
         """Get the number of sampled frequencies and return a period grid.
 
@@ -112,11 +118,12 @@ class Periodogram(object):
             array: Array of test periods
 
         """
-        fmin = 1. / self.maxsearchP
-        fmax = 1. / self.minsearchP
+        fmin = 1./self.maxsearchP
+        fmax = 1./self.minsearchP
 
-        dnu       = 1. / (4. * self.timelen)
-        num_freq  = int((fmax - fmin) / dnu + 1)
+        # Should be 1/(2*pi*baseline), was previously 1/4.
+        dnu       = 1./(2*np.pi*self.timelen)
+        num_freq  = (fmax - fmin)/dnu + 1
         num_freq *= self.oversampling
         num_freq  = int(num_freq)
 
@@ -153,6 +160,7 @@ class Periodogram(object):
         if self.verbose:
             print("Calculating BIC periodogram for {} planets vs. {} planets".format(plstr, prvstr))
         # This assumes nth planet parameters, and all periods, are fixed.
+
         if self.basebic is None:
             self.post.params['per'+plstr].vary = False
             self.post.params['tc'+plstr].vary = False
@@ -179,13 +187,8 @@ class Periodogram(object):
         # Divide period grid into as many subgrids as there are parallel workers.
         self.sub_pers = np.array_split(self.pers, self.workers)
 
-        if self.verbose:
-            # Create a separate progress bar for each parallel worker.
-            pbars = [tqdm(total = len(self.sub_pers[i]), position=i) for i in
-                     np.arange(self.workers)]
-
         # Define a function to compute periodogram for a given grid section.
-        def fit_period(n):
+        def _fit_period(n):
             post = copy.deepcopy(self.post)
             per_array = self.sub_pers[n]
             '''
@@ -231,17 +234,25 @@ class Periodogram(object):
                 fit_params[i] = best_params
 
                 if self.verbose:
-                    pbars[n].update(1)
+                    counter.value += 1
+                    pbar.update_to(counter.value)
 
-            return [bic, fit_params]
+            return (bic, fit_params)
+
+        if self.verbose:
+            global pbar
+            global counter
+
+            counter = Value('i', 0, lock=True)
+            pbar = TqdmUpTo(total=len(self.pers), position=0)
 
         if self.workers == 1:
             # Call the periodogram loop on one core.
-            self.bic, self.fit_params = fit_period(0)
+            self.bic, self.fit_params = _fit_period(0)
         else:
             # Parallelize the loop over sections of the period grid.
             p = mp.Pool(processes=self.workers)
-            output = p.map(fit_period, np.arange(self.workers))
+            output = p.map(_fit_period, (np.arange(self.workers)))
 
             # Sort output.
             all_bics = []
@@ -258,11 +269,7 @@ class Periodogram(object):
         self.power['bic'] = self.bic
 
         if self.verbose:
-            # Clean up the progress bars.
-            for pbar in pbars:
-                pbar.close()
-            for i in np.arange(self.workers):
-                print('')
+            pbar.close()
 
     def ls(self):
         """Compute Lomb-Scargle periodogram with astropy.
@@ -275,9 +282,10 @@ class Periodogram(object):
         power = periodogram.power(np.flip(self.freqs))
         self.power['ls'] = power
 
-    def eFAP_thresh(self):
+    def eFAP(self):
         """Calculate the threshold for significance based on BJ's empirical
-            false-alarm-probability algorithm.
+            false-alarm-probability algorithm, and estimate the
+            false-alarm-probability of the DBIC global maximum.
 
         """
         # select out intermediate values of BIC, median - 95%
@@ -299,6 +307,8 @@ class Periodogram(object):
         thresh = xmod[np.where(np.abs(lfit-self.fap/self.num_pers) ==
                         np.min(np.abs(lfit-self.fap/self.num_pers)))]
         self.bic_thresh = thresh[0]
+        # Save the empirical-FAP of the DBIC global maximum.
+        self.fap_min = fap_min
 
     def save_per(self, ls=False):
         """Save BIC periodogram as csv.
@@ -320,7 +330,7 @@ class Periodogram(object):
             except:
                 print('Have not generated a Lomb-Scargle periodogram.')
 
-    def plot_per(self, alias=True, floor=False, save=False):
+    def plot_per(self, alias=True, floor=True, save=False):
         """Plot periodogram.
 
         Args:
@@ -345,11 +355,13 @@ class Periodogram(object):
             upper = 1.1*max(np.amax(self.power['bic']), self.bic_thresh)
         else:
             upper = 1.1*np.amax(self.power['bic'])
+
         if floor:
             # Set periodogram plot floor according to circular-fit BIC min.
             lower = -2*np.log(len(self.times))
         else:
             lower = np.amin(self.power['bic'])
+
         ax.set_ylim([lower, upper])
         ax.set_xlim([self.pers[0], self.pers[-1]])
 

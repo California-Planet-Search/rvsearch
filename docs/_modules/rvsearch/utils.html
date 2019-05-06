@@ -81,6 +81,7 @@
             
             
               <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorial_api.html">API Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
 </ul>
 
@@ -145,35 +146,36 @@
            <div itemprop="articleBody">
             
   <h1>Source code for rvsearch.utils</h1><div class="highlight"><pre>
-<span></span><span class="c1">#Utilities for loading data, checking for known planets, etc.</span>
-<span class="kn">import</span> <span class="nn">pdb</span>
+<span></span><span class="sd">&quot;&quot;&quot;Utilities for loading data, checking for known planets, etc.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">scipy</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">radvel</span>
 <span class="k">try</span><span class="p">:</span>
-	<span class="kn">import</span> <span class="nn">cpsutils</span>
-	<span class="kn">from</span> <span class="nn">cpsutils</span> <span class="k">import</span> <span class="n">io</span>
+    <span class="kn">import</span> <span class="nn">cpsutils</span>
+    <span class="kn">from</span> <span class="nn">cpsutils</span> <span class="k">import</span> <span class="n">io</span>
 <span class="k">except</span><span class="p">:</span>
-	<span class="ne">RuntimeError</span><span class="p">()</span>
+    <span class="ne">RuntimeError</span><span class="p">()</span>
 
 
 <span class="sd">&quot;&quot;&quot;Functions for posterior modification (resetting, intializing, etc.)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+
 <span class="k">def</span> <span class="nf">reset_params</span><span class="p">(</span><span class="n">post</span><span class="p">,</span> <span class="n">default_pdict</span><span class="p">):</span>
-	<span class="c1">#Reset post.params values to default values</span>
-	<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">default_pdict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-		<span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">default_pdict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
-	<span class="k">return</span> <span class="n">post</span>
+    <span class="c1"># Reset post.params values to default values</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">default_pdict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">default_pdict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">post</span>
+
 
 <div class="viewcode-block" id="initialize_default_pars"><a class="viewcode-back" href="../../utils.html#rvsearch.utils.initialize_default_pars">[docs]</a><span class="k">def</span> <span class="nf">initialize_default_pars</span><span class="p">(</span><span class="n">instnames</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;inst&#39;</span><span class="p">],</span>
                             <span class="n">fitting_basis</span><span class="o">=</span><span class="s1">&#39;per tc secosw sesinw k&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Set up a default Parameters object.</span>
 
-<span class="sd">	None of the basis values are free params, for the initial 0-planet fit.</span>
-<span class="sd">	Remember to reset .vary to True for all relevant params.</span>
+<span class="sd">    None of the basis values are free params, for the initial 0-planet fit.</span>
+<span class="sd">    Remember to reset .vary to True for all relevant params.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        instnames (list): codes of instruments used</span>
@@ -195,7 +197,7 @@
     <span class="n">anybasis_params</span><span class="p">[</span><span class="s1">&#39;curv&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">instnames</span><span class="p">:</span>
-        <span class="n">anybasis_params</span><span class="p">[</span><span class="s1">&#39;gamma_&#39;</span><span class="o">+</span><span class="n">inst</span><span class="p">]</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">anybasis_params</span><span class="p">[</span><span class="s1">&#39;gamma_&#39;</span><span class="o">+</span><span class="n">inst</span><span class="p">]</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">anybasis_params</span><span class="p">[</span><span class="s1">&#39;jit_&#39;</span><span class="o">+</span><span class="n">inst</span><span class="p">]</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
 
     <span class="n">params</span> <span class="o">=</span> <span class="n">anybasis_params</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">to_any_basis</span><span class="p">(</span><span class="n">anybasis_params</span><span class="p">,</span> <span class="n">fitting_basis</span><span class="p">)</span>
@@ -206,97 +208,102 @@
 
     <span class="k">return</span> <span class="n">params</span></div>
 
+
 <div class="viewcode-block" id="initialize_post"><a class="viewcode-back" href="../../utils.html#rvsearch.utils.initialize_post">[docs]</a><span class="k">def</span> <span class="nf">initialize_post</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">priors</span><span class="o">=</span><span class="p">[]):</span>
-	<span class="sd">&quot;&quot;&quot;Initialize a posterior object with data, params, and priors.</span>
-<span class="sd">	Args:</span>
-<span class="sd">		data: a pandas dataframe.</span>
-<span class="sd">		params: a list of radvel parameter objects.</span>
-<span class="sd">		priors: a list of priors to place on the posterior object.</span>
-<span class="sd">	Returns:</span>
-<span class="sd">		post (radvel Posterior object)</span>
+    <span class="sd">&quot;&quot;&quot;Initialize a posterior object with data, params, and priors.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        data: a pandas dataframe.</span>
+<span class="sd">        params: a list of radvel parameter objects.</span>
+<span class="sd">        priors: a list of priors to place on the posterior object.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        post (radvel Posterior object)</span>
 
-<span class="sd">	&quot;&quot;&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
-	<span class="k">if</span> <span class="n">params</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
-		<span class="c1">#params = radvel.Parameters(1, basis=&#39;per tc secosw sesinw logk&#39;)</span>
-		<span class="n">params</span> <span class="o">=</span> <span class="n">initialize_default_pars</span><span class="p">(</span><span class="n">instnames</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">tel</span><span class="p">)</span>
-	<span class="n">iparams</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">_copy_params</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># params = radvel.Parameters(1, basis=&#39;per tc secosw sesinw logk&#39;)</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">initialize_default_pars</span><span class="p">(</span><span class="n">instnames</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">tel</span><span class="p">)</span>
+    <span class="n">iparams</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">_copy_params</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
 
-	<span class="c1"># Allow for time to be listed as &#39;time&#39; or &#39;jd&#39; (Julian Date).</span>
-	<span class="k">if</span> <span class="p">{</span><span class="s1">&#39;jd&#39;</span><span class="p">}</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
-		<span class="n">data</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;jd&#39;</span><span class="p">]</span>
+    <span class="c1"># Allow for time to be listed as &#39;time&#39; or &#39;jd&#39; (Julian Date).</span>
+    <span class="k">if</span> <span class="p">{</span><span class="s1">&#39;jd&#39;</span><span class="p">}</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;jd&#39;</span><span class="p">]</span>
 
-	<span class="c1">#initialize RVModel</span>
-	<span class="n">time_base</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()])</span>
-	<span class="n">mod</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">RVModel</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">time_base</span><span class="o">=</span><span class="n">time_base</span><span class="p">)</span>
+    <span class="c1"># initialize RVModel</span>
+    <span class="n">time_base</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()])</span>
+    <span class="n">mod</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">RVModel</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">time_base</span><span class="o">=</span><span class="n">time_base</span><span class="p">)</span>
 
-	<span class="c1">#initialize Likelihood objects for each instrument</span>
-	<span class="n">telgrps</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;tel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">groups</span>
-	<span class="n">likes</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="c1"># initialize Likelihood objects for each instrument</span>
+    <span class="n">telgrps</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;tel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">groups</span>
+    <span class="n">likes</span> <span class="o">=</span> <span class="p">{}</span>
 
-	<span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">telgrps</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-		<span class="n">likes</span><span class="p">[</span><span class="n">inst</span><span class="p">]</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">RVLikelihood</span><span class="p">(</span>
-			<span class="n">mod</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">telgrps</span><span class="p">[</span><span class="n">inst</span><span class="p">]]</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">telgrps</span><span class="p">[</span><span class="n">inst</span><span class="p">]]</span><span class="o">.</span><span class="n">mnvel</span><span class="p">,</span>
-			<span class="n">data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">telgrps</span><span class="p">[</span><span class="n">inst</span><span class="p">]]</span><span class="o">.</span><span class="n">errvel</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">inst</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">telgrps</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">likes</span><span class="p">[</span><span class="n">inst</span><span class="p">]</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">RVLikelihood</span><span class="p">(</span>
+            <span class="n">mod</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">telgrps</span><span class="p">[</span><span class="n">inst</span><span class="p">]]</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">telgrps</span><span class="p">[</span><span class="n">inst</span><span class="p">]]</span><span class="o">.</span><span class="n">mnvel</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">telgrps</span><span class="p">[</span><span class="n">inst</span><span class="p">]]</span><span class="o">.</span><span class="n">errvel</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">inst</span><span class="p">)</span>
 
-		<span class="n">likes</span><span class="p">[</span><span class="n">inst</span><span class="p">]</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;gamma_&#39;</span><span class="o">+</span><span class="n">inst</span><span class="p">]</span> <span class="o">=</span> <span class="n">iparams</span><span class="p">[</span><span class="s1">&#39;gamma_&#39;</span><span class="o">+</span><span class="n">inst</span><span class="p">]</span>
-		<span class="n">likes</span><span class="p">[</span><span class="n">inst</span><span class="p">]</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;jit_&#39;</span><span class="o">+</span><span class="n">inst</span><span class="p">]</span> <span class="o">=</span> <span class="n">iparams</span><span class="p">[</span><span class="s1">&#39;jit_&#39;</span><span class="o">+</span><span class="n">inst</span><span class="p">]</span>
-	<span class="c1">#Can this be cleaner? like = radvel.likelihood.CompositeLikelihood(likes)</span>
-	<span class="n">like</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">CompositeLikelihood</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">likes</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+        <span class="n">likes</span><span class="p">[</span><span class="n">inst</span><span class="p">]</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;gamma_&#39;</span><span class="o">+</span><span class="n">inst</span><span class="p">]</span> <span class="o">=</span> <span class="n">iparams</span><span class="p">[</span><span class="s1">&#39;gamma_&#39;</span><span class="o">+</span><span class="n">inst</span><span class="p">]</span>
+        <span class="n">likes</span><span class="p">[</span><span class="n">inst</span><span class="p">]</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;jit_&#39;</span><span class="o">+</span><span class="n">inst</span><span class="p">]</span> <span class="o">=</span> <span class="n">iparams</span><span class="p">[</span><span class="s1">&#39;jit_&#39;</span><span class="o">+</span><span class="n">inst</span><span class="p">]</span>
+    <span class="c1"># Can this be cleaner? like = radvel.likelihood.CompositeLikelihood(likes)</span>
+    <span class="n">like</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">CompositeLikelihood</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">likes</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
 
-	<span class="n">post</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">posterior</span><span class="o">.</span><span class="n">Posterior</span><span class="p">(</span><span class="n">like</span><span class="p">)</span>
-	<span class="k">if</span> <span class="n">priors</span> <span class="o">==</span> <span class="p">[]:</span>
-		<span class="n">priors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">radvel</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">PositiveKPrior</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">num_planets</span><span class="p">))</span>
-		<span class="n">priors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">radvel</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">EccentricityPrior</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">num_planets</span><span class="p">))</span>
-	<span class="c1">#priors.append([radvel.prior.HardBounds(&#39;jit_&#39;+inst, 0.0, 20.0)</span>
-	<span class="c1">#									for inst in telgrps.keys()])</span>
-	<span class="n">post</span><span class="o">.</span><span class="n">priors</span> <span class="o">=</span> <span class="n">priors</span>
+    <span class="n">post</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">posterior</span><span class="o">.</span><span class="n">Posterior</span><span class="p">(</span><span class="n">like</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">priors</span> <span class="o">==</span> <span class="p">[]:</span>
+        <span class="n">priors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">radvel</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">PositiveKPrior</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">num_planets</span><span class="p">))</span>
+        <span class="n">priors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">radvel</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">EccentricityPrior</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">num_planets</span><span class="p">))</span>
+    <span class="c1"># priors.append([radvel.prior.HardBounds(&#39;jit_&#39;+inst, 0.0, 20.0)</span>
+    <span class="c1"># for inst in telgrps.keys()])</span>
+    <span class="n">post</span><span class="o">.</span><span class="n">priors</span> <span class="o">=</span> <span class="n">priors</span>
 
-	<span class="k">return</span> <span class="n">post</span></div>
+    <span class="k">return</span> <span class="n">post</span></div>
 
-<div class="viewcode-block" id="window"><a class="viewcode-back" href="../../utils.html#rvsearch.utils.window">[docs]</a><span class="k">def</span> <span class="nf">window</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">freqs</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-	<span class="sd">&quot;&quot;&quot;Function to generate, and plot, the window function of observations.</span>
 
-<span class="sd">	Args:</span>
-<span class="sd">		time: times of observations in a dataset. FOR SEPARATE TELESCOPES?</span>
+<div class="viewcode-block" id="window"><a class="viewcode-back" href="../../utils.html#rvsearch.utils.window">[docs]</a><span class="k">def</span> <span class="nf">window</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">freqs</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Function to generate, and plot, the window function of observations.</span>
 
-<span class="sd">	&quot;&quot;&quot;</span>
-	<span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">freqs</span><span class="p">))</span>
-	<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">freq</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">freqs</span><span class="p">):</span>
-		<span class="n">W</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">time</span><span class="o">*</span><span class="n">freq</span><span class="p">))</span>
-	<span class="n">W</span> <span class="o">/=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">freq</span><span class="p">))</span>
-	<span class="k">return</span> <span class="n">W</span></div>
+<span class="sd">    Args:</span>
+<span class="sd">        time: times of observations in a dataset. FOR SEPARATE TELESCOPES?</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">freqs</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">freq</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">freqs</span><span class="p">):</span>
+        <span class="n">W</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">times</span><span class="o">*</span><span class="n">freq</span><span class="p">)))</span>
+    <span class="n">W</span> <span class="o">/=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">W</span></div>
 
 <div class="viewcode-block" id="read_from_csv"><a class="viewcode-back" href="../../utils.html#rvsearch.utils.read_from_csv">[docs]</a><span class="k">def</span> <span class="nf">read_from_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">binsize</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-	<span class="sd">&quot;&quot;&quot;Read radial velocity data from a csv file into a Pandas dataframe.</span>
+    <span class="sd">&quot;&quot;&quot;Read radial velocity data from a csv file into a Pandas dataframe.</span>
 
-<span class="sd">	Args:</span>
-<span class="sd">		filename (string): Path to csv file</span>
-<span class="sd">		binsize (float): Times in which to bin data, in given units</span>
-<span class="sd">		verbose (bool): Notify user if instrument types not given?</span>
+<span class="sd">    Args:</span>
+<span class="sd">        filename (string): Path to csv file</span>
+<span class="sd">        binsize (float): Times in which to bin data, in given units</span>
+<span class="sd">        verbose (bool): Notify user if instrument types not given?</span>
 
-<span class="sd">	&quot;&quot;&quot;</span>
-	<span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-	<span class="k">if</span> <span class="s1">&#39;tel&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-		<span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-			<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Instrument types not given.&#39;</span><span class="p">)</span>
-		<span class="n">data</span><span class="p">[</span><span class="s1">&#39;tel&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Inst&#39;</span>
-	<span class="k">if</span> <span class="n">binsize</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
-		<span class="k">if</span> <span class="s1">&#39;time&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-			<span class="n">t</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
-			<span class="n">tkey</span> <span class="o">=</span> <span class="s1">&#39;time&#39;</span>
-		<span class="k">elif</span> <span class="s1">&#39;jd&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-			<span class="n">t</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;jd&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
-			<span class="n">tkey</span> <span class="o">=</span> <span class="s1">&#39;jd&#39;</span>
-		<span class="k">else</span><span class="p">:</span>
-			<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Incorrect data input.&#39;</span><span class="p">)</span>
-		<span class="n">time</span><span class="p">,</span> <span class="n">mnvel</span><span class="p">,</span> <span class="n">errvel</span><span class="p">,</span> <span class="n">tel</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">bintels</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;mnvel&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
-														<span class="n">data</span><span class="p">[</span><span class="s1">&#39;errvel&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
-														<span class="n">data</span><span class="p">[</span><span class="s1">&#39;tel&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
-														<span class="n">binsize</span><span class="o">=</span><span class="n">binsize</span><span class="p">)</span>
-		<span class="n">bin_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">tkey</span><span class="p">:</span><span class="n">time</span><span class="p">,</span> <span class="s1">&#39;mnvel&#39;</span><span class="p">:</span><span class="n">mnvel</span><span class="p">,</span> <span class="s1">&#39;errvel&#39;</span><span class="p">:</span><span class="n">errvel</span><span class="p">,</span> <span class="s1">&#39;tel&#39;</span><span class="p">:</span><span class="n">tel</span><span class="p">}</span>
-		<span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">bin_dict</span><span class="p">)</span>
-	<span class="k">return</span> <span class="n">data</span></div>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s1">&#39;tel&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Instrument types not given.&#39;</span><span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;tel&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Inst&#39;</span>
+    <span class="k">if</span> <span class="n">binsize</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;time&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">tkey</span> <span class="o">=</span> <span class="s1">&#39;time&#39;</span>
+        <span class="k">elif</span> <span class="s1">&#39;jd&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;jd&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">tkey</span> <span class="o">=</span> <span class="s1">&#39;jd&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Incorrect data input.&#39;</span><span class="p">)</span>
+        <span class="n">time</span><span class="p">,</span> <span class="n">mnvel</span><span class="p">,</span> <span class="n">errvel</span><span class="p">,</span> <span class="n">tel</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">bintels</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;mnvel&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+                                                        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;errvel&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+                                                        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;tel&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+                                                        <span class="n">binsize</span><span class="o">=</span><span class="n">binsize</span><span class="p">)</span>
+        <span class="n">bin_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">tkey</span><span class="p">:</span> <span class="n">time</span><span class="p">,</span> <span class="s1">&#39;mnvel&#39;</span><span class="p">:</span> <span class="n">mnvel</span><span class="p">,</span>
+                    <span class="s1">&#39;errvel&#39;</span><span class="p">:</span> <span class="n">errvel</span><span class="p">,</span> <span class="s1">&#39;tel&#39;</span><span class="p">:</span> <span class="n">tel</span><span class="p">}</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">bin_dict</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">data</span></div>
+
 
 <span class="k">def</span> <span class="nf">read_from_arrs</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">mnvel</span><span class="p">,</span> <span class="n">errvel</span><span class="p">,</span> <span class="n">tel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
@@ -309,109 +316,133 @@
         <span class="n">data</span><span class="p">[</span><span class="s1">&#39;tel&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tel</span>
     <span class="k">return</span> <span class="n">data</span>
 
+
 <div class="viewcode-block" id="read_from_vst"><a class="viewcode-back" href="../../utils.html#rvsearch.utils.read_from_vst">[docs]</a><span class="k">def</span> <span class="nf">read_from_vst</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-	<span class="sd">&quot;&quot;&quot;Read radial velocity data from a vst file into a Pandas dataframe.</span>
+    <span class="sd">&quot;&quot;&quot;Read radial velocity data from a vst file into a Pandas dataframe.</span>
 
-<span class="sd">	Args:</span>
-<span class="sd">		filename (string): Path to csv file</span>
-<span class="sd">		verbose (bool): Notify user if instrument types not given?</span>
+<span class="sd">    Args:</span>
+<span class="sd">        filename (string): Path to csv file</span>
+<span class="sd">        verbose (bool): Notify user if instrument types not given?</span>
 
-<span class="sd">	Note:</span>
-<span class="sd">		Only relevant for HIRES users.</span>
+<span class="sd">    Note:</span>
+<span class="sd">        Only relevant for HIRES users.</span>
 
-<span class="sd">	&quot;&quot;&quot;</span>
-	<span class="n">b</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">read_vst</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-	<span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
-	<span class="n">data</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">jd</span>
-	<span class="n">data</span><span class="p">[</span><span class="s1">&#39;mnvel&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">mnvel</span>
-	<span class="n">data</span><span class="p">[</span><span class="s1">&#39;errvel&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">errvel</span>
-	<span class="n">data</span><span class="p">[</span><span class="s1">&#39;tel&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;HIRES&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">read_vst</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+    <span class="n">data</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">jd</span>
+    <span class="n">data</span><span class="p">[</span><span class="s1">&#39;mnvel&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">mnvel</span>
+    <span class="n">data</span><span class="p">[</span><span class="s1">&#39;errvel&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">errvel</span>
+    <span class="n">data</span><span class="p">[</span><span class="s1">&#39;tel&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;HIRES&#39;</span>
 
-	<span class="n">data</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;csv&#39;</span><span class="p">)</span>
-	<span class="k">return</span> <span class="n">data</span></div>
+    <span class="n">data</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;csv&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">data</span></div>
+
 
 <span class="c1"># Function for collecting results of searches in current directory.</span>
 <div class="viewcode-block" id="scrape"><a class="viewcode-back" href="../../utils.html#rvsearch.utils.scrape">[docs]</a><span class="k">def</span> <span class="nf">scrape</span><span class="p">(</span><span class="n">starlist</span><span class="p">,</span> <span class="n">star_db_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s1">&#39;system_props.csv&#39;</span><span class="p">):</span>
-	<span class="sd">&quot;&quot;&quot;Take data from completed searches and compile into one dataframe.</span>
+    <span class="sd">&quot;&quot;&quot;Take data from completed searches and compile into one dataframe.</span>
 
-<span class="sd">	Args:</span>
-<span class="sd">		starlist (list): List of starnames to access in current directory</span>
-<span class="sd">		star_db_name (string [optional]): Filename of star properties dataframe</span>
-<span class="sd">		filename (string): Path to which to save dataframe</span>
+<span class="sd">    Args:</span>
+<span class="sd">        starlist (list): List of starnames to access in current directory</span>
+<span class="sd">        star_db_name (string [optional]): Filename of star properties dataframe</span>
+<span class="sd">        filename (string): Path to which to save dataframe</span>
 
-<span class="sd">	Note:</span>
-<span class="sd">		If specified, compute planet masses and semi-major axes.</span>
+<span class="sd">    Note:</span>
+<span class="sd">        If specified, compute planet masses and semi-major axes.</span>
 
-<span class="sd">	&quot;&quot;&quot;</span>
-	<span class="n">all_params</span> <span class="o">=</span> <span class="p">[]</span>
-	<span class="n">nplanets</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">all_params</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">nplanets</span> <span class="o">=</span> <span class="p">[]</span>
 
-	<span class="k">for</span> <span class="n">star</span> <span class="ow">in</span> <span class="n">starlist</span><span class="p">:</span>
-		<span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
-		<span class="n">params</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">star</span>
-		<span class="k">try</span><span class="p">:</span>
-			<span class="n">post</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">posterior</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">star</span><span class="o">+</span><span class="s1">&#39;/post_final.pkl&#39;</span><span class="p">)</span>
-		<span class="k">except</span> <span class="p">(</span><span class="ne">RuntimeError</span><span class="p">,</span> <span class="ne">FileNotFoundError</span><span class="p">):</span>
-			<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Not done looking for planets around </span><span class="si">{}</span><span class="s1"> yet, </span><span class="se">\</span>
-<span class="s1">								try again later.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">star</span><span class="p">))</span>
-			<span class="k">continue</span>
+    <span class="k">for</span> <span class="n">star</span> <span class="ow">in</span> <span class="n">starlist</span><span class="p">:</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">params</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">star</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">post</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">posterior</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">star</span><span class="o">+</span><span class="s1">&#39;/post_final.pkl&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">RuntimeError</span><span class="p">,</span> <span class="ne">FileNotFoundError</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Not done looking for planets around </span><span class="si">{}</span><span class="s1"> yet, </span><span class="se">\</span>
+<span class="s1">                                try again later.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">star</span><span class="p">))</span>
+            <span class="k">continue</span>
 
-		<span class="k">if</span> <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">num_planets</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-			<span class="k">if</span> <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;k1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
-				<span class="n">num_planets</span> <span class="o">=</span> <span class="mi">0</span>
-			<span class="k">else</span><span class="p">:</span>
-				<span class="n">num_planets</span> <span class="o">=</span> <span class="mi">1</span>
-			<span class="n">nplanets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">num_planets</span><span class="p">)</span>
-		<span class="k">else</span><span class="p">:</span>
-			<span class="n">num_planets</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">num_planets</span>
-			<span class="n">nplanets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">num_planets</span><span class="p">)</span>
-		<span class="n">params</span><span class="p">[</span><span class="s1">&#39;num_planets&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_planets</span>
+        <span class="k">if</span> <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">num_planets</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;k1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
+                <span class="n">num_planets</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">num_planets</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">nplanets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">num_planets</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">num_planets</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">num_planets</span>
+            <span class="n">nplanets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">num_planets</span><span class="p">)</span>
+        <span class="n">params</span><span class="p">[</span><span class="s1">&#39;num_planets&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_planets</span>
 
-		<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-			<span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
-		<span class="n">all_params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">all_params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
 
-	<span class="c1"># Save radvel parameters as a pandas dataframe.</span>
-	<span class="n">props</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">all_params</span><span class="p">)</span>
+    <span class="c1"># Save radvel parameters as a pandas dataframe.</span>
+    <span class="n">props</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">all_params</span><span class="p">)</span>
 
-	<span class="k">if</span> <span class="n">star_db_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-		<span class="k">try</span><span class="p">:</span>
-			<span class="n">star_db</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">star_db_name</span><span class="p">)</span>
-		<span class="k">except</span> <span class="p">(</span><span class="ne">RuntimeError</span><span class="p">,</span> <span class="ne">FileNotFoundError</span><span class="p">):</span>
-			<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;That is not a pandas dataframe. Try again.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">star_db_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">star_db</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">star_db_name</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">RuntimeError</span><span class="p">,</span> <span class="ne">FileNotFoundError</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;That is not a pandas dataframe. Try again.&#39;</span><span class="p">)</span>
 
         <span class="c1"># Add enough columns to for searched system with most planets.</span>
-		<span class="n">max_num_planets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">nplanets</span><span class="p">)</span>
-		<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_num_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
-			<span class="n">props</span><span class="p">[</span><span class="s1">&#39;Mstar&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
-			<span class="n">props</span><span class="p">[</span><span class="s1">&#39;M</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
-			<span class="n">props</span><span class="p">[</span><span class="s1">&#39;a</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="n">max_num_planets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">nplanets</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_num_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">props</span><span class="p">[</span><span class="s1">&#39;Mstar&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="n">props</span><span class="p">[</span><span class="s1">&#39;M</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="n">props</span><span class="p">[</span><span class="s1">&#39;a</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 
-		<span class="c1"># Save median star mass, uncertainties</span>
-		<span class="k">for</span> <span class="n">star</span> <span class="ow">in</span> <span class="n">starlist</span><span class="p">:</span>
-			<span class="k">try</span><span class="p">:</span>
-				<span class="n">props_index</span> <span class="o">=</span> <span class="n">props</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">props</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="n">star</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
-				<span class="n">star_index</span> <span class="o">=</span> <span class="n">star_db</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">star_db</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="n">star</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
-			<span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
-				<span class="k">continue</span>
-			<span class="c1"># Save star mass, to be used in planet mass &amp; semi-major axis calculations.</span>
-			<span class="n">Mtot</span> <span class="o">=</span> <span class="n">star_db</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">star_index</span><span class="p">,</span> <span class="s1">&#39;mstar&#39;</span><span class="p">]</span>
-			<span class="n">props</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">props_index</span><span class="p">,</span> <span class="s1">&#39;Mstar&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Mtot</span>
+        <span class="c1"># Save median star mass, uncertainties</span>
+        <span class="k">for</span> <span class="n">star</span> <span class="ow">in</span> <span class="n">starlist</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">props_index</span> <span class="o">=</span> <span class="n">props</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">props</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="n">star</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">star_index</span> <span class="o">=</span> <span class="n">star_db</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">star_db</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="n">star</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="c1"># Save star mass, to be used in planet mass &amp; semi-major axis calculations.</span>
+            <span class="n">Mtot</span> <span class="o">=</span> <span class="n">star_db</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">star_index</span><span class="p">,</span> <span class="s1">&#39;mstar&#39;</span><span class="p">]</span>
+            <span class="n">props</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">props_index</span><span class="p">,</span> <span class="s1">&#39;Mstar&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Mtot</span>
 
-			<span class="c1"># For each found planet, compute mass and semi-major axis</span>
-			<span class="k">if</span> <span class="n">props</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">star_index</span><span class="p">,</span> <span class="s1">&#39;num_planets&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-				<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">props</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">star_index</span><span class="p">,</span> <span class="s1">&#39;num_planets&#39;</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
-					<span class="n">K</span> <span class="o">=</span> <span class="n">props</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">star_index</span><span class="p">,</span> <span class="s1">&#39;k</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
-					<span class="n">P</span> <span class="o">=</span> <span class="n">props</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">star_index</span><span class="p">,</span> <span class="s1">&#39;per</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
-					<span class="n">e</span> <span class="o">=</span> <span class="n">props</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">star_index</span><span class="p">,</span> <span class="s1">&#39;secosw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> \
-						<span class="n">props</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">star_index</span><span class="p">,</span> <span class="s1">&#39;sesinw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span><span class="o">**</span><span class="mi">2</span>
-					<span class="n">props</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">star_index</span><span class="p">,</span> <span class="s1">&#39;M</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span> <span class="o">=</span> \
-						<span class="n">radvel</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">Msini</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">Mtot</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">Msini_units</span><span class="o">=</span><span class="s1">&#39;jupiter&#39;</span><span class="p">)</span>
-					<span class="n">props</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">star_index</span><span class="p">,</span> <span class="s1">&#39;a</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span> <span class="o">=</span> \
-						<span class="n">radvel</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">semi_major_axis</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">Mtot</span><span class="p">)</span>
+            <span class="c1"># For each found planet, compute mass and semi-major axis</span>
+            <span class="k">if</span> <span class="n">props</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">props_index</span><span class="p">,</span> <span class="s1">&#39;num_planets&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">props</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">props_index</span><span class="p">,</span> <span class="s1">&#39;num_planets&#39;</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="n">K</span> <span class="o">=</span> <span class="n">props</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">props_index</span><span class="p">,</span> <span class="s1">&#39;k</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
+                    <span class="n">P</span> <span class="o">=</span> <span class="n">props</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">props_index</span><span class="p">,</span> <span class="s1">&#39;per</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
+                    <span class="n">e</span> <span class="o">=</span> <span class="n">props</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">props_index</span><span class="p">,</span> <span class="s1">&#39;secosw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> \
+                        <span class="n">props</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">props_index</span><span class="p">,</span> <span class="s1">&#39;sesinw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span><span class="o">**</span><span class="mi">2</span>
+                    <span class="n">props</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">props_index</span><span class="p">,</span> <span class="s1">&#39;M</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span> <span class="o">=</span> \
+                        <span class="n">radvel</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">Msini</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">Mtot</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">Msini_units</span><span class="o">=</span><span class="s1">&#39;jupiter&#39;</span><span class="p">)</span>
+                    <span class="n">props</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">props_index</span><span class="p">,</span> <span class="s1">&#39;a</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span> <span class="o">=</span> \
+                        <span class="n">radvel</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">semi_major_axis</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">Mtot</span><span class="p">)</span>
 
-	<span class="n">props</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s1">&#39;system_props.csv&#39;</span><span class="p">)</span>
-	<span class="k">return</span> <span class="n">props</span></div>
+    <span class="n">props</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s1">&#39;system_props.csv&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">props</span></div>
+
+
+<div class="viewcode-block" id="cartesian_product"><a class="viewcode-back" href="../../utils.html#rvsearch.utils.cartesian_product">[docs]</a><span class="k">def</span> <span class="nf">cartesian_product</span><span class="p">(</span><span class="o">*</span><span class="n">arrays</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a cartesian product of input arrays.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        arrays (arrays): 1-D arrays to form the cartesian product of.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        array: cartesian product of input arrays</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">la</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">arrays</span><span class="p">)</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">result_type</span><span class="p">(</span><span class="o">*</span><span class="n">arrays</span><span class="p">)</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">arrays</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">la</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="o">*</span><span class="n">arrays</span><span class="p">)):</span>
+        <span class="n">arr</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span>
+
+    <span class="k">return</span> <span class="n">arr</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">la</span><span class="p">)</span></div>
+
 
 <span class="c1"># Test search-specific priors</span>
 <span class="sd">&#39;&#39;&#39;</span>

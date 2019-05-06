@@ -22,7 +22,8 @@ def reset_params(post, default_pdict):
     return post
 
 
-def initialize_default_pars(instnames=['inst'], fitting_basis='per tc secosw sesinw k'):
+def initialize_default_pars(instnames=['inst'],
+                            fitting_basis='per tc secosw sesinw k'):
     """Set up a default Parameters object.
 
     None of the basis values are free params, for the initial 0-planet fit.
@@ -48,7 +49,7 @@ def initialize_default_pars(instnames=['inst'], fitting_basis='per tc secosw ses
     anybasis_params['curv'] = radvel.Parameter(value=0.0)
 
     for inst in instnames:
-        anybasis_params['gamma_'+inst] = radvel.Parameter(value=0.0)
+        anybasis_params['gamma_'+inst] = radvel.Parameter(value=0.0, linear=True, vary=False)
         anybasis_params['jit_'+inst] = radvel.Parameter(value=2.0)
 
     params = anybasis_params.basis.to_any_basis(anybasis_params, fitting_basis)
@@ -208,7 +209,7 @@ def scrape(starlist, star_db_name=None, filename='system_props.csv'):
     nplanets = []
 
     for star in starlist:
-        params = dict
+        params = dict()
         params['name'] = star
         try:
             post = radvel.posterior.load(star+'/post_final.pkl')
@@ -260,15 +261,15 @@ def scrape(starlist, star_db_name=None, filename='system_props.csv'):
             props.loc[props_index, 'Mstar'] = Mtot
 
             # For each found planet, compute mass and semi-major axis
-            if props.loc[star_index, 'num_planets'] != 0:
-                for n in np.arange(1, props.loc[star_index, 'num_planets']+1):
-                    K = props.loc[star_index, 'k{}'.format(n)]
-                    P = props.loc[star_index, 'per{}'.format(n)]
-                    e = props.loc[star_index, 'secosw{}'.format(n)]**2 + \
-                        props.loc[star_index, 'sesinw{}'.format(n)]**2
-                    props.loc[star_index, 'M{}'.format(n)] = \
+            if props.loc[props_index, 'num_planets'] != 0:
+                for n in np.arange(1, props.loc[props_index, 'num_planets']+1):
+                    K = props.loc[props_index, 'k{}'.format(n)]
+                    P = props.loc[props_index, 'per{}'.format(n)]
+                    e = props.loc[props_index, 'secosw{}'.format(n)]**2 + \
+                        props.loc[props_index, 'sesinw{}'.format(n)]**2
+                    props.loc[props_index, 'M{}'.format(n)] = \
                         radvel.utils.Msini(K, P, Mtot, e, Msini_units='jupiter')
-                    props.loc[star_index, 'a{}'.format(n)] = \
+                    props.loc[props_index, 'a{}'.format(n)] = \
                         radvel.utils.semi_major_axis(P, Mtot)
 
     props.to_csv('system_props.csv')
