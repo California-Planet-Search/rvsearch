@@ -14,6 +14,7 @@ import radvel
 from radvel.utils import working_directory
 import rvsearch
 
+
 def run_search(args):
     """Run a search from a given RadVel setup file
 

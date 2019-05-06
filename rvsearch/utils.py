@@ -4,6 +4,11 @@ import numpy as np
 import scipy
 import pandas as pd
 import radvel
+from astropy import constants as c
+from astropy import units as u
+from scipy.optimize import root
+
+
 try:
     import cpsutils
     from cpsutils import io
@@ -13,6 +18,8 @@ except:
 
 """Functions for posterior modification (resetting, intializing, etc.)
 """
+
+K_0 = 28.4329
 
 
 def reset_params(post, default_pdict):
@@ -267,8 +274,8 @@ def scrape(starlist, star_db_name=None, filename='system_props.csv'):
                     P = props.loc[props_index, 'per{}'.format(n)]
                     e = props.loc[props_index, 'secosw{}'.format(n)]**2 + \
                         props.loc[props_index, 'sesinw{}'.format(n)]**2
-                    props.loc[props_index, 'M{}'.format(n)] = \
-                        radvel.utils.Msini(K, P, Mtot, e, Msini_units='jupiter')
+                    props.loc[props_index, 'M{}'.format(n)] = Msini(K, P, Mtot, e, Msini_units='jupiter')
+
                     props.loc[props_index, 'a{}'.format(n)] = \
                         radvel.utils.semi_major_axis(P, Mtot)
 
@@ -332,3 +339,68 @@ class Beta(Prior):
 
         return s
 '''
+
+
+def Msini(K, P, Mstar, e, Msini_units='earth'):
+    """Calculate Msini
+
+    Calculate Msini for a given K, P, stellar mass, and e
+
+    Args:
+        K (float): Doppler semi-amplitude [m/s]
+        P (float): Orbital period [days]
+        Mstar (float): Mass of star [Msun]
+        e (float): eccentricity
+        Msini_units (Optional[str]): Units of Msini {'earth','jupiter'}
+            default: 'earth'
+
+    Returns:
+        float: Msini [units = Msini_units]
+
+    """
+    # convert inputs to array so they work with units
+    P = np.array(P)
+    Mstar = np.array(Mstar)
+    K = np.array(K)
+    e = np.array(e)
+    G = c.G.value  # added gravitational constant
+    Mjup = c.M_jup.value  # added Jupiter's mass
+    Msun = c.M_sun.value  # added sun's mass
+
+    P_year = (P * u.d).to(u.year).value
+    P = (P * u.d).to(u.second).value
+    Mstar = Mstar * Msun
+
+    # First assume that Mp << Mstar
+    Msini = K / K_0 * np.sqrt(1.0 - e ** 2.0) * (Mstar / Msun) ** (2.0 / 3.0) * P_year ** (1 / 3.0)
+
+    # Use correct calculation if any elements are >10% of the stellar mass
+    if (np.array(((Msini * u.Mjup).to(u.M_sun) / (Mstar / Msun)).value > 0.1)).any():
+        print("Mpsini << Mstar assumption broken, correcting Msini calculation.")
+
+        a = K * (((2 * (np.pi) * G) / P) ** (-1 / 3.)) * np.sqrt(1 - (e ** 2))
+        Msini = []
+        try:
+            for i in range(len(P)):
+                def func(x):
+                    return x - a[i] * ((Mstar[i] + x) ** (2 / 3.))
+
+                sol = root(func, Mjup)
+                Msini.append(sol.x[0])
+
+            Msini = np.array(Msini)
+            Msini = Msini / Mjup
+        except TypeError:
+            def func(x):
+                return x - a * ((Mstar + x) ** (2 / 3.))
+
+            Msini = root(func, Mjup).x
+
+    if Msini_units.lower() == 'jupiter':
+        pass
+    elif Msini_units.lower() == 'earth':
+        Msini = (Msini * u.M_jup).to(u.M_earth).value
+    else:
+        raise Exception("Msini_units must be 'earth', or 'jupiter'")
+
+    return Msini

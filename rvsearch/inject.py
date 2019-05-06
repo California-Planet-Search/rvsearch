@@ -120,6 +120,7 @@ class Injections(object):
         out_orbels = []
         recs = []
         bics = []
+        outputs = []
         for i, row in self.injected_planets.iterrows():
             in_orbels.append(list(row.values))
 
@@ -235,7 +236,7 @@ class Completeness(object):
                 yhigh = 10**(np.log10(y) + ylogwin/2)
 
                 xbox = yinj[np.where((xinj <= xhigh) & (xinj >= xlow))[0]]
-                if y > max(xbox) or y < min(xbox):
+                if len(xbox) == 0 or y > max(xbox) or y < min(xbox):
                     z[j, i] = np.nan
                     continue
 
