@@ -8,3 +8,4 @@ radvel>=1.2
 pathos
 tqdm
 sphinx_rtd_theme
+bottleneck>=1.2.1
