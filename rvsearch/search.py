@@ -427,7 +427,8 @@ class Search(object):
             nensembles = 16
             if os.cpu_count() < nensembles:
                 nensembles = os.cpu_count()
-            chains = radvel.mcmc(self.post, thin=5, nwalkers=50, nrun=2000,
+            chains = radvel.mcmc(self.post, thin=5, nwalkers=50, nrun=20000,
+                                 burnGR=1.02, minsteps=2000, minpercent=10,
                                  ensembles=nensembles)
             # Convert chains to e, w basis.
             for par in self.post.params.keys():
