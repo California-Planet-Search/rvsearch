@@ -164,7 +164,8 @@ class Search(object):
 
         new_num_planets = current_num_planets + 1
 
-        default_pars = utils.initialize_default_pars(instnames=self.tels, fitting_basis=fitting_basis)
+        default_pars = utils.initialize_default_pars(instnames=self.tels,
+                                                     fitting_basis=fitting_basis)
         new_params = radvel.Parameters(new_num_planets, basis=fitting_basis)
 
         for planet in np.arange(1, new_num_planets):
@@ -176,7 +177,8 @@ class Search(object):
             new_params[par] = self.post.params[par]  # For gamma and jitter
 
         # Set default parameters for n+1th planet
-        default_params = utils.initialize_default_pars(self.tels, fitting_basis=fitting_basis)
+        default_params = utils.initialize_default_pars(self.tels,
+                                                       fitting_basis=fitting_basis)
         for par in param_list:
             parkey = par + str(new_num_planets)
             onepar = par + '1'  # MESSY, FIX THIS 10/22/18
@@ -427,8 +429,9 @@ class Search(object):
             nensembles = 16
             if os.cpu_count() < nensembles:
                 nensembles = os.cpu_count()
-            chains = radvel.mcmc(self.post, thin=5, nwalkers=50, nrun=2000,
-                                 ensembles=nensembles)
+            chains = radvel.mcmc(self.post, thin=5, nwalkers=50, nrun=20000,
+                                 burnGR=1.02, minTz=2000, minsteps=2000,
+                                 minpercent=10, ensembles=nensembles)
             # Convert chains to e, w basis.
             for par in self.post.params.keys():
                 if not self.post.params[par].vary:
