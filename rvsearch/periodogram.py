@@ -162,12 +162,19 @@ class Periodogram(object):
         # This assumes nth planet parameters, and all periods, are fixed.
 
         if self.basebic is None:
-            self.post.params['per'+plstr].vary = False
-            self.post.params['tc'+plstr].vary = False
-            self.post.params['k'+plstr].vary = False
-            # Vary ONLY gamma, jitter, dvdt, curv. All else fixed, and k=0
-            baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
-            baseline_bic = baseline_fit.likelihood.bic()
+            # Handle the case where there are no known planets.
+            if self.post.params.num_planets == 1 and self.post.params['k1'].value == 0.:
+                self.post.params['per'+plstr].vary = False
+                self.post.params['tc'+plstr].vary = False
+                self.post.params['k'+plstr].vary = False
+                # Vary ONLY gamma, jitter, dvdt, curv. All else fixed, and k=0
+                baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
+                baseline_bic = baseline_fit.likelihood.bic()
+            # Handle the case where there is at least known planet.
+            else:
+                baseline_bic = self.post.likelihood.bic()
+                #baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
+                #baseline_bic = baseline_fit.likelihood.bic()
         else:
             baseline_bic = self.basebic
 
@@ -358,7 +365,8 @@ class Periodogram(object):
 
         if floor:
             # Set periodogram plot floor according to circular-fit BIC min.
-            lower = -2*np.log(len(self.times))
+            # Set this until we figure out how to fix known planet offset. 5/8
+            lower = max(self.floor, np.amin(self.power['bic']))
         else:
             lower = np.amin(self.power['bic'])
 
