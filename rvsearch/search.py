@@ -425,13 +425,14 @@ class Search(object):
             self.post.uparams   = {}
             self.post.medparams = {}
             self.post.maxparams = {}
-            # Use minimal recommended parameters for mcmc.
+            # Use recommended parameters for mcmc.
             nensembles = 16
             if os.cpu_count() < nensembles:
                 nensembles = os.cpu_count()
-            chains = radvel.mcmc(self.post, thin=5, nwalkers=50, nrun=20000,
-                                 burnGR=1.02, minTz=2000, minsteps=2000,
-                                 minpercent=10, ensembles=nensembles)
+            chains = radvel.mcmc(self.post, nwalkers=50, nrun=20000,
+                                 burnGR=1.015, maxGR=1.005, minTz=2000,
+                                 minsteps=2000, minpercent=20,
+                                 thin=5, ensembles=nensembles)
             # Convert chains to e, w basis.
             for par in self.post.params.keys():
                 if not self.post.params[par].vary:
@@ -502,7 +503,7 @@ class Search(object):
                     labels.append('tc{}'.format(n))
                     labels.append('k{}'.format(n))
                     labels.append('e{}'.format(n))
-                    #labels.append('w{}'.format(n))
+                    labels.append('w{}'.format(n))
                 texlabels = [self.post.params.tex_labels().get(l, l)
                              for l in labels]
                 plot = corner.corner(synthchains[labels], labels=texlabels,
