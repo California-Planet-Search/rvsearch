@@ -119,7 +119,7 @@ def plots(args):
                                              xlabel=xlabel,
                                              ylabel=ylabel)
 
-                saveto = os.path.join(run_name+'_recoveries.pdf')
+                saveto = os.path.join(run_name+'_recoveries.{}'.format(args.fmt))
 
                 fig.savefig(saveto)
                 print("Recovery plot saved to {}".format(
@@ -127,5 +127,5 @@ def plots(args):
 
             if ptype == 'summary':
                 plotter = rvsearch.plots.PeriodModelPlot(searcher,
-                            saveplot='{}_summary.pdf'.format(searcher.starname))
+                            saveplot='{}_summary.{}'.format(searcher.starname, args.fmt))
                 plotter.plot_summary()
