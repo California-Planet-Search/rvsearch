@@ -9,9 +9,15 @@ Use RadVel setup files to load:
 - fix/vary within search (not implemented)
 - fitting (search) basis (not implemented)
 
+See the [documentation](https://california-planet-search.github.io/rvsearch/) for installation instructions. Installing into a fresh anaconda environment is highly reccomended.
 
 Calling syntax:
 
-`rvsearch search path-to-setup`
+`rvsearch search -s path-to-setup`
+
+`rvsearch plot -t summary -d path-to-outputdir`
 
 `rvsearch inject path-to-outputdir`
+
+
+See `rvsearch --help` or `rvsearch plot --help` to see all available options.
