@@ -17,34 +17,32 @@
   
 
   
-  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
+  
+  
     
 
   
+
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
+
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
+        <div class="wy-side-nav-search">
           
 
           
@@ -314,7 +312,8 @@
 
         <span class="n">new_num_planets</span> <span class="o">=</span> <span class="n">current_num_planets</span> <span class="o">+</span> <span class="mi">1</span>
 
-        <span class="n">default_pars</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">initialize_default_pars</span><span class="p">(</span><span class="n">instnames</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tels</span><span class="p">,</span> <span class="n">fitting_basis</span><span class="o">=</span><span class="n">fitting_basis</span><span class="p">)</span>
+        <span class="n">default_pars</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">initialize_default_pars</span><span class="p">(</span><span class="n">instnames</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tels</span><span class="p">,</span>
+                                                     <span class="n">fitting_basis</span><span class="o">=</span><span class="n">fitting_basis</span><span class="p">)</span>
         <span class="n">new_params</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">Parameters</span><span class="p">(</span><span class="n">new_num_planets</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="n">fitting_basis</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">planet</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">new_num_planets</span><span class="p">):</span>
@@ -326,7 +325,8 @@
             <span class="n">new_params</span><span class="p">[</span><span class="n">par</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">par</span><span class="p">]</span>  <span class="c1"># For gamma and jitter</span>
 
         <span class="c1"># Set default parameters for n+1th planet</span>
-        <span class="n">default_params</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">initialize_default_pars</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tels</span><span class="p">,</span> <span class="n">fitting_basis</span><span class="o">=</span><span class="n">fitting_basis</span><span class="p">)</span>
+        <span class="n">default_params</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">initialize_default_pars</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tels</span><span class="p">,</span>
+                                                       <span class="n">fitting_basis</span><span class="o">=</span><span class="n">fitting_basis</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="n">param_list</span><span class="p">:</span>
             <span class="n">parkey</span> <span class="o">=</span> <span class="n">par</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">new_num_planets</span><span class="p">)</span>
             <span class="n">onepar</span> <span class="o">=</span> <span class="n">par</span> <span class="o">+</span> <span class="s1">&#39;1&#39;</span>  <span class="c1"># MESSY, FIX THIS 10/22/18</span>
@@ -577,8 +577,9 @@
             <span class="n">nensembles</span> <span class="o">=</span> <span class="mi">16</span>
             <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">nensembles</span><span class="p">:</span>
                 <span class="n">nensembles</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
-            <span class="n">chains</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">mcmc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="p">,</span> <span class="n">thin</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">nwalkers</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">nrun</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span>
-                                 <span class="n">ensembles</span><span class="o">=</span><span class="n">nensembles</span><span class="p">)</span>
+            <span class="n">chains</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">mcmc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="p">,</span> <span class="n">thin</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">nwalkers</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">nrun</span><span class="o">=</span><span class="mi">20000</span><span class="p">,</span>
+                                 <span class="n">burnGR</span><span class="o">=</span><span class="mf">1.02</span><span class="p">,</span> <span class="n">minTz</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">minsteps</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span>
+                                 <span class="n">minpercent</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">ensembles</span><span class="o">=</span><span class="n">nensembles</span><span class="p">)</span>
             <span class="c1"># Convert chains to e, w basis.</span>
             <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">par</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span><span class="p">:</span>
@@ -780,7 +781,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Lee Rosenthal and BJ Fulton
+        &copy; Copyright 2019, Lee Rosenthal and BJ Fulton.
 
     </p>
   </div>
@@ -797,16 +798,33 @@
   
 
 
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../_static/language_data.js"></script>
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

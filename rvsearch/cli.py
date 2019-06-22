@@ -104,6 +104,11 @@ def main():
                          type=float, action='store', default=1.0,
                          help="Stellar mass [msun]"
                          )
+    psr_plot.add_argument('--fmt',
+                         type=str, action='store', default='pdf',
+                         help="format to save plot [pdf]"
+                         )
+
 
     psr_plot.set_defaults(func=rvsearch.driver.plots)
 
