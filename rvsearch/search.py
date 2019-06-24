@@ -430,8 +430,8 @@ class Search(object):
             if os.cpu_count() < nensembles:
                 nensembles = os.cpu_count()
             chains = radvel.mcmc(self.post, nwalkers=50, nrun=20000,
-                                 burnGR=1.015, maxGR=1.005, minTz=2000,
-                                 minsteps=2000, minpercent=20,
+                                 burnGR=1.01, maxGR=1.008, minTz=2000,
+                                 minsteps=8000, minpercent=40,
                                  thin=5, ensembles=nensembles)
             # Convert chains to e, w basis.
             for par in self.post.params.keys():
@@ -500,7 +500,7 @@ class Search(object):
                 labels = []
                 for n in np.arange(1, self.num_planets+1):
                     labels.append('per{}'.format(n))
-                    labels.append('tc{}'.format(n))
+                    labels.append('tp{}'.format(n))
                     labels.append('k{}'.format(n))
                     labels.append('e{}'.format(n))
                     labels.append('w{}'.format(n))
