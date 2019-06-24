@@ -56,6 +56,10 @@ def main():
                           action='store', default=None,
                           help="Number of test frequencies"
                           )
+    psr_search.add_argument('--trend',
+                          action='store_true',
+                          help="Trend free during periodogram calculation"
+                          )
 
 
     # Injections
