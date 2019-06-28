@@ -500,10 +500,15 @@ class Search(object):
                 labels = []
                 for n in np.arange(1, self.num_planets+1):
                     labels.append('per{}'.format(n))
-                    labels.append('tp{}'.format(n))
+                    labels.append('tc{}'.format(n))
                     labels.append('k{}'.format(n))
-                    labels.append('e{}'.format(n))
-                    labels.append('w{}'.format(n))
+                    labels.append('secosw{}'.format(n))
+                    labels.append('sesinw{}'.format(n))
+                    #labels.append('per{}'.format(n))
+                    #labels.append('tp{}'.format(n))
+                    #labels.append('k{}'.format(n))
+                    #labels.append('e{}'.format(n))
+                    #labels.append('w{}'.format(n))
                 texlabels = [self.post.params.tex_labels().get(l, l)
                              for l in labels]
                 plot = corner.corner(synthchains[labels], labels=texlabels,
