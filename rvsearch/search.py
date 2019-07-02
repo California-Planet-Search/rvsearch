@@ -437,9 +437,9 @@ class Search(object):
                 self.post.params['sesinw{}'.format(n)].mcmcscale = sesinwscale
 
             # Run MCMC.
-            chains = radvel.mcmc(self.post, nwalkers=50, nrun=20000,
-                                 burnGR=1.01, maxGR=1.008, minTz=2000,
-                                 minsteps=8000, minpercent=40,
+            chains = radvel.mcmc(self.post, nwalkers=50, nrun=50000,
+                                 burnGR=1.01, maxGR=1.0075, minTz=2000,
+                                 minsteps=8000, minpercent=25,
                                  thin=5, ensembles=nensembles)
             # Convert chains to e, w basis.
             for par in self.post.params.keys():
