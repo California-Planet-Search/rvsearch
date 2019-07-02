@@ -377,7 +377,11 @@ class Periodogram(object):
             # Plot sidereal day, lunation period, and sidereal year aliases.
             colors = ['r', 'b', 'g']
             alias = [0.997, 29.531, 365.256]
-            for i in np.arange(3):
+            if np.amin(self.pers) <= 1.:
+                alii = np.arange(1, 3)
+            else:
+                alii = np.arange(3)
+            for i in alii:
                 f_ap = 1./alias[i] + f_real
                 f_am = 1./alias[i] - f_real
                 ax.axvline(1./f_am, linestyle='--', c=colors[i], alpha=0.5,
