@@ -429,6 +429,14 @@ class Search(object):
             nensembles = 16
             if os.cpu_count() < nensembles:
                 nensembles = os.cpu_count()
+            # Set custom mcmc scales for e/w parameters.
+            for n in np.arange(1, self.num_planets+1):
+                secoswscale = 0.005#*np.abs(self.post.params['secosw{}'.format(n)].value)
+                sesinwscale = 0.005#*np.abs(self.post.params['sesinw{}'.format(n)].value)
+                self.post.params['secosw{}'.format(n)].mcmcscale = secoswscale
+                self.post.params['sesinw{}'.format(n)].mcmcscale = sesinwscale
+
+            # Run MCMC.
             chains = radvel.mcmc(self.post, nwalkers=50, nrun=20000,
                                  burnGR=1.01, maxGR=1.008, minTz=2000,
                                  minsteps=8000, minpercent=40,
@@ -500,10 +508,15 @@ class Search(object):
                 labels = []
                 for n in np.arange(1, self.num_planets+1):
                     labels.append('per{}'.format(n))
-                    labels.append('tp{}'.format(n))
+                    labels.append('tc{}'.format(n))
                     labels.append('k{}'.format(n))
-                    labels.append('e{}'.format(n))
-                    labels.append('w{}'.format(n))
+                    labels.append('secosw{}'.format(n))
+                    labels.append('sesinw{}'.format(n))
+                    #labels.append('per{}'.format(n))
+                    #labels.append('tp{}'.format(n))
+                    #labels.append('k{}'.format(n))
+                    #labels.append('e{}'.format(n))
+                    #labels.append('w{}'.format(n))
                 texlabels = [self.post.params.tex_labels().get(l, l)
                              for l in labels]
                 plot = corner.corner(synthchains[labels], labels=texlabels,
