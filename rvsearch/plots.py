@@ -306,6 +306,10 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
             pers_safe   = self.pers[np.where(np.logical_and(
                                              self.pers < max, self.pers > min))]
 
+            # skip plotting if baseline < min search period
+            if len(window_safe) == 0:
+                continue
+
             ax.set_ylim([0, 1.1*np.amax(window_safe)])
             ax.plot(pers_safe, window_safe, alpha=0.75, label=tel)
         ax.xaxis.set_major_formatter(CustomTicker())
