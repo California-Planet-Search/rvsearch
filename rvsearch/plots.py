@@ -228,7 +228,7 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
             # Set periodogram plot floor according to circular-fit BIC min.
             lower = -2*np.log(len(self.rvtimes))
         else:
-            lower = np.amin(self.power['bic'])
+            lower = np.amin(self.periodograms[pnum])
 
         ax.set_ylim([lower, upper])
         ax.set_xlim([self.pers[0], self.pers[-1]])
@@ -420,7 +420,7 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
         ax_non = pl.subplot(gs_phase[self.num_planets, 0])
         self.ax_list += [ax_non]
         pl.sca(ax_non)
-        self.plot_periodogram(pltletter, self.num_planets, floor=False)
+        self.plot_periodogram(pltletter, self.num_planets)
         pltletter += 1
 
         ax_window = pl.subplot(gs_phase[self.num_planets, 1])
