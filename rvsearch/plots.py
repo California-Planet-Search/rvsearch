@@ -421,6 +421,8 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
         self.ax_list += [ax_non]
         pl.sca(ax_non)
         self.plot_periodogram(pltletter, self.num_planets)
+        ylim = ax_non.get_ylim()
+        ax_non.set_ylim(0, ylim[1])
         pltletter += 1
 
         ax_window = pl.subplot(gs_phase[self.num_planets, 1])
