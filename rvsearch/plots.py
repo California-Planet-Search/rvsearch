@@ -467,7 +467,7 @@ class CompletenessPlots(object):
         good = self.comp.recoveries.query('recovered == True')
         bad = self.comp.recoveries.query('recovered == False')
 
-        fig = pl.figure(figsize=(5, 3.5))
+        fig = pl.figure(figsize=(10, 7))
         pl.subplots_adjust(bottom=0.18, left=0.22, right=0.95)
 
         CS = pl.contourf(self.xgrid, self.ygrid, self.comp_array, 10, cmap=pl.cm.Reds_r, vmax=0.9)
