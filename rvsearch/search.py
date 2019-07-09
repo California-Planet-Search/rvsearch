@@ -137,8 +137,8 @@ class Search(object):
 
         flat_bic = post2.likelihood.bic()
 
-        if trend_bic < flat_bic - 10.:
-            if trend_curve_bic < trend_bic - 10.:
+        if trend_bic < flat_bic - 5.:
+            if trend_curve_bic < trend_bic - 5.:
                 # Quadratic
                 pass
             else:
@@ -358,9 +358,9 @@ class Search(object):
             os.mkdir(outdir)
 
         if self.trend:
-            self.trend_test()
-            #self.post.params['dvdt'].vary = True
-            #self.post.params['curv'].vary = True
+            #self.trend_test()
+            self.post.params['dvdt'].vary = True
+            self.post.params['curv'].vary = True
         else:
             self.post.params['dvdt'].vary = False
             self.post.params['curv'].vary = False
