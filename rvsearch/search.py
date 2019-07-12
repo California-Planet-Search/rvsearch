@@ -402,8 +402,6 @@ class Search(object):
                     self.post.params[k].value = perioder.bestfit_params[k]
 
                 # 7/12/19: Try re-fitting with re-set tc. Highly particular fix.
-                # 7/11/19: DEBUG DARN TC JUMP
-                print('before_refit:\n', self.post.params['tc1'].value)
                 if self.num_planets == 1 and self.post.params['tc1'].value < \
                                                      np.amin(self.data.time):
                     self.post.params['tc1'].value = np.median(self.data.time)
@@ -417,8 +415,6 @@ class Search(object):
                     self.post.params['per1'].vary = True
                     self.post.params['secosw1'].vary = True
                     self.post.params['secosw1'].vary = True
-                # 7/11/19: DEBUG DARN TC JUMP
-                print('after_refit:\n', self.post.params['tc1'].value)
 
                 self.fit_orbit()
                 self.all_params.append(self.post.params)
