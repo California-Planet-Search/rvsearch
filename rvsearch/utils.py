@@ -22,7 +22,7 @@ def reset_params(post, default_pdict):
     return post
 
 
-def initialize_default_pars(instnames=['inst'],
+def initialize_default_pars(instnames=['inst'], times=None,
                             fitting_basis='per tc secosw sesinw k'):
     """Set up a default Parameters object.
 
@@ -31,6 +31,7 @@ def initialize_default_pars(instnames=['inst'],
 
     Args:
         instnames (list): codes of instruments used
+        times (array): optional, timestamps of observations.
         fitting_basis: optional
 
     Returns:
@@ -39,7 +40,10 @@ def initialize_default_pars(instnames=['inst'],
 
     anybasis_params = radvel.Parameters(num_planets=1, basis='per tc e w k')
 
-    anybasis_params['tc1'] = radvel.Parameter(value=2455200.0)
+    if times is None:
+        anybasis_params['tc1'] = radvel.Parameter(value=2455200.0)
+    else:
+        anybasis_params['tc1'] = radvel.Parameter(value=np.median(times))
     anybasis_params['w1'] = radvel.Parameter(value=np.pi/2.)
     anybasis_params['k1'] = radvel.Parameter(value=0.0)
     anybasis_params['e1'] = radvel.Parameter(value=0.0)
@@ -49,7 +53,9 @@ def initialize_default_pars(instnames=['inst'],
     anybasis_params['curv'] = radvel.Parameter(value=0.0)
 
     for inst in instnames:
-        anybasis_params['gamma_'+inst] = radvel.Parameter(value=0.0, linear=True, vary=False)
+        anybasis_params['gamma_'+inst] = radvel.Parameter(value=0.0,
+                                                          linear=True,
+                                                          vary=False)
         anybasis_params['jit_'+inst] = radvel.Parameter(value=2.0)
 
     params = anybasis_params.basis.to_any_basis(anybasis_params, fitting_basis)
@@ -74,7 +80,7 @@ def initialize_post(data, params=None, priors=[]):
 
     if params is None:
         # params = radvel.Parameters(1, basis='per tc secosw sesinw logk')
-        params = initialize_default_pars(instnames=data.tel)
+        params = initialize_default_pars(instnames=data.tel, times=data.time)
     iparams = radvel.basis._copy_params(params)
 
     # Allow for time to be listed as 'time' or 'jd' (Julian Date).
@@ -103,8 +109,8 @@ def initialize_post(data, params=None, priors=[]):
     if priors == []:
         priors.append(radvel.prior.PositiveKPrior(post.params.num_planets))
         priors.append(radvel.prior.EccentricityPrior(post.params.num_planets))
-    # priors.append([radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0)
-    # for inst in telgrps.keys()])
+        #for inst in telgrps.keys():
+        #    priors.append(radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0))
     post.priors = priors
 
     return post
@@ -256,7 +262,7 @@ def scrape(starlist, star_db_name=None, filename='system_props.csv'):
                 star_index = star_db.index[star_db['name'] == str(star)][0]
             except IndexError:
                 continue
-            # Save star mass, to be used in planet mass & semi-major axis calculations.
+            # Save stellar mass, to be used in mass and orbital calculations.
             Mtot = star_db.loc[star_index, 'mstar']
             props.loc[props_index, 'Mstar'] = Mtot
 
