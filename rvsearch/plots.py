@@ -189,11 +189,8 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
 
         """
         ax = pl.gca()
-
-        if pnum < self.num_known_planets:
-            #Put axis and label on the right side, unless non-detection.
-            ax.yaxis.tick_right()
-            ax.yaxis.set_label_position('right')
+        ax.yaxis.tick_right()
+        ax.yaxis.set_label_position('right')
 
         plot.labelfig(pltletter)
 
@@ -280,8 +277,8 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
         ax = pl.gca()
 
         #Put axis and label on the right side of the plot.
-        ax.yaxis.tick_right()
-        ax.yaxis.set_label_position('right')
+        #ax.yaxis.tick_right()
+        #ax.yaxis.set_label_position('right')
 
         ax.set_xlabel('Period [day]', fontweight='bold')
         ax.set_ylabel('Window function power', fontweight='bold')
@@ -413,16 +410,16 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
                         top=divide - self.rv_phase_space * 0.2,
                         bottom=0.07, hspace=0.003, wspace=0.05)
         '''
-        ax_non = pl.subplot(gs_phase[self.num_planets, 0])
-        self.ax_list += [ax_non]
-        pl.sca(ax_non)
-        self.plot_periodogram(pltletter, self.num_planets)
-        pltletter += 1
-
-        ax_window = pl.subplot(gs_phase[self.num_planets, 1])
+        ax_window = pl.subplot(gs_phase[self.num_planets, 0])
         self.ax_list += [ax_window]
         pl.sca(ax_window)
         self.plot_window(pltletter)
+        pltletter += 1
+
+        ax_non = pl.subplot(gs_phase[self.num_planets, 1])
+        self.ax_list += [ax_non]
+        pl.sca(ax_non)
+        self.plot_periodogram(pltletter, self.num_planets)
         pltletter += 1
 
         pl.suptitle(self.search.starname, fontsize=self.text_size+6, weight='bold')
