@@ -160,7 +160,6 @@ class Periodogram(object):
         if self.verbose:
             print("Calculating BIC periodogram for {} planets vs. {} planets".format(plstr, prvstr))
         # This assumes nth planet parameters, and all periods, are fixed.
-
         if self.basebic is None:
             # Handle the case where there are no known planets.
             if self.post.params.num_planets == 1 and self.post.params['k1'].value == 0.:
@@ -198,9 +197,6 @@ class Periodogram(object):
         def _fit_period(n):
             post = copy.deepcopy(self.post)
             per_array = self.sub_pers[n]
-            '''
-            TO DECIDE: WRITE PER_ARRAY AS SUB_PERS COPY, OR REFERENCE SUB_PERS?
-            '''
             fit_params = [{} for x in range(len(per_array))]
             bic = np.zeros_like(per_array)
 
@@ -208,8 +204,6 @@ class Periodogram(object):
                 # Reset posterior parameters to default values.
                 for k in self.default_pdict.keys():
                     post.params[k].value = self.default_pdict[k]
-
-                #Set new period, and fit a circular orbit.
                 perkey = 'per{}'.format(self.num_known_planets+1)
                 post.params[perkey].value = per
                 post = radvel.fitting.maxlike_fitting(post, verbose=False)
@@ -228,7 +222,7 @@ class Periodogram(object):
                     # If the fit is still bad, reset tc to better value and try again.
                     for k in self.default_pdict.keys():
                         post.params[k].value = self.default_pdict[k]
-                    veldiff = np.absolute(post.likelihood.y - np.mean(post.likelihood.y))
+                    veldiff = np.absolute(post.likelihood.y - np.median(post.likelihood.y))
                     tc_new = self.times[np.argmin(veldiff)]
                     post.params['tc{}'.format(post.params.num_planets)].value = tc_new
                     post = radvel.fitting.maxlike_fitting(post, verbose=False)
