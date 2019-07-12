@@ -47,6 +47,7 @@ class Search(object):
             self.tels = np.unique(self.data['tel'].values)
         elif {'jd', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
+            self.data.time = self.data.jd
             self.tels = np.unique(self.data['tel'].values)
         else:
             raise ValueError('Incorrect data input.')
@@ -55,16 +56,13 @@ class Search(object):
 
         if post == None:
             self.priors = priors
-            self.params = utils.initialize_default_pars(instnames=self.tels)
+            self.params = utils.initialize_default_pars(instnames=self.tels,
+                                                        times=data.time)
             self.post   = utils.initialize_post(data, params=self.params,
                                                 priors=self.priors)
         else:
             self.post   = post
             # self.priors = post.priors
-
-        # self.post   = post
-        # self.params = self.post.params
-        # self.priors = self.post.priors
 
         self.all_params = []
 
@@ -137,8 +135,8 @@ class Search(object):
 
         flat_bic = post2.likelihood.bic()
 
-        if trend_bic < flat_bic - 10.:
-            if trend_curve_bic < trend_bic - 10.:
+        if trend_bic < flat_bic - 5.:
+            if trend_curve_bic < trend_bic - 5.:
                 # Quadratic
                 pass
             else:
@@ -358,9 +356,9 @@ class Search(object):
             os.mkdir(outdir)
 
         if self.trend:
-            self.trend_test()
-            #self.post.params['dvdt'].vary = True
-            #self.post.params['curv'].vary = True
+            #self.trend_test()
+            self.post.params['dvdt'].vary = True
+            self.post.params['curv'].vary = True
         else:
             self.post.params['dvdt'].vary = False
             self.post.params['curv'].vary = False
@@ -402,6 +400,26 @@ class Search(object):
                 self.num_planets += 1
                 for k in self.post.params.keys():
                     self.post.params[k].value = perioder.bestfit_params[k]
+
+                # 7/12/19: Try re-fitting with re-set tc. Highly particular fix.
+                # 7/11/19: DEBUG DARN TC JUMP
+                print('before_refit:\n', self.post.params['tc1'].value)
+                if self.num_planets == 1 and self.post.params['tc1'].value < \
+                                                     np.amin(self.data.time):
+                    self.post.params['tc1'].value = np.median(self.data.time)
+                    self.post.params['k1'].vary = False
+                    self.post.params['per1'].vary = False
+                    self.post.params['secosw1'].vary = False
+                    self.post.params['secosw1'].vary = False
+                    self.post = radvel.fitting.maxlike_fitting(self.post,
+                                                               verbose=False)
+                    self.post.params['k1'].vary = True
+                    self.post.params['per1'].vary = True
+                    self.post.params['secosw1'].vary = True
+                    self.post.params['secosw1'].vary = True
+                # 7/11/19: DEBUG DARN TC JUMP
+                print('after_refit:\n', self.post.params['tc1'].value)
+
                 self.fit_orbit()
                 self.all_params.append(self.post.params)
                 self.basebic = self.post.bic()
@@ -437,9 +455,9 @@ class Search(object):
                 self.post.params['sesinw{}'.format(n)].mcmcscale = sesinwscale
 
             # Run MCMC.
-            chains = radvel.mcmc(self.post, nwalkers=50, nrun=20000,
-                                 burnGR=1.01, maxGR=1.008, minTz=2000,
-                                 minsteps=8000, minpercent=40,
+            chains = radvel.mcmc(self.post, nwalkers=50, nrun=25000,
+                                 burnGR=1.01, maxGR=1.0075, minTz=2000,
+                                 minsteps=8000, minpercent=25,
                                  thin=5, ensembles=nensembles)
             # Convert chains to e, w basis.
             for par in self.post.params.keys():
@@ -546,9 +564,9 @@ class Search(object):
             np.savetxt(outdir+'/pers_periodograms.csv', periodograms_plus_pers,
                        header='period  BIC_array')
 
-            #threshs_bics_faps = np.append([self.bic_threshes], [self.best_bics], axis=0).T
             threshs_bics_faps = np.append([list(self.bic_threshes.values())],
-                                          [list(self.best_bics.values()), list(self.eFAPs.values())], axis=0).T
+                                          [list(self.best_bics.values()),
+                                           list(self.eFAPs.values())], axis=0).T
 
             np.savetxt(outdir+'/thresholds_bics_faps.csv', threshs_bics_faps,
                        header='threshold  best_bic  fap')

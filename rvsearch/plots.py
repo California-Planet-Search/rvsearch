@@ -228,7 +228,7 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
             # Set periodogram plot floor according to circular-fit BIC min.
             lower = -2*np.log(len(self.rvtimes))
         else:
-            lower = np.amin(self.power['bic'])
+            lower = np.amin(self.periodograms[pnum])
 
         ax.set_ylim([lower, upper])
         ax.set_xlim([self.pers[0], self.pers[-1]])
@@ -305,6 +305,10 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
                                           self.pers < max, self.pers > min))]
             pers_safe   = self.pers[np.where(np.logical_and(
                                              self.pers < max, self.pers > min))]
+
+            # skip plotting if baseline < min search period
+            if len(window_safe) == 0:
+                continue
 
             ax.set_ylim([0, 1.1*np.amax(window_safe)])
             ax.plot(pers_safe, window_safe, alpha=0.75, label=tel)
@@ -463,7 +467,7 @@ class CompletenessPlots(object):
         good = self.comp.recoveries.query('recovered == True')
         bad = self.comp.recoveries.query('recovered == False')
 
-        fig = pl.figure(figsize=(5, 3.5))
+        fig = pl.figure(figsize=(7.5, 5.25))
         pl.subplots_adjust(bottom=0.18, left=0.22, right=0.95)
 
         CS = pl.contourf(self.xgrid, self.ygrid, self.comp_array, 10, cmap=pl.cm.Reds_r, vmax=0.9)
