@@ -38,7 +38,7 @@ class Search(object):
     """
 
     def __init__(self, data, post=None, starname='star', max_planets=8,
-                priors=[], crit='bic', fap=0.01, min_per=3, manual_grid=None,
+                priors=[], crit='bic', fap=0.001, min_per=3, manual_grid=None,
                 oversampling=1., trend=False, fix=False, polish=True, mcmc=True,
                 workers=1, verbose=True, save_outputs=True):
 
@@ -111,38 +111,42 @@ class Search(object):
         """
 
         post1 = copy.deepcopy(self.post)
+        # Fix all Keplerian parameters. K is zero, equivalent to no planet.
         post1.params['per1'].vary = False
-        post1.params['k1'].vary = False
-        post1 =radvel.fitting.maxlike_fitting(post1, verbose=False)
+        post1.params['tc1'].vary  = False
+        post1.params['k1'].vary   = False
+        post1.params['secosw1'].vary = False
+        post1.params['sesinw1'].vary = False
+        post1 = radvel.fitting.maxlike_fitting(post1, verbose=False)
 
-        trend_curve_bic = self.post.likelihood.bic()
+        trend_curve_bic = post1.likelihood.bic()
 
         # Test without curvature
-        post1.params['curv'].value = 0.0
-        post1.params['curv'].vary = False
-        post1 = radvel.fitting.maxlike_fitting(post1, verbose=False)
-        post1.params['dvdt'].vary = False
+        post2 = copy.deepcopy(post1)
+        post2.params['curv'].value = 0.0
+        post2.params['curv'].vary  = False
+        post2 = radvel.fitting.maxlike_fitting(post2, verbose=False)
 
-        trend_bic = post1.likelihood.bic()
+        trend_bic = post2.likelihood.bic()
 
         # Test without trend or curvature
-        post2 = copy.deepcopy(post1)
+        post3 = copy.deepcopy(post2)
+        post3.params['dvdt'].value = 0.0
+        post3.params['dvdt'].vary  = False
+        post3.params['curv'].value = 0.0
+        post3.params['curv'].vary  = False
 
-        post2.params['dvdt'].value = 0.0
-        post2.params['dvdt'].vary = False
-        post2 = radvel.fitting.maxlike_fitting(post2, verbose=False)
-        post1.params['curv'].vary = False
+        flat_bic = post3.likelihood.bic()
 
-        flat_bic = post2.likelihood.bic()
-
-        if trend_bic < flat_bic - 5.:
-            if trend_curve_bic < trend_bic - 5.:
+        if trend_bic < flat_bic - 5:
+            if trend_curve_bic < trend_bic - 5:
                 # Quadratic
-                pass
+                self.post.params['dvdt'].value = post1.params['dvdt'].value
+                self.post.params['curv'].value = post1.params['curv'].value
             else:
                 # Linear
-                self.post.params['dvdt'].value = post1.params['dvdt'].value
                 self.post.params['curv'].value = 0
+                self.post.params['dvdt'].value = post2.params['dvdt'].value
                 self.post.params['curv'].vary  = False
         else:
             # Flat
@@ -356,9 +360,9 @@ class Search(object):
             os.mkdir(outdir)
 
         if self.trend:
-            #self.trend_test()
-            self.post.params['dvdt'].vary = True
-            self.post.params['curv'].vary = True
+            self.trend_test()
+            #self.post.params['dvdt'].vary = True
+            #self.post.params['curv'].vary = True
         else:
             self.post.params['dvdt'].vary = False
             self.post.params['curv'].vary = False
