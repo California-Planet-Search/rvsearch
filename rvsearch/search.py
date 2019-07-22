@@ -98,6 +98,12 @@ class Search(object):
         self.save_outputs = save_outputs
 
         self.basebic = None
+        '''
+        if post == None:
+            self.basebic = None
+        else:
+            self.basebic = post.likelihood.bic()
+        '''
 
         self.pers = None
         self.periodograms = dict()
@@ -370,9 +376,9 @@ class Search(object):
         run = True
         while run:
             if self.num_planets != 0:
-                self.add_planet()
                 if self.basebic is None:
                     self.basebic = self.post.likelihood.bic()
+                self.add_planet()
 
             perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
                                                minsearchp=self.min_per, fap=self.fap,

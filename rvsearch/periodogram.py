@@ -169,7 +169,7 @@ class Periodogram(object):
                 # Vary ONLY gamma, jitter, dvdt, curv. All else fixed, and k=0
                 baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
                 baseline_bic = baseline_fit.likelihood.bic()
-            # Handle the case where there is at least known planet.
+            # Handle the case where there is at least one known planet.
             else:
                 baseline_bic = self.post.likelihood.bic()
                 #baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
