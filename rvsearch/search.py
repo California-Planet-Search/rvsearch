@@ -436,7 +436,7 @@ class Search(object):
                 run = False
 
             # If any jitter values are negative, flip them.
-            for tel in tels:
+            for tel in self.tels:
                 if self.post.params[tel].value < 0:
                     self.post.params[tel].value = -self.post.params[tel].value
 
