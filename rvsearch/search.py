@@ -542,6 +542,10 @@ class Search(object):
                     #labels.append('k{}'.format(n))
                     #labels.append('e{}'.format(n))
                     #labels.append('w{}'.format(n))
+                if self.post.params['dvdt'].vary == True:
+                    labels.append('dvdt')
+                if self.post.params['curv'].vary == True:
+                    labels.append('curv')
                 texlabels = [self.post.params.tex_labels().get(l, l)
                              for l in labels]
                 plot = corner.corner(synthchains[labels], labels=texlabels,
