@@ -436,9 +436,10 @@ class Search(object):
                 run = False
 
             # If any jitter values are negative, flip them.
-            for tel in self.tels:
-                if self.post.params[tel].value < 0:
-                    self.post.params[tel].value = -self.post.params[tel].value
+            for key in self.post.params.keys():
+                if 'jit' in key:
+                    if self.post.params[key].value < 0:
+                        self.post.params[key].value = -self.post.params[key].value
 
             # Generate an orbit plot.
             if self.save_outputs:
