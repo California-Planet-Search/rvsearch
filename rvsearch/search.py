@@ -445,7 +445,8 @@ class Search(object):
                                                         self.num_planets))
 
         # Run MCMC on final posterior, save new parameters and uncertainties.
-        if self.mcmc == True and self.num_planets != 0:
+        if self.mcmc == True and (self.num_planets != 0 or
+                                  self.post.params['dvdt'].vary == True):
             self.post.uparams   = {}
             self.post.medparams = {}
             self.post.maxparams = {}
