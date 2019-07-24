@@ -435,6 +435,11 @@ class Search(object):
             if self.num_planets >= self.max_planets:
                 run = False
 
+            # If any jitter values are negative, flip them.
+            for tel in tels:
+                if self.post.params[tel].value < 0:
+                    self.post.params[tel].value = -self.post.params[tel].value
+
             # Generate an orbit plot.
             if self.save_outputs:
                 rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir +
@@ -502,8 +507,6 @@ class Search(object):
                 max_w, err_w, errhigh_w = radvel.utils.sigfig(
                                           self.post.params[w_key].value, err_w)
 
-                # self.post.params[e_key].value = med_e
-                # self.post.params[w_key].value = med_w
                 self.post.uparams[e_key] = err_e
                 self.post.uparams[w_key] = err_w
                 self.post.medparams[e_key] = med_e
@@ -523,31 +526,25 @@ class Search(object):
                     max, err, errhigh = radvel.utils.sigfig(
                                         self.post.params[par].value, err)
 
-                    # self.post.params[par].value = med
                     self.post.uparams[par] = err
                     self.post.medparams[par] = med
                     self.post.maxparams[par] = max
 
             if self.save_outputs:
                 # Generate a corner plot, sans nuisance parameters.
-                labels = []
                 for n in np.arange(1, self.num_planets+1):
                     labels.append('per{}'.format(n))
                     labels.append('tc{}'.format(n))
                     labels.append('k{}'.format(n))
                     labels.append('secosw{}'.format(n))
                     labels.append('sesinw{}'.format(n))
-                    #labels.append('per{}'.format(n))
-                    #labels.append('tp{}'.format(n))
-                    #labels.append('k{}'.format(n))
-                    #labels.append('e{}'.format(n))
-                    #labels.append('w{}'.format(n))
                 if self.post.params['dvdt'].vary == True:
                     labels.append('dvdt')
                 if self.post.params['curv'].vary == True:
                     labels.append('curv')
                 texlabels = [self.post.params.tex_labels().get(l, l)
                              for l in labels]
+
                 plot = corner.corner(synthchains[labels], labels=texlabels,
                                      label_kwargs={"fontsize": 14},
                                      plot_datapoints=False, bins=30,
