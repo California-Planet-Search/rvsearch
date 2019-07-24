@@ -533,6 +533,7 @@ class Search(object):
 
             if self.save_outputs:
                 # Generate a corner plot, sans nuisance parameters.
+                labels = []
                 for n in np.arange(1, self.num_planets+1):
                     labels.append('per{}'.format(n))
                     labels.append('tc{}'.format(n))
