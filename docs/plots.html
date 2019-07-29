@@ -1,0 +1,419 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Plotting &mdash; rvsearch 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Miscellaneous Utilities" href="utils.html" />
+    <link rel="prev" title="Injection and Recovery Tests" href="inject.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> rvsearch
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="tutorial_api.html">API Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="periodogram.html">Periodograms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="search_class.html">Blind Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inject.html">Injection and Recovery Tests</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Miscellaneous Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">rvsearch</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="api.html">API</a> &raquo;</li>
+        
+      <li>Plotting</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/plots.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="module-rvsearch">
+<span id="plotting"></span><span id="plots"></span><h1>Plotting<a class="headerlink" href="#module-rvsearch" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-rvsearch.plots"></span><dl class="class">
+<dt id="rvsearch.plots.CompletenessPlots">
+<em class="property">class </em><code class="descclassname">rvsearch.plots.</code><code class="descname">CompletenessPlots</code><span class="sig-paren">(</span><em>completeness</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#CompletenessPlots"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.CompletenessPlots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to plot results of injection/recovery tests</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>completeness</strong> (<a class="reference internal" href="inject.html#rvsearch.inject.Completeness" title="rvsearch.inject.Completeness"><em>inject.Completeness</em></a>) – completeness object</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="rvsearch.plots.CompletenessPlots.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>completeness</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#CompletenessPlots.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.CompletenessPlots.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="rvsearch.plots.CompletenessPlots.__weakref__">
+<code class="descname">__weakref__</code><a class="headerlink" href="#rvsearch.plots.CompletenessPlots.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.plots.CompletenessPlots.completeness_plot">
+<code class="descname">completeness_plot</code><span class="sig-paren">(</span><em>title=''</em>, <em>xlabel=''</em>, <em>ylabel=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#CompletenessPlots.completeness_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.CompletenessPlots.completeness_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot completeness contours</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>title</strong> (<em>string</em>) – (optional) plot title</li>
+<li><strong>xlabel</strong> (<em>string</em>) – (optional) x-axis label</li>
+<li><strong>ylabel</strong> (<em>string</em>) – (optional) y-axis label</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="rvsearch.plots.CustomTicker">
+<em class="property">class </em><code class="descclassname">rvsearch.plots.</code><code class="descname">CustomTicker</code><span class="sig-paren">(</span><em>base=10.0</em>, <em>labelOnlyBase=False</em>, <em>minor_thresholds=None</em>, <em>linthresh=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#CustomTicker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.CustomTicker" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="rvsearch.plots.CustomTicker.__call__">
+<code class="descname">__call__</code><span class="sig-paren">(</span><em>x</em>, <em>pos=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#CustomTicker.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.CustomTicker.__call__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the format for tick value <em>x</em>.</p>
+<p>The position <em>pos</em> is ignored.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="rvsearch.plots.PeriodModelPlot">
+<em class="property">class </em><code class="descclassname">rvsearch.plots.</code><code class="descname">PeriodModelPlot</code><span class="sig-paren">(</span><em>search</em>, <em>saveplot=None</em>, <em>epoch=2450000</em>, <em>yscale_auto=False</em>, <em>yscale_sigma=3.0</em>, <em>phase_nrows=None</em>, <em>phase_ncols=None</em>, <em>summary_ncols=2</em>, <em>uparams=None</em>, <em>telfmts={'APF': {'color': 'g'</em>, <em>'fmt': 'd'</em>, <em>'label': 'APF'}</em>, <em>'HARPS': {'color': 'firebrick'</em>, <em>'fmt': 's'</em>, <em>'label': 'HARPS'}</em>, <em>'HARPS-N': {'color': 'firebrick'</em>, <em>'fmt': '^'</em>, <em>'label': 'HARPS-N'}</em>, <em>'HIRES': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'HIRES_RJ': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'HIRES_RK': {'color': 'k'</em>, <em>'fmt': 's'</em>, <em>'label': 'HIRES pre 2004'</em>, <em>'mew': 1</em>, <em>'mfc': 'none'}</em>, <em>'LICK': {'color': 'g'</em>, <em>'fmt': '*'</em>, <em>'label': 'LICK'}</em>, <em>'PFS': {'color': 'magenta'</em>, <em>'fmt': 'p'</em>, <em>'label': 'PFS'}</em>, <em>'a': {'color': 'g'</em>, <em>'fmt': 'd'</em>, <em>'label': 'APF'}</em>, <em>'apf': {'color': 'g'</em>, <em>'fmt': 'd'</em>, <em>'label': 'APF'}</em>, <em>'h': {'color': 'firebrick'</em>, <em>'fmt': 's'</em>, <em>'label': 'HARPS'}</em>, <em>'harps': {'color': 'firebrick'</em>, <em>'fmt': 's'</em>, <em>'label': 'HARPS'}</em>, <em>'harps-n': {'color': 'firebrick'</em>, <em>'fmt': '^'</em>, <em>'label': 'HARPS-N'}</em>, <em>'hires': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'hires_rj': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'hires_rk': {'color': 'k'</em>, <em>'fmt': 's'</em>, <em>'label': 'HIRES pre 2004'</em>, <em>'mew': 1</em>, <em>'mfc': 'none'}</em>, <em>'j': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'k': {'color': 'k'</em>, <em>'fmt': 's'</em>, <em>'label': 'HIRES pre 2004'</em>, <em>'mew': 1</em>, <em>'mfc': 'none'}</em>, <em>'l': {'color': 'g'</em>, <em>'fmt': '*'</em>, <em>'label': 'LICK'}</em>, <em>'lick': {'color': 'g'</em>, <em>'fmt': '*'</em>, <em>'label': 'LICK'}</em>, <em>'pfs': {'color': 'magenta'</em>, <em>'fmt': 'p'</em>, <em>'label': 'PFS'}}</em>, <em>legend=True</em>, <em>phase_limits=[]</em>, <em>nobin=False</em>, <em>phasetext_size='small'</em>, <em>rv_phase_space=0.06</em>, <em>figwidth=9.5</em>, <em>fit_linewidth=2.0</em>, <em>set_xlim=None</em>, <em>text_size=9</em>, <em>legend_kwargs={'loc': 'best'}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Class to jointly plot the periodograms, best model phaseplots, and</dt>
+<dd>window function for each search iteration.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>search</strong> (<em>rvsearch.Search</em>) – rvsearch.Search object.
+This includes the periodograms and best-fit RadVel
+posteriors for each added planet.</li>
+<li><strong>saveplot</strong> (<em>string</em>) – path to save plot</li>
+<li><strong>epoch</strong> (<em>int</em><em>, </em><em>optional</em>) – epoch to subtract off of all time measurements</li>
+<li><strong>yscale_auto</strong> (<em>bool</em><em>, </em><em>optional</em>) – Use matplotlib auto y-axis
+scaling (default: False)</li>
+<li><strong>yscale_sigma</strong> (<em>float</em><em>, </em><em>optional</em>) – Scale y-axis limits for all panels to be +/-
+yscale_sigma*(RMS of data plotted) if yscale_auto==False</li>
+<li><strong>phase_nrows</strong> (<em>int</em><em>, </em><em>optional</em>) – number of columns in the phase
+folded plots. Default is nplanets.</li>
+<li><strong>phase_ncols</strong> (<em>int</em><em>, </em><em>optional</em>) – number of columns in the phase
+folded plots. Default is 1.</li>
+<li><strong>uparams</strong> (<em>dict</em><em>, </em><em>optional</em>) – parameter uncertainties, must
+contain ‘per’, ‘k’, and ‘e’ keys.</li>
+<li><strong>telfmts</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>dictionary of dictionaries mapping
+instrument suffix to plotting format code. Example:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>telfmts = {</dt>
+<dd>‘hires’: dict(fmt=’o’,label=’HIRES’),
+‘harps-n’ dict(fmt=’s’)</dd>
+</dl>
+<p>}</p>
+</div></blockquote>
+</li>
+<li><strong>legend</strong> (<em>bool</em><em>, </em><em>optional</em>) – include legend on plot? Default: True.</li>
+<li><strong>phase_limits</strong> (<em>list</em><em>, </em><em>optional</em>) – two element list specifying
+pyplot.xlim bounds for phase-folded plots. Useful for
+partial orbits.</li>
+<li><strong>nobin</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True do not show binned data on
+phase plots. Will default to True if total number of
+measurements is less then 20.</li>
+<li><strong>phasetext_size</strong> (<em>string</em><em>, </em><em>optional</em>) – fontsize for text in phase plots.
+Choice of {‘xx-small’, ‘x-small’, ‘small’, ‘medium’, ‘large’,
+‘x-large’, ‘xx-large’}. Default: ‘x-small’.</li>
+<li><strong>rv_phase_space</strong> (<em>float</em><em>, </em><em>optional</em>) – amount of space to leave between orbit/residual plot
+and phase plots.</li>
+<li><strong>figwidth</strong> (<em>float</em><em>, </em><em>optional</em>) – width of the figures to be produced.
+Default: 7.5 (spans a page with 0.5 in margins)</li>
+<li><strong>fit_linewidth</strong> (<em>float</em><em>, </em><em>optional</em>) – linewidth to use for orbit model lines in phase-folded
+plots and residuals plots.</li>
+<li><strong>set_xlim</strong> (<em>list of float</em>) – limits to use for x-axes of the timeseries and residuals plots, in
+JD - <cite>epoch</cite>. Ex: [7000., 70005.]</li>
+<li><strong>text_size</strong> (<em>int</em>) – set matplotlib.rcParams[‘font.size’] (default: 9)</li>
+<li><strong>legend_kwargs</strong> (<em>dict</em>) – dict of options to pass to legend (plotted in top panel)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="rvsearch.plots.PeriodModelPlot.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>search</em>, <em>saveplot=None</em>, <em>epoch=2450000</em>, <em>yscale_auto=False</em>, <em>yscale_sigma=3.0</em>, <em>phase_nrows=None</em>, <em>phase_ncols=None</em>, <em>summary_ncols=2</em>, <em>uparams=None</em>, <em>telfmts={'APF': {'color': 'g'</em>, <em>'fmt': 'd'</em>, <em>'label': 'APF'}</em>, <em>'HARPS': {'color': 'firebrick'</em>, <em>'fmt': 's'</em>, <em>'label': 'HARPS'}</em>, <em>'HARPS-N': {'color': 'firebrick'</em>, <em>'fmt': '^'</em>, <em>'label': 'HARPS-N'}</em>, <em>'HIRES': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'HIRES_RJ': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'HIRES_RK': {'color': 'k'</em>, <em>'fmt': 's'</em>, <em>'label': 'HIRES pre 2004'</em>, <em>'mew': 1</em>, <em>'mfc': 'none'}</em>, <em>'LICK': {'color': 'g'</em>, <em>'fmt': '*'</em>, <em>'label': 'LICK'}</em>, <em>'PFS': {'color': 'magenta'</em>, <em>'fmt': 'p'</em>, <em>'label': 'PFS'}</em>, <em>'a': {'color': 'g'</em>, <em>'fmt': 'd'</em>, <em>'label': 'APF'}</em>, <em>'apf': {'color': 'g'</em>, <em>'fmt': 'd'</em>, <em>'label': 'APF'}</em>, <em>'h': {'color': 'firebrick'</em>, <em>'fmt': 's'</em>, <em>'label': 'HARPS'}</em>, <em>'harps': {'color': 'firebrick'</em>, <em>'fmt': 's'</em>, <em>'label': 'HARPS'}</em>, <em>'harps-n': {'color': 'firebrick'</em>, <em>'fmt': '^'</em>, <em>'label': 'HARPS-N'}</em>, <em>'hires': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'hires_rj': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'hires_rk': {'color': 'k'</em>, <em>'fmt': 's'</em>, <em>'label': 'HIRES pre 2004'</em>, <em>'mew': 1</em>, <em>'mfc': 'none'}</em>, <em>'j': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'k': {'color': 'k'</em>, <em>'fmt': 's'</em>, <em>'label': 'HIRES pre 2004'</em>, <em>'mew': 1</em>, <em>'mfc': 'none'}</em>, <em>'l': {'color': 'g'</em>, <em>'fmt': '*'</em>, <em>'label': 'LICK'}</em>, <em>'lick': {'color': 'g'</em>, <em>'fmt': '*'</em>, <em>'label': 'LICK'}</em>, <em>'pfs': {'color': 'magenta'</em>, <em>'fmt': 'p'</em>, <em>'label': 'PFS'}}</em>, <em>legend=True</em>, <em>phase_limits=[]</em>, <em>nobin=False</em>, <em>phasetext_size='small'</em>, <em>rv_phase_space=0.06</em>, <em>figwidth=9.5</em>, <em>fit_linewidth=2.0</em>, <em>set_xlim=None</em>, <em>text_size=9</em>, <em>legend_kwargs={'loc': 'best'}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.plots.PeriodModelPlot.plot_periodogram">
+<code class="descname">plot_periodogram</code><span class="sig-paren">(</span><em>pltletter</em>, <em>pnum=0</em>, <em>alias=True</em>, <em>floor=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot.plot_periodogram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.plot_periodogram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot periodogram for a given search iteration.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.plots.PeriodModelPlot.plot_summary">
+<code class="descname">plot_summary</code><span class="sig-paren">(</span><em>letter_labels=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot.plot_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.plot_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provision and plot a search summary plot</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>letter_labels</strong> (<em>bool</em><em>, </em><em>optional</em>) – if True, include
+letter labels on orbit and residual plots.
+Default: True.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
+<li>current matplotlib Figure object</li>
+<li>list of Axes objects</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">tuple containing</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.plots.PeriodModelPlot.plot_window">
+<code class="descname">plot_window</code><span class="sig-paren">(</span><em>pltletter</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot.plot_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.plot_window" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the window function of the data, for each instrument.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="utils.html" class="btn btn-neutral float-right" title="Miscellaneous Utilities" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="inject.html" class="btn btn-neutral" title="Injection and Recovery Tests" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Lee Rosenthal and BJ Fulton.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="_static/language_data.js"></script>
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

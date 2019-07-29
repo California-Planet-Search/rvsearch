@@ -1,0 +1,393 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Periodograms &mdash; rvsearch 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Blind Search" href="search_class.html" />
+    <link rel="prev" title="API" href="api.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> rvsearch
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="tutorial_api.html">API Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Periodograms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="search_class.html">Blind Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inject.html">Injection and Recovery Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plots.html">Plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Miscellaneous Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">rvsearch</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="api.html">API</a> &raquo;</li>
+        
+      <li>Periodograms</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/periodogram.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="module-rvsearch">
+<span id="periodograms"></span><span id="periodogram"></span><h1>Periodograms<a class="headerlink" href="#module-rvsearch" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-rvsearch.periodogram"></span><dl class="class">
+<dt id="rvsearch.periodogram.Periodogram">
+<em class="property">class </em><code class="descclassname">rvsearch.periodogram.</code><code class="descname">Periodogram</code><span class="sig-paren">(</span><em>post</em>, <em>basebic=None</em>, <em>minsearchp=3</em>, <em>maxsearchp=10000</em>, <em>baseline=True</em>, <em>basefactor=5.0</em>, <em>oversampling=1.0</em>, <em>manual_grid=None</em>, <em>fap=0.01</em>, <em>num_pers=None</em>, <em>eccentric=False</em>, <em>workers=1</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/periodogram.html#Periodogram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.periodogram.Periodogram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to calculate and store periodograms.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>post</strong> (<em>radvel.Posterior</em>) – radvel.Posterior object</li>
+<li><strong>minsearchp</strong> (<em>float</em>) – minimum search period</li>
+<li><strong>maxsearchp</strong> (<em>float</em>) – maximum search period</li>
+<li><strong>baseline</strong> (<em>bool</em>) – Whether to calculate maxsearchp from obs. baseline</li>
+<li><strong>basefactor</strong> (<em>float</em>) – How far past the obs. baseline to search</li>
+<li><strong>oversampling</strong> (<em>float</em>) – By how much to oversample the period grid</li>
+<li><strong>manual_grid</strong> (<em>array</em>) – Option to feed in a user-chosen period grid</li>
+<li><strong>fap</strong> (<em>float</em>) – False-alarm-probability threshold for detection</li>
+<li><strong>num_pers</strong> (<em>int</em>) – (optional) number of frequencies to test, default</li>
+<li><strong>eccentric</strong> (<em>bool</em>) – Whether to fit with free or fixed eccentricity</li>
+<li><strong>workers</strong> (<em>int</em>) – Number of cpus over which to parallelize</li>
+<li><strong>verbose</strong> (<em>bool</em>) – Whether to print progress during calculation</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="rvsearch.periodogram.Periodogram.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>post</em>, <em>basebic=None</em>, <em>minsearchp=3</em>, <em>maxsearchp=10000</em>, <em>baseline=True</em>, <em>basefactor=5.0</em>, <em>oversampling=1.0</em>, <em>manual_grid=None</em>, <em>fap=0.01</em>, <em>num_pers=None</em>, <em>eccentric=False</em>, <em>workers=1</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/periodogram.html#Periodogram.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.periodogram.Periodogram.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="rvsearch.periodogram.Periodogram.__weakref__">
+<code class="descname">__weakref__</code><a class="headerlink" href="#rvsearch.periodogram.Periodogram.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.periodogram.Periodogram.eFAP">
+<code class="descname">eFAP</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/periodogram.html#Periodogram.eFAP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.periodogram.Periodogram.eFAP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the threshold for significance based on BJ’s empirical
+false-alarm-probability algorithm, and estimate the
+false-alarm-probability of the DBIC global maximum.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.periodogram.Periodogram.ls">
+<code class="descname">ls</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/periodogram.html#Periodogram.ls"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.periodogram.Periodogram.ls" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute Lomb-Scargle periodogram with astropy.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.periodogram.Periodogram.make_per_grid">
+<code class="descname">make_per_grid</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/periodogram.html#Periodogram.make_per_grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.periodogram.Periodogram.make_per_grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a grid of periods for which to compute likelihoods.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.periodogram.Periodogram.per_bic">
+<code class="descname">per_bic</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/periodogram.html#Periodogram.per_bic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.periodogram.Periodogram.per_bic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute delta-BIC periodogram. ADD: crit is BIC or AIC.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.periodogram.Periodogram.per_spacing">
+<code class="descname">per_spacing</code><span class="sig-paren">(</span><em>verbose=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/periodogram.html#Periodogram.per_spacing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.periodogram.Periodogram.per_spacing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of sampled frequencies and return a period grid.</p>
+<p>Condition for spacing: delta nu such that during the
+entire duration of observations, phase slip is no more than P/4</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>verbose</strong> (<em>bool</em>) – (optional) print extra messages</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Array of test periods</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">array</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.periodogram.Periodogram.plot_per">
+<code class="descname">plot_per</code><span class="sig-paren">(</span><em>alias=True</em>, <em>floor=True</em>, <em>save=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/periodogram.html#Periodogram.plot_per"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.periodogram.Periodogram.plot_per" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot periodogram.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>alias</strong> (<em>bool</em>) – Plot year, month, day aliases?</li>
+<li><strong>floor</strong> (<em>bool</em>) – Set y-axis minimum according to likelihood limit?</li>
+<li><strong>save</strong> (<em>bool</em>) – Save plot to current directory?</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.periodogram.Periodogram.save_per">
+<code class="descname">save_per</code><span class="sig-paren">(</span><em>ls=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/periodogram.html#Periodogram.save_per"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.periodogram.Periodogram.save_per" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save BIC periodogram as csv.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ls</strong> (<em>bool</em>) – Save Lomb-Scargle periodogram?</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="rvsearch.periodogram.TqdmUpTo">
+<em class="property">class </em><code class="descclassname">rvsearch.periodogram.</code><code class="descname">TqdmUpTo</code><span class="sig-paren">(</span><em>iterable=None</em>, <em>desc=None</em>, <em>total=None</em>, <em>leave=True</em>, <em>file=None</em>, <em>ncols=None</em>, <em>mininterval=0.1</em>, <em>maxinterval=10.0</em>, <em>miniters=None</em>, <em>ascii=None</em>, <em>disable=False</em>, <em>unit='it'</em>, <em>unit_scale=False</em>, <em>dynamic_ncols=False</em>, <em>smoothing=0.3</em>, <em>bar_format=None</em>, <em>initial=0</em>, <em>position=None</em>, <em>postfix=None</em>, <em>unit_divisor=1000</em>, <em>gui=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/periodogram.html#TqdmUpTo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.periodogram.TqdmUpTo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provides <cite>update_to(n)</cite> which uses <cite>tqdm.update(delta_n)</cite>.</p>
+<dl class="method">
+<dt id="rvsearch.periodogram.TqdmUpTo.update_to">
+<code class="descname">update_to</code><span class="sig-paren">(</span><em>b=1</em>, <em>bsize=1</em>, <em>tsize=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/periodogram.html#TqdmUpTo.update_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.periodogram.TqdmUpTo.update_to" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>b <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd>Number of blocks transferred so far [default: 1].</dd>
+<dt>bsize <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd>Size of each block (in tqdm units) [default: 1].</dd>
+<dt>tsize <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd>Total size (in tqdm units). If [default: None] remains unchanged.</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="search_class.html" class="btn btn-neutral float-right" title="Blind Search" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="api.html" class="btn btn-neutral" title="API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Lee Rosenthal and BJ Fulton.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="_static/language_data.js"></script>
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

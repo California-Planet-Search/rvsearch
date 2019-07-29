@@ -13,8 +13,16 @@ for line in open('requirements.txt', 'r').readlines():
 setup(
     name="rvsearch",
     version=get_property('__version__', 'rvsearch'),
-    author="BJ Fulton",
+    author="Lee Rosenthal, BJ Fulton",
     packages=find_packages(),
     entry_points={'console_scripts': ['rvsearch=rvsearch.cli:main']},
-    install_requires=reqs
+    install_requires=reqs,
+    data_files=[
+        (
+            'rvsearch_example_data',
+            [
+                'example_data/HD128311.csv'
+            ]
+        )
+    ],
 )

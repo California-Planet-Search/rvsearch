@@ -1,0 +1,605 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rvsearch.periodogram &mdash; rvsearch 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> rvsearch
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorial_api.html">API Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">rvsearch</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>rvsearch.periodogram</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for rvsearch.periodogram</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">pdb</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">astropy.stats</span>
+<span class="kn">import</span> <span class="nn">radvel</span>
+<span class="kn">import</span> <span class="nn">radvel.fitting</span>
+<span class="kn">from</span> <span class="nn">radvel.plot</span> <span class="k">import</span> <span class="n">orbit_plots</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm</span>
+<span class="kn">import</span> <span class="nn">pathos.multiprocessing</span> <span class="k">as</span> <span class="nn">mp</span>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="k">import</span> <span class="n">Value</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">repeat</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span>
+
+<span class="kn">import</span> <span class="nn">rvsearch.utils</span> <span class="k">as</span> <span class="nn">utils</span>
+
+
+<div class="viewcode-block" id="TqdmUpTo"><a class="viewcode-back" href="../../periodogram.html#rvsearch.periodogram.TqdmUpTo">[docs]</a><span class="k">class</span> <span class="nc">TqdmUpTo</span><span class="p">(</span><span class="n">tqdm</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Provides `update_to(n)` which uses `tqdm.update(delta_n)`.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="TqdmUpTo.update_to"><a class="viewcode-back" href="../../periodogram.html#rvsearch.periodogram.TqdmUpTo.update_to">[docs]</a>    <span class="k">def</span> <span class="nf">update_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bsize</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">tsize</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        b  : int, optional</span>
+<span class="sd">            Number of blocks transferred so far [default: 1].</span>
+<span class="sd">        bsize  : int, optional</span>
+<span class="sd">            Size of each block (in tqdm units) [default: 1].</span>
+<span class="sd">        tsize  : int, optional</span>
+<span class="sd">            Total size (in tqdm units). If [default: None] remains unchanged.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">tsize</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">total</span> <span class="o">=</span> <span class="n">tsize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">b</span> <span class="o">*</span> <span class="n">bsize</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>  <span class="c1"># will also set self.n = b * bsize</span></div></div>
+
+
+<div class="viewcode-block" id="Periodogram"><a class="viewcode-back" href="../../periodogram.html#rvsearch.periodogram.Periodogram">[docs]</a><span class="k">class</span> <span class="nc">Periodogram</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class to calculate and store periodograms.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        post (radvel.Posterior): radvel.Posterior object</span>
+<span class="sd">        minsearchp (float): minimum search period</span>
+<span class="sd">        maxsearchp (float): maximum search period</span>
+<span class="sd">        baseline (bool): Whether to calculate maxsearchp from obs. baseline</span>
+<span class="sd">        basefactor (float): How far past the obs. baseline to search</span>
+<span class="sd">        oversampling (float): By how much to oversample the period grid</span>
+<span class="sd">        manual_grid (array): Option to feed in a user-chosen period grid</span>
+<span class="sd">        fap (float): False-alarm-probability threshold for detection</span>
+<span class="sd">        num_pers (int): (optional) number of frequencies to test, default</span>
+<span class="sd">        eccentric (bool): Whether to fit with free or fixed eccentricity</span>
+<span class="sd">        workers (int): Number of cpus over which to parallelize</span>
+<span class="sd">        verbose (bool): Whether to print progress during calculation</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Periodogram.__init__"><a class="viewcode-back" href="../../periodogram.html#rvsearch.periodogram.Periodogram.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">post</span><span class="p">,</span> <span class="n">basebic</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">minsearchp</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">maxsearchp</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+                 <span class="n">baseline</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">basefactor</span><span class="o">=</span><span class="mf">5.</span><span class="p">,</span> <span class="n">oversampling</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">manual_grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">fap</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">num_pers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">eccentric</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">post</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">post</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default_pdict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">default_pdict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">basebic</span> <span class="o">=</span> <span class="n">basebic</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">num_planets</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">times</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">errvel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">yerr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timelen</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">times</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">times</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="s1">&#39;gamma_&#39;</span> <span class="ow">in</span> <span class="n">val</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">tels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">minsearchP</span> <span class="o">=</span> <span class="n">minsearchp</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxsearchP</span> <span class="o">=</span> <span class="n">maxsearchp</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span> <span class="o">=</span> <span class="n">baseline</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">basefactor</span> <span class="o">=</span> <span class="n">basefactor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">oversampling</span> <span class="o">=</span> <span class="n">oversampling</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">manual_grid</span> <span class="o">=</span> <span class="n">manual_grid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fap</span> <span class="o">=</span> <span class="n">fap</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_pers</span> <span class="o">=</span> <span class="n">num_pers</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">manual_grid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_pers</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">manual_grid</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">eccentric</span> <span class="o">=</span> <span class="n">eccentric</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">maxsearchP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">basefactor</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">timelen</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">valid_types</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;bic&#39;</span><span class="p">,</span> <span class="s1">&#39;aic&#39;</span><span class="p">,</span> <span class="s1">&#39;ls&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid_types</span><span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">workers</span> <span class="o">=</span> <span class="n">workers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_per</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_bic</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bic_thresh</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Pre-compute good-fit floor of the BIC periodogram.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">floor</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">times</span><span class="p">))</span>
+
+        <span class="c1"># Automatically generate a period grid upon initialization.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">make_per_grid</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Periodogram.per_spacing"><a class="viewcode-back" href="../../periodogram.html#rvsearch.periodogram.Periodogram.per_spacing">[docs]</a>    <span class="k">def</span> <span class="nf">per_spacing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the number of sampled frequencies and return a period grid.</span>
+
+<span class="sd">        Condition for spacing: delta nu such that during the</span>
+<span class="sd">        entire duration of observations, phase slip is no more than P/4</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            verbose (bool): (optional) print extra messages</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            array: Array of test periods</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fmin</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">maxsearchP</span>
+        <span class="n">fmax</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">minsearchP</span>
+
+        <span class="c1"># Should be 1/(2*pi*baseline), was previously 1/4.</span>
+        <span class="n">dnu</span>       <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">timelen</span><span class="p">)</span>
+        <span class="n">num_freq</span>  <span class="o">=</span> <span class="p">(</span><span class="n">fmax</span> <span class="o">-</span> <span class="n">fmin</span><span class="p">)</span><span class="o">/</span><span class="n">dnu</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">num_freq</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">oversampling</span>
+        <span class="n">num_freq</span>  <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_freq</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of test periods:&quot;</span><span class="p">,</span> <span class="n">num_freq</span><span class="p">)</span>
+
+        <span class="n">freqs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">fmax</span><span class="p">,</span> <span class="n">fmin</span><span class="p">,</span> <span class="n">num_freq</span><span class="p">)</span>
+        <span class="n">pers</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">freqs</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_pers</span> <span class="o">=</span> <span class="n">num_freq</span>
+        <span class="k">return</span> <span class="n">pers</span></div>
+
+<div class="viewcode-block" id="Periodogram.make_per_grid"><a class="viewcode-back" href="../../periodogram.html#rvsearch.periodogram.Periodogram.make_per_grid">[docs]</a>    <span class="k">def</span> <span class="nf">make_per_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate a grid of periods for which to compute likelihoods.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">manual_grid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">manual_grid</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_pers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">per_spacing</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pers</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">maxsearchP</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">minsearchP</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">num_pers</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">freqs</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">pers</span></div>
+
+<div class="viewcode-block" id="Periodogram.per_bic"><a class="viewcode-back" href="../../periodogram.html#rvsearch.periodogram.Periodogram.per_bic">[docs]</a>    <span class="k">def</span> <span class="nf">per_bic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute delta-BIC periodogram. ADD: crit is BIC or AIC.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">prvstr</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">num_planets</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">plstr</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">num_planets</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Calculating BIC periodogram for </span><span class="si">{}</span><span class="s2"> planets vs. </span><span class="si">{}</span><span class="s2"> planets&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">plstr</span><span class="p">,</span> <span class="n">prvstr</span><span class="p">))</span>
+        <span class="c1"># This assumes nth planet parameters, and all periods, are fixed.</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">basebic</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Handle the case where there are no known planets.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">num_planets</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;k1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;per&#39;</span><span class="o">+</span><span class="n">plstr</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;tc&#39;</span><span class="o">+</span><span class="n">plstr</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;k&#39;</span><span class="o">+</span><span class="n">plstr</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="c1"># Vary ONLY gamma, jitter, dvdt, curv. All else fixed, and k=0</span>
+                <span class="n">baseline_fit</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">fitting</span><span class="o">.</span><span class="n">maxlike_fitting</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">baseline_bic</span> <span class="o">=</span> <span class="n">baseline_fit</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">bic</span><span class="p">()</span>
+            <span class="c1"># Handle the case where there is at least known planet.</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">baseline_bic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">bic</span><span class="p">()</span>
+                <span class="c1">#baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)</span>
+                <span class="c1">#baseline_bic = baseline_fit.likelihood.bic()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">baseline_bic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">basebic</span>
+
+        <span class="n">rms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">residuals</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default_pdict</span><span class="p">[</span><span class="s1">&#39;k</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">num_planets</span><span class="p">)]</span> <span class="o">=</span> <span class="n">rms</span>
+
+        <span class="c1"># Allow amplitude and time offset to vary, fix period (and ecc. if asked.)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;per</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eccentric</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="c1"># If eccentric set to False, fix eccentricity to zero.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;secosw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;sesinw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;k</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span>  <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;tc</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># Divide period grid into as many subgrids as there are parallel workers.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sub_pers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="p">)</span>
+
+        <span class="c1"># Define a function to compute periodogram for a given grid section.</span>
+        <span class="k">def</span> <span class="nf">_fit_period</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">post</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="p">)</span>
+            <span class="n">per_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sub_pers</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+            <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">            TO DECIDE: WRITE PER_ARRAY AS SUB_PERS COPY, OR REFERENCE SUB_PERS?</span>
+<span class="sd">            &#39;&#39;&#39;</span>
+            <span class="n">fit_params</span> <span class="o">=</span> <span class="p">[{}</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">per_array</span><span class="p">))]</span>
+            <span class="n">bic</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">per_array</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">per</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">per_array</span><span class="p">):</span>
+                <span class="c1"># Reset posterior parameters to default values.</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_pdict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_pdict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+                <span class="c1">#Set new period, and fit a circular orbit.</span>
+                <span class="n">perkey</span> <span class="o">=</span> <span class="s1">&#39;per</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">perkey</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">per</span>
+                <span class="n">post</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">fitting</span><span class="o">.</span><span class="n">maxlike_fitting</span><span class="p">(</span><span class="n">post</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">bic</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">baseline_bic</span> <span class="o">-</span> <span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">bic</span><span class="p">()</span>
+
+                <span class="k">if</span> <span class="n">bic</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">floor</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="c1"># If the fit is bad, reset k_n+1 = 0 and try again.</span>
+                    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_pdict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_pdict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                    <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">perkey</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">per</span>
+                    <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;k</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">num_planets</span><span class="p">)]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">post</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">fitting</span><span class="o">.</span><span class="n">maxlike_fitting</span><span class="p">(</span><span class="n">post</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="n">bic</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">baseline_bic</span> <span class="o">-</span> <span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">bic</span><span class="p">()</span>
+
+                <span class="k">if</span> <span class="n">bic</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">floor</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="c1"># If the fit is still bad, reset tc to better value and try again.</span>
+                    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_pdict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_pdict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                    <span class="n">veldiff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">y</span><span class="p">))</span>
+                    <span class="n">tc_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">times</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">veldiff</span><span class="p">)]</span>
+                    <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;tc</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">num_planets</span><span class="p">)]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">tc_new</span>
+                    <span class="n">post</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">fitting</span><span class="o">.</span><span class="n">maxlike_fitting</span><span class="p">(</span><span class="n">post</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="n">bic</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">baseline_bic</span> <span class="o">-</span> <span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">bic</span><span class="p">()</span>
+
+                <span class="c1"># Append the best-fit parameters to the period-iterated list.</span>
+                <span class="n">best_params</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">best_params</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+                <span class="n">fit_params</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">best_params</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                    <span class="n">counter</span><span class="o">.</span><span class="n">value</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">pbar</span><span class="o">.</span><span class="n">update_to</span><span class="p">(</span><span class="n">counter</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="p">(</span><span class="n">bic</span><span class="p">,</span> <span class="n">fit_params</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="k">global</span> <span class="n">pbar</span>
+            <span class="k">global</span> <span class="n">counter</span>
+
+            <span class="n">counter</span> <span class="o">=</span> <span class="n">Value</span><span class="p">(</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">lock</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">pbar</span> <span class="o">=</span> <span class="n">TqdmUpTo</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pers</span><span class="p">),</span> <span class="n">position</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">workers</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># Call the periodogram loop on one core.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bic</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_params</span> <span class="o">=</span> <span class="n">_fit_period</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Parallelize the loop over sections of the period grid.</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="p">)</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">_fit_period</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="p">)))</span>
+
+            <span class="c1"># Sort output.</span>
+            <span class="n">all_bics</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">all_params</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
+                <span class="n">all_bics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">chunk</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">all_params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">chunk</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bic</span> <span class="o">=</span> <span class="p">[</span><span class="n">y</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_bics</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">x</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fit_params</span> <span class="o">=</span> <span class="p">[</span><span class="n">y</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_params</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">x</span><span class="p">]</span>
+
+        <span class="n">fit_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bic</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bestfit_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_params</span><span class="p">[</span><span class="n">fit_index</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_bic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bic</span><span class="p">[</span><span class="n">fit_index</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">power</span><span class="p">[</span><span class="s1">&#39;bic&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bic</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="n">pbar</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Periodogram.ls"><a class="viewcode-back" href="../../periodogram.html#rvsearch.periodogram.Periodogram.ls">[docs]</a>    <span class="k">def</span> <span class="nf">ls</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute Lomb-Scargle periodogram with astropy.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#FOR TESTING</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Calculating Lomb-Scargle periodogram&quot;</span><span class="p">)</span>
+        <span class="n">periodogram</span> <span class="o">=</span> <span class="n">astropy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">LombScargle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">times</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vel</span><span class="p">,</span>
+                                                        <span class="bp">self</span><span class="o">.</span><span class="n">errvel</span><span class="p">)</span>
+        <span class="n">power</span> <span class="o">=</span> <span class="n">periodogram</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">freqs</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">power</span><span class="p">[</span><span class="s1">&#39;ls&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">power</span></div>
+
+<div class="viewcode-block" id="Periodogram.eFAP"><a class="viewcode-back" href="../../periodogram.html#rvsearch.periodogram.Periodogram.eFAP">[docs]</a>    <span class="k">def</span> <span class="nf">eFAP</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the threshold for significance based on BJ&#39;s empirical</span>
+<span class="sd">            false-alarm-probability algorithm, and estimate the</span>
+<span class="sd">            false-alarm-probability of the DBIC global maximum.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># select out intermediate values of BIC, median - 95%</span>
+        <span class="n">sBIC</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power</span><span class="p">[</span><span class="s1">&#39;bic&#39;</span><span class="p">])</span>
+        <span class="n">crop_BIC</span> <span class="o">=</span> <span class="n">sBIC</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">sBIC</span><span class="p">)):</span><span class="nb">int</span><span class="p">(</span><span class="mf">0.95</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">sBIC</span><span class="p">))]</span>
+
+        <span class="n">hist</span><span class="p">,</span> <span class="n">edge</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">crop_BIC</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">cent</span> <span class="o">=</span> <span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">+</span><span class="n">edge</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="mf">2.</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist</span><span class="p">))</span>
+        <span class="n">nhist</span> <span class="o">=</span> <span class="n">hist</span><span class="o">/</span><span class="n">norm</span>
+        <span class="n">loghist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">nhist</span><span class="p">)</span>
+
+        <span class="n">func</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">poly1d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">cent</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">loghist</span><span class="p">)],</span> \
+                                <span class="n">loghist</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">loghist</span><span class="p">)],</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">xmod</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">sBIC</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">sBIC</span><span class="p">)]),</span> \
+                                    <span class="mf">10.</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">sBIC</span><span class="p">),</span> <span class="mi">10000</span><span class="p">)</span>
+        <span class="n">lfit</span> <span class="o">=</span> <span class="mf">10.</span><span class="o">**</span><span class="n">func</span><span class="p">(</span><span class="n">xmod</span><span class="p">)</span>
+        <span class="n">fap_min</span> <span class="o">=</span> <span class="mf">10.</span><span class="o">**</span><span class="n">func</span><span class="p">(</span><span class="n">sBIC</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">num_pers</span>
+        <span class="n">thresh</span> <span class="o">=</span> <span class="n">xmod</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lfit</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">fap</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">num_pers</span><span class="p">)</span> <span class="o">==</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lfit</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">fap</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">num_pers</span><span class="p">)))]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bic_thresh</span> <span class="o">=</span> <span class="n">thresh</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># Save the empirical-FAP of the DBIC global maximum.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fap_min</span> <span class="o">=</span> <span class="n">fap_min</span></div>
+
+<div class="viewcode-block" id="Periodogram.save_per"><a class="viewcode-back" href="../../periodogram.html#rvsearch.periodogram.Periodogram.save_per">[docs]</a>    <span class="k">def</span> <span class="nf">save_per</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save BIC periodogram as csv.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            ls (bool): Save Lomb-Scargle periodogram?</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">ls</span><span class="o">==</span><span class="kc">False</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">pers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">power</span><span class="p">[</span><span class="s1">&#39;bic&#39;</span><span class="p">]),</span> <span class="n">filename</span><span class="o">=</span>\
+                                                <span class="s1">&#39;BIC_periodogram.csv&#39;</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Have not generated a delta-BIC periodogram.&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">pers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">power</span><span class="p">[</span><span class="s1">&#39;ls&#39;</span><span class="p">]),</span> <span class="n">filename</span><span class="o">=</span>\
+                                                <span class="s1">&#39;LS_periodogram.csv&#39;</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Have not generated a Lomb-Scargle periodogram.&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Periodogram.plot_per"><a class="viewcode-back" href="../../periodogram.html#rvsearch.periodogram.Periodogram.plot_per">[docs]</a>    <span class="k">def</span> <span class="nf">plot_per</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">floor</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Plot periodogram.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            alias (bool): Plot year, month, day aliases?</span>
+<span class="sd">            floor (bool): Set y-axis minimum according to likelihood limit?</span>
+<span class="sd">            save (bool): Save plot to current directory?</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TO-DO: WORK IN AIC/BIC OPTION, INCLUDE IN PLOT TITLE</span>
+        <span class="n">peak</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power</span><span class="p">[</span><span class="s1">&#39;bic&#39;</span><span class="p">])</span>
+        <span class="n">f_real</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freqs</span><span class="p">[</span><span class="n">peak</span><span class="p">]</span>
+
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">power</span><span class="p">[</span><span class="s1">&#39;bic&#39;</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pers</span><span class="p">[</span><span class="n">peak</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">power</span><span class="p">[</span><span class="s1">&#39;bic&#39;</span><span class="p">][</span><span class="n">peak</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> days&#39;</span>\
+                            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pers</span><span class="p">[</span><span class="n">peak</span><span class="p">],</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span>
+
+        <span class="c1"># If DBIC threshold has been calculated, plot.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bic_thresh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bic_thresh</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> FAP&#39;</span>\
+                                                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fap</span><span class="p">))</span>
+            <span class="n">upper</span> <span class="o">=</span> <span class="mf">1.1</span><span class="o">*</span><span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power</span><span class="p">[</span><span class="s1">&#39;bic&#39;</span><span class="p">]),</span> <span class="bp">self</span><span class="o">.</span><span class="n">bic_thresh</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">upper</span> <span class="o">=</span> <span class="mf">1.1</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power</span><span class="p">[</span><span class="s1">&#39;bic&#39;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">floor</span><span class="p">:</span>
+            <span class="c1"># Set periodogram plot floor according to circular-fit BIC min.</span>
+            <span class="c1"># Set this until we figure out how to fix known planet offset. 5/8</span>
+            <span class="n">lower</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">floor</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power</span><span class="p">[</span><span class="s1">&#39;bic&#39;</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lower</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power</span><span class="p">[</span><span class="s1">&#39;bic&#39;</span><span class="p">])</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">pers</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">pers</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+
+        <span class="k">if</span> <span class="n">alias</span><span class="p">:</span>
+            <span class="c1"># Plot sidereal day, lunation period, and sidereal year aliases.</span>
+            <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">]</span>
+            <span class="n">alias</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.997</span><span class="p">,</span> <span class="mf">29.531</span><span class="p">,</span> <span class="mf">365.256</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+                <span class="n">f_ap</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="n">alias</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">f_real</span>
+                <span class="n">f_am</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="n">alias</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_real</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="n">f_am</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                                <span class="n">label</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> day alias&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">alias</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                <span class="n">decimals</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="n">f_ap</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Period (days)&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\Delta$BIC&#39;</span><span class="p">)</span>  <span class="c1"># TO-DO: WORK IN AIC/BIC OPTION</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Planet </span><span class="si">{}</span><span class="s1"> vs. planet </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span>
+                                                      <span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span><span class="p">))</span>
+
+        <span class="c1"># Store figure as object attribute, make separate saving functionality?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">fig</span>
+        <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;dbic</span><span class="si">{}</span><span class="s1">.pdf&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Lee Rosenthal and BJ Fulton.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="../../_static/language_data.js"></script>
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

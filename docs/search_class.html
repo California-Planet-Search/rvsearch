@@ -1,0 +1,385 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Blind Search &mdash; rvsearch 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Injection and Recovery Tests" href="inject.html" />
+    <link rel="prev" title="Periodograms" href="periodogram.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> rvsearch
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="tutorial_api.html">API Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="periodogram.html">Periodograms</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Blind Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inject.html">Injection and Recovery Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plots.html">Plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Miscellaneous Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">rvsearch</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="api.html">API</a> &raquo;</li>
+        
+      <li>Blind Search</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/search_class.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="module-rvsearch">
+<span id="blind-search"></span><span id="search-class"></span><h1>Blind Search<a class="headerlink" href="#module-rvsearch" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-rvsearch.search"></span><p>Search class</p>
+<dl class="class">
+<dt id="rvsearch.search.Search">
+<em class="property">class </em><code class="descclassname">rvsearch.search.</code><code class="descname">Search</code><span class="sig-paren">(</span><em>data</em>, <em>post=None</em>, <em>starname='star'</em>, <em>max_planets=8</em>, <em>priors=[]</em>, <em>crit='bic'</em>, <em>fap=0.01</em>, <em>min_per=3</em>, <em>manual_grid=None</em>, <em>oversampling=1.0</em>, <em>trend=False</em>, <em>fix=False</em>, <em>polish=True</em>, <em>mcmc=True</em>, <em>workers=1</em>, <em>verbose=True</em>, <em>save_outputs=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to initialize and modify posteriors as planet search runs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>data</strong> (<em>DataFrame</em>) – pandas dataframe containing times, vel, err, and insts.</li>
+<li><strong>post</strong> (<em>radvel.Posterior</em>) – Optional posterior with known planet params.</li>
+<li><strong>starname</strong> (<em>str</em>) – String, used to name the output directory.</li>
+<li><strong>max_planets</strong> (<em>int</em>) – Integer, limit on iterative planet search.</li>
+<li><strong>priors</strong> (<em>list</em>) – List of radvel prior objects to use.</li>
+<li><strong>crit</strong> (<em>str</em>) – Either ‘bic’ or ‘aic’, depending on which criterion to use.</li>
+<li><strong>fap</strong> (<em>float</em>) – False-alarm-probability to pass to the periodogram object.</li>
+<li><strong>min_per</strong> (<em>float</em>) – Minimum search period, to pass to the periodogram object.</li>
+<li><strong>dvdt</strong> (<em>bool</em>) – Whether to include a linear trend in the search.</li>
+<li><strong>curv</strong> (<em>bool</em>) – Whether to include a quadratic trend in the search.</li>
+<li><strong>fix</strong> (<em>bool</em>) – Whether to fix known planet parameters during search.</li>
+<li><strong>polish</strong> (<em>bool</em>) – Whether to create finer period grid after planet is found.</li>
+<li><strong>verbose</strong> (<em>bool</em>) – </li>
+<li><strong>save_outputs</strong> (<em>bool</em>) – Save output plots and files? [default = True]</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="rvsearch.search.Search.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>data</em>, <em>post=None</em>, <em>starname='star'</em>, <em>max_planets=8</em>, <em>priors=[]</em>, <em>crit='bic'</em>, <em>fap=0.01</em>, <em>min_per=3</em>, <em>manual_grid=None</em>, <em>oversampling=1.0</em>, <em>trend=False</em>, <em>fix=False</em>, <em>polish=True</em>, <em>mcmc=True</em>, <em>workers=1</em>, <em>verbose=True</em>, <em>save_outputs=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="rvsearch.search.Search.__weakref__">
+<code class="descname">__weakref__</code><a class="headerlink" href="#rvsearch.search.Search.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.search.Search.add_gp">
+<code class="descname">add_gp</code><span class="sig-paren">(</span><em>inst=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.add_gp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.add_gp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a gaussian process to the posterior (NOT IN USE).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.search.Search.add_planet">
+<code class="descname">add_planet</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.add_planet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.add_planet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add parameters for one more planet to posterior.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.search.Search.continue_search">
+<code class="descname">continue_search</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.continue_search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.continue_search" title="Permalink to this definition">¶</a></dt>
+<dd><p>Continue a search by trying to add one more planet</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.search.Search.fit_orbit">
+<code class="descname">fit_orbit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.fit_orbit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.fit_orbit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform a max-likelihood fit with all parameters free.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.search.Search.inject_recover">
+<code class="descname">inject_recover</code><span class="sig-paren">(</span><em>injected_orbel</em>, <em>num_cpus=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.inject_recover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.inject_recover" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inject and recover
+Inject and attempt to recover a synthetic planet signal
+:param injected_orbel: array of orbital elements sent to radvel.kepler.rv_drive
+:type injected_orbel: array
+:param num_cpus: Number of CPUs to utilize. Will default to self.workers
+:type num_cpus: int</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(recovered? (T/F), recovered_orbel)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.search.Search.run_search">
+<code class="descname">run_search</code><span class="sig-paren">(</span><em>fixed_threshold=None</em>, <em>mkoutdir=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.run_search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.run_search" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run an iterative search for planets not given in posterior.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>fixed_threshold</strong> (<em>float</em>) – (optional) use a fixed delta BIC threshold</li>
+<li><strong>mkoutdir</strong> (<em>bool</em>) – create the output directory?</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.search.Search.save">
+<code class="descname">save</code><span class="sig-paren">(</span><em>filename='post_final.pkl'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pickle current posterior.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.search.Search.sub_gp">
+<code class="descname">sub_gp</code><span class="sig-paren">(</span><em>num_gps=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.sub_gp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.sub_gp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a gaussian process from the posterior (NOT IN USE).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.search.Search.sub_planet">
+<code class="descname">sub_planet</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.sub_planet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.sub_planet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove parameters for one  planet from posterior.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rvsearch.search.Search.trend_test">
+<code class="descname">trend_test</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.trend_test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.trend_test" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform zero-planet baseline fit, test for significant trend.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="inject.html" class="btn btn-neutral float-right" title="Injection and Recovery Tests" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="periodogram.html" class="btn btn-neutral" title="Periodograms" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Lee Rosenthal and BJ Fulton.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="_static/language_data.js"></script>
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

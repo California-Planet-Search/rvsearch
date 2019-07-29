@@ -1,34 +1,37 @@
-#Utilities for loading data, checking for known planets, etc.
-import pdb
+"""Utilities for loading data, checking for known planets, etc."""
 
 import numpy as np
 import scipy
 import pandas as pd
 import radvel
 try:
-	import cpsutils
-	from cpsutils import io
+    import cpsutils
+    from cpsutils import io
 except:
-	RuntimeError()
+    RuntimeError()
 
 
-"""Functions for posterior modification (resetting parameters, intializing, etc.)
+"""Functions for posterior modification (resetting, intializing, etc.)
 """
 
-def reset_params(post, default_pdict):
-	#Reset post.params values to default values
-	for k in default_pdict.keys():
-		post.params[k].value = default_pdict[k]
-	return post
 
-def initialize_default_pars(instnames=['inst'], fitting_basis='per tc secosw sesinw k'):
+def reset_params(post, default_pdict):
+    # Reset post.params values to default values
+    for k in default_pdict.keys():
+        post.params[k].value = default_pdict[k]
+    return post
+
+
+def initialize_default_pars(instnames=['inst'], times=None,
+                            fitting_basis='per tc secosw sesinw k'):
     """Set up a default Parameters object.
 
-	None of the basis values are free params, for the initial 0-planet fit.
-	Remember to reset .vary to True for all relevant params.
+    None of the basis values are free params, for the initial 0-planet fit.
+    Remember to reset .vary to True for all relevant params.
 
     Args:
         instnames (list): codes of instruments used
+        times (array): optional, timestamps of observations.
         fitting_basis: optional
 
     Returns:
@@ -37,7 +40,10 @@ def initialize_default_pars(instnames=['inst'], fitting_basis='per tc secosw ses
 
     anybasis_params = radvel.Parameters(num_planets=1, basis='per tc e w k')
 
-    anybasis_params['tc1'] = radvel.Parameter(value=2455200.0)
+    if times is None:
+        anybasis_params['tc1'] = radvel.Parameter(value=2455200.0)
+    else:
+        anybasis_params['tc1'] = radvel.Parameter(value=np.median(times))
     anybasis_params['w1'] = radvel.Parameter(value=np.pi/2.)
     anybasis_params['k1'] = radvel.Parameter(value=0.0)
     anybasis_params['e1'] = radvel.Parameter(value=0.0)
@@ -47,7 +53,9 @@ def initialize_default_pars(instnames=['inst'], fitting_basis='per tc secosw ses
     anybasis_params['curv'] = radvel.Parameter(value=0.0)
 
     for inst in instnames:
-        anybasis_params['gamma_'+inst] = radvel.Parameter(value=0.0)
+        anybasis_params['gamma_'+inst] = radvel.Parameter(value=0.0,
+                                                          linear=True,
+                                                          vary=False)
         anybasis_params['jit_'+inst] = radvel.Parameter(value=2.0)
 
     params = anybasis_params.basis.to_any_basis(anybasis_params, fitting_basis)
@@ -58,77 +66,102 @@ def initialize_default_pars(instnames=['inst'], fitting_basis='per tc secosw ses
 
     return params
 
-def initialize_post(data, params=None, priors=None):
-	"""Initialize a posterior object with data, params, and priors.
-	Args:
-		data: a pandas dataframe.
-		params: a list of radvel parameter objects.
-		priors: a list of priors to place on the posterior object.
-	Returns:
-		post (radvel Posterior object)
 
-	TO-DO: MAKE OPTION FOR KNOWN MULTI-PLANET POSTERIOR
-	"""
+def initialize_post(data, params=None, priors=[]):
+    """Initialize a posterior object with data, params, and priors.
+    Args:
+        data: a pandas dataframe.
+        params: a list of radvel parameter objects.
+        priors: a list of priors to place on the posterior object.
+    Returns:
+        post (radvel Posterior object)
 
-	if params == None:
-		params = radvel.Parameters(1, basis='per tc secosw sesinw logk')
-	iparams = radvel.basis._copy_params(params)
+    """
 
-	# Allow for time to be listed as 'time' or 'jd' (Julian Date).
-	if {'jd'}.issubset(data.columns):
-		data['time'] = data['jd']
+    if params is None:
+        # params = radvel.Parameters(1, basis='per tc secosw sesinw logk')
+        params = initialize_default_pars(instnames=data.tel, times=data.time)
+    iparams = radvel.basis._copy_params(params)
 
-	#initialize RVModel
-	time_base = np.mean([data['time'].max(), data['time'].min()])
-	mod = radvel.RVModel(params, time_base=time_base)
+    # Allow for time to be listed as 'time' or 'jd' (Julian Date).
+    if {'jd'}.issubset(data.columns):
+        data['time'] = data['jd']
 
-	#initialize Likelihood objects for each instrument
-	telgrps = data.groupby('tel').groups
-	likes = {}
+    # initialize RVModel
+    time_base = np.mean([data['time'].max(), data['time'].min()])
+    mod = radvel.RVModel(params, time_base=time_base)
 
-	for inst in telgrps.keys():
-		likes[inst] = radvel.likelihood.RVLikelihood(
-			mod, data.iloc[telgrps[inst]].time, data.iloc[telgrps[inst]].mnvel,
-			data.iloc[telgrps[inst]].errvel, suffix='_'+inst)
+    # initialize Likelihood objects for each instrument
+    telgrps = data.groupby('tel').groups
+    likes = {}
 
-		likes[inst].params['gamma_'+inst] = iparams['gamma_'+inst]
-		likes[inst].params['jit_'+inst] = iparams['jit_'+inst]
-	#Can this be cleaner? like = radvel.likelihood.CompositeLikelihood(likes), if likes is array, not dic.
-	like = radvel.likelihood.CompositeLikelihood(list(likes.values()))
+    for inst in telgrps.keys():
+        likes[inst] = radvel.likelihood.RVLikelihood(
+            mod, data.iloc[telgrps[inst]].time, data.iloc[telgrps[inst]].mnvel,
+            data.iloc[telgrps[inst]].errvel, suffix='_'+inst)
 
-	post = radvel.posterior.Posterior(like)
-	#FIX TO COMBINE GIVEN PRIORS AND NEEDED PRIORS
-	if priors is not None:
-		post.priors = priors
-	else:
-		priors = []
-		priors.append(radvel.prior.PositiveKPrior(post.params.num_planets))
-		priors.append(radvel.prior.EccentricityPrior(post.params.num_planets))
-		#priors.append([radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0) for inst in telgrps.keys()])
-		post.priors = priors
+        likes[inst].params['gamma_'+inst] = iparams['gamma_'+inst]
+        likes[inst].params['jit_'+inst] = iparams['jit_'+inst]
+    # Can this be cleaner? like = radvel.likelihood.CompositeLikelihood(likes)
+    like = radvel.likelihood.CompositeLikelihood(list(likes.values()))
 
-	return post
+    post = radvel.posterior.Posterior(like)
+    if priors == []:
+        priors.append(radvel.prior.PositiveKPrior(post.params.num_planets))
+        priors.append(radvel.prior.EccentricityPrior(post.params.num_planets))
+        #for inst in telgrps.keys():
+        #    priors.append(radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0))
+    post.priors = priors
 
-def window(time, freqs, plot=False):
-	"""Function to generate, and possibly plot, the window function of observations.
-	Args:
-		time: times of observations in a dataset. FOR SEPARATE TELESCOPES?
-	"""
-	W = np.zeros(len(freqs))
-	for i, freq in enumerate(freqs):
-		W[i] = np.sum(np.exp(-2*np.pi*1j*time*freq))
-	W /= float(len(freq))
-	return W
+    return post
 
-"""Series of functions for reading data from various sources into pandas dataframes.
-"""
-def read_from_csv(filename, verbose=True):
+
+def window(times, freqs, plot=False):
+    """Function to generate, and plot, the window function of observations.
+
+    Args:
+        time: times of observations in a dataset. FOR SEPARATE TELESCOPES?
+
+    """
+    W = np.zeros(len(freqs))
+    for i, freq in enumerate(freqs):
+        W[i] = np.absolute(np.sum(np.exp(-2*np.pi*1j*times*freq)))
+    W /= float(len(times))
+    return W
+
+def read_from_csv(filename, binsize=0.0, verbose=True):
+    """Read radial velocity data from a csv file into a Pandas dataframe.
+
+    Args:
+        filename (string): Path to csv file
+        binsize (float): Times in which to bin data, in given units
+        verbose (bool): Notify user if instrument types not given?
+
+    """
     data = pd.read_csv(filename)
     if 'tel' not in data.columns:
         if verbose:
             print('Instrument types not given.')
-        data['tel'] = 'Inst.'
+        data['tel'] = 'Inst'
+    if binsize > 0.0:
+        if 'time' in data.columns:
+            t = data['time'].values
+            tkey = 'time'
+        elif 'jd' in data.columns:
+            t = data['jd'].values
+            tkey = 'jd'
+        else:
+            raise ValueError('Incorrect data input.')
+        time, mnvel, errvel, tel = radvel.utils.bintels(t, data['mnvel'].values,
+                                                        data['errvel'].values,
+                                                        data['tel'].values,
+                                                        binsize=binsize)
+        bin_dict = {tkey: time, 'mnvel': mnvel,
+                    'errvel': errvel, 'tel': tel}
+        data = pd.DataFrame(data=bin_dict)
+
     return data
+
 
 def read_from_arrs(t, mnvel, errvel, tel=None, verbose=True):
     data = pd.DataFrame()
@@ -136,14 +169,22 @@ def read_from_arrs(t, mnvel, errvel, tel=None, verbose=True):
     if tel == None:
         if verbose:
             print('Instrument type not given.')
-        data['tel'] = 'Inst.'
+        data['tel'] = 'Inst'
     else:
         data['tel'] = tel
     return data
 
+
 def read_from_vst(filename, verbose=True):
-    """This reads .vst files generated by the CPS pipeline, which
-    means that it is only relevant for HIRES data.
+    """Read radial velocity data from a vst file into a Pandas dataframe.
+
+    Args:
+        filename (string): Path to csv file
+        verbose (bool): Notify user if instrument types not given?
+
+    Note:
+        Only relevant for HIRES users.
+
     """
     b = io.read_vst(filename)
     data = pd.DataFrame()
@@ -153,79 +194,113 @@ def read_from_vst(filename, verbose=True):
     data['tel'] = 'HIRES'
 
     data.to_csv(filename[:-3]+'csv')
+
     return data
 
+
 # Function for collecting results of searches in current directory.
-def scrape(starlist, mass_db_name=None, save=True):
-	"""Take data from completed searches and compile into one databases.
-	If specified, compute planet masses and semi-major axes.
-	"""
-	all_params = []
-	nplanets = []
+def scrape(starlist, star_db_name=None, filename='system_props.csv'):
+    """Take data from completed searches and compile into one dataframe.
 
-	for star in starlist:
-		params = {}
-		params['name'] = star
-		try:
-			post = radvel.posterior.load(star+'/post_final.pkl')
-		except (RuntimeError, FileNotFoundError):
-			print('I am not done looking for planets around {} yet, try again later.'.format(star))
-			continue
+    Args:
+        starlist (list): List of starnames to access in current directory
+        star_db_name (string [optional]): Filename of star properties dataframe
+        filename (string): Path to which to save dataframe
 
-		if post.params.num_planets == 1:
-			if post.params['k1'].value == 0.:
-				num_planets = 0
-			else:
-				num_planets = 1
-			nplanets.append(num_planets)
-		else:
-			num_planets = post.params.num_planets
-			nplanets.append(num_planets)
-		params['num_planets'] = num_planets
+    Note:
+        If specified, compute planet masses and semi-major axes.
 
-		for k in post.params.keys():
-			params[k] = post.params[k].value
-		all_params.append(params)
+    """
+    all_params = []
+    nplanets = []
 
-	# Save radvel parameters as a pandas dataframe.
-	props = pd.DataFrame(all_params)
+    for star in starlist:
+        params = dict()
+        params['name'] = star
+        try:
+            post = radvel.posterior.load(star+'/post_final.pkl')
+        except (RuntimeError, FileNotFoundError):
+            print('Not done looking for planets around {} yet, \
+                                try again later.'.format(star))
+            continue
 
-	if mass_db_name is not None:
-		try:
-			mass_db = pd.read_csv(mass_db_name)
-		except (RuntimeError, FileNotFoundError):
-			print('That is not a pandas dataframe. Try again.')
+        if post.params.num_planets == 1:
+            if post.params['k1'].value == 0.:
+                num_planets = 0
+            else:
+                num_planets = 1
+            nplanets.append(num_planets)
+        else:
+            num_planets = post.params.num_planets
+            nplanets.append(num_planets)
+        params['num_planets'] = num_planets
 
-        # Add enough columns to compute masses & semi-major axes for system with most planets.
-		max_num_planets = np.amax(nplanets)
-		for n in np.arange(1, max_num_planets+1):
-			props['Mstar'] = np.nan
-			props['M{}'.format(n)] = np.nan
-			props['a{}'.format(n)] = np.nan
+        for k in post.params.keys():
+            params[k] = post.params[k].value
+        all_params.append(params)
 
-		# Save median star mass, uncertainties
-		for star in starlist:
-			try:
-				star_index = props.index[props['name'] == str(star)][0]
-				mass_index = mass_db.index[mass_db['name'] == str(star)][0]
-			except IndexError:
-				continue
-			# Save star mass, to be used in planet mass & semi-major axis calculations.
-			Mtot = mass_db.loc[mass_index, 'mstar']
-			props.loc[star_index, 'Mstar'] = Mtot
+    # Save radvel parameters as a pandas dataframe.
+    props = pd.DataFrame(all_params)
 
-			# For each found planet, compute mass and semi-major axis
-			if props.loc[star_index, 'num_planets'] != 0:
-				for n in np.arange(1, props.loc[star_index, 'num_planets']+1):
-					K = props.loc[star_index, 'k{}'.format(n)]
-					P = props.loc[star_index, 'per{}'.format(n)]
-					e = props.loc[star_index, 'secosw{}'.format(n)]**2 + props.loc[star_index, 'sesinw{}'.format(n)]**2
-					props.loc[star_index, 'M{}'.format(n)] = radvel.utils.Msini(K, P, Mtot, e, Msini_units='jupiter')
-					props.loc[star_index, 'a{}'.format(n)] = radvel.utils.semi_major_axis(P, Mtot)
+    if star_db_name is not None:
+        try:
+            star_db = pd.read_csv(star_db_name)
+        except (RuntimeError, FileNotFoundError):
+            print('That is not a pandas dataframe. Try again.')
 
-	if save:
-		props.to_csv('system_props.csv')
-	return props
+        # Add enough columns to for searched system with most planets.
+        max_num_planets = np.amax(nplanets)
+        for n in np.arange(1, max_num_planets+1):
+            props['Mstar'] = np.nan
+            props['M{}'.format(n)] = np.nan
+            props['a{}'.format(n)] = np.nan
+
+        # Save median star mass, uncertainties
+        for star in starlist:
+            try:
+                props_index = props.index[props['name'] == str(star)][0]
+                star_index = star_db.index[star_db['name'] == str(star)][0]
+            except IndexError:
+                continue
+            # Save stellar mass, to be used in mass and orbital calculations.
+            Mtot = star_db.loc[star_index, 'mstar']
+            props.loc[props_index, 'Mstar'] = Mtot
+
+            # For each found planet, compute mass and semi-major axis
+            if props.loc[props_index, 'num_planets'] != 0:
+                for n in np.arange(1, props.loc[props_index, 'num_planets']+1):
+                    K = props.loc[props_index, 'k{}'.format(n)]
+                    P = props.loc[props_index, 'per{}'.format(n)]
+                    e = props.loc[props_index, 'secosw{}'.format(n)]**2 + \
+                        props.loc[props_index, 'sesinw{}'.format(n)]**2
+                    props.loc[props_index, 'M{}'.format(n)] = \
+                        radvel.utils.Msini(K, P, Mtot, e, Msini_units='jupiter')
+                    props.loc[props_index, 'a{}'.format(n)] = \
+                        radvel.utils.semi_major_axis(P, Mtot)
+
+    props.to_csv('system_props.csv')
+    return props
+
+
+def cartesian_product(*arrays):
+    """
+        Generate a cartesian product of input arrays.
+
+    Args:
+        arrays (arrays): 1-D arrays to form the cartesian product of.
+
+    Returns:
+        array: cartesian product of input arrays
+    """
+
+    la = len(arrays)
+    dtype = np.result_type(*arrays)
+    arr = np.empty([len(a) for a in arrays] + [la], dtype=dtype)
+    for i, a in enumerate(np.ix_(*arrays)):
+        arr[..., i] = a
+
+    return arr.reshape(-1, la)
+
 
 # Test search-specific priors
 '''

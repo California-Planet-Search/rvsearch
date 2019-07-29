@@ -5,21 +5,77 @@ the `cli.py` command line interface.
 """
 from __future__ import print_function
 import os
-import sys
 import copy
-import collections
+import pylab as pl
 import pandas as pd
-import numpy as np
-from astropy import constants as c
+import pickle
 
-import radvel.utils
+import radvel
+from radvel.utils import working_directory
+import rvsearch
 
-from rvsearch.periodogram import Periodogram
+def run_search(args):
+    """Run a search from a given RadVel setup file
 
-if sys.version_info[0] < 3:
-    import ConfigParser as configparser
-else:
-    import configparser
+    Args:
+        args (ArgumentParser): command line arguments
+    """
+
+    config_file = args.setupfn
+    conf_base = os.path.basename(config_file).split('.')[0]
+
+    P, post = radvel.utils.initialize_posterior(config_file)
+
+    starname = conf_base
+    data = P.data
+
+    if args.known:
+        ipost = copy.deepcopy(post)
+        post = radvel.fitting.maxlike_fitting(post, verbose=True)
+    else:
+        post = None
+
+
+    searcher = rvsearch.search.Search(data, starname=starname,
+                                      min_per=args.minP,
+                                      workers=args.num_cpus,
+                                      post=post,
+                                      trend=args.trend,
+                                      verbose=True)
+    searcher.run_search()
+
+
+def injections(args):
+    """Injection-recovery tests
+
+    Args:
+        args (ArgumentParser): command line arguments
+    """
+
+    plim = (args.minP, args.maxP)
+    klim = (args.minK, args.maxK)
+    elim = (args.minE, args.maxE)
+
+    sdir = args.search_dir
+
+    with working_directory(sdir):
+        sfile = 'search.pkl'
+        sfile = os.path.abspath(sfile)
+        if not os.path.exists(sfile):
+            print("No search file found in {}".format(sdir))
+            os._exit(1)
+
+        if not os.path.exists('recoveries.csv'):
+            try:
+                inj = rvsearch.inject.Injections(sfile, plim, klim, elim,
+                                                 num_sim=args.num_inject)
+                recoveries = inj.run_injections(num_cpus=args.num_cpus)
+                inj.save()
+            except IOError:
+                print("WARNING: Problem with {}".format(sfile))
+                os._exit(1)
+        else:
+            recoveries = pd.read_csv('recoveries.csv')
 
 
 def plots(args):
@@ -29,446 +85,49 @@ def plots(args):
     Args:
         args (ArgumentParser): command line arguments
     """
-    
-    pass
-        
-def periodograms(args):
-    """Calculate periodograms
+    sdir = args.search_dir
 
-    Args:
-        args (ArgumentParser): command line arguments
-    """
-
-    config_file = args.setupfn
-    conf_base = os.path.basename(config_file).split('.')[0]
-
-    P, post = radvel.utils.initialize_posterior(config_file)
-
-    for ptype in args.type:
-        print("Calculating {} periodogram for {}".format(ptype, conf_base))
-
-        peri = Periodogram(post, args.minP, args.maxP, num_known_planets=args.num_known, num_freqs=args.num_freqs)
-
-        if ptype == 'bic':
-            peri.bic()
-        if ptype == 'ls':
-            peri.ls()
-
-    print(peri.power)
-    postfile = os.path.join(args.outputdir,
-                            '{}_post_obj.pkl'.format(conf_base))
-    post.writeto(postfile)
-    
-    savestate = {'run': True,
-                 'postfile': os.path.abspath(postfile)}
-    save_status(os.path.join(args.outputdir,
-                             '{}_rvsearch.stat'.format(conf_base)),
-                             'periodograms', savestate)
-
-
-def mcmc(args):
-    """Perform MCMC error analysis
-
-    Args:
-        args (ArgumentParser): command line arguments
-    """
-
-    config_file = args.setupfn
-    conf_base = os.path.basename(config_file).split('.')[0]
-    statfile = os.path.join(args.outputdir,
-                            "{}_radvel.stat".format(conf_base))
-
-    status = load_status(statfile)
-
-    if status.getboolean('fit', 'run'):
-        print("Loading starting positions from previous max-likelihood fit")
-
-        post = radvel.posterior.load(status.get('fit', 'postfile'))
-    else:
-        P, post = radvel.utils.initialize_posterior(config_file,
-                                                        decorr=args.decorr)
-
-    msg = "Running MCMC for {}, N_walkers = {}, N_steps = {}, N_ensembles = {}, Max G-R = {}, Min Tz = {} ..."\
-        .format(conf_base, args.nwalkers, args.nsteps, args.ensembles, args.maxGR, args.minTz)
-    print(msg)
-
-    chains = radvel.mcmc(
-            post, nwalkers=args.nwalkers, nrun=args.nsteps, ensembles=args.ensembles, burnGR=args.burnGR,
-            maxGR=args.maxGR, minTz=args.minTz, minsteps=args.minsteps, thin=args.thin, serial=args.serial)
-
-    # Convert chains into synth basis
-    synthchains = chains.copy()
-    for par in post.params.keys():
-        if not post.params[par].vary:
-            synthchains[par] = post.params[par].value
-
-    synthchains = post.params.basis.to_synth(synthchains)
-    synth_quantile = synthchains.quantile([0.159, 0.5, 0.841])
-
-    # Get quantiles and update posterior object to median 
-    # values returned by MCMC chains
-    post_summary=chains.quantile([0.159, 0.5, 0.841])        
-
-    for k in chains.keys():
-        if k in post.params.keys():
-            post.params[k].value = post_summary[k][0.5]
-
-    print("Performing post-MCMC maximum likelihood fit...")
-    post = radvel.fitting.maxlike_fitting(post, verbose=False)
-
-    final_logprob = post.logprob()
-    final_residuals = post.likelihood.residuals().std()
-    synthparams = post.params.basis.to_synth(post.params)
-    post.params.update(synthparams)
-
-
-    print("Calculating uncertainties...")
-    post.uparams = {}
-    post.medparams = {}
-    post.maxparams = {}
-    for par in post.params.keys():
-        maxlike = post.params[par].value
-        med = synth_quantile[par][0.5]
-        high = synth_quantile[par][0.841] - med
-        low = med - synth_quantile[par][0.159]
-        err = np.mean([high,low])
-        if maxlike == -np.inf and med == -np.inf and np.isnan(low) and np.isnan(high):
-            err = 0.0
+    with working_directory(sdir):
+        sfile = os.path.abspath('search.pkl')
+        run_name = sfile.split('/')[-2]
+        if not os.path.exists(sfile):
+            print("No search file found in {}".format(sdir))
+            os._exit(1)
         else:
-            err = radvel.utils.round_sig(err)
-        if err > 0.0:
-            med, err, errhigh = radvel.utils.sigfig(med, err)
-            maxlike, err, errhigh = radvel.utils.sigfig(maxlike, err)
-        post.uparams[par] = err
-        post.medparams[par] = med
-        post.maxparams[par] = maxlike
-
-
-    print("Final loglikelihood = %f" % final_logprob)
-    print("Final RMS = %f" % final_residuals)
-    print("Best-fit parameters:")
-    print(post)
-
-    print("Saving output files...")
-    saveto = os.path.join(args.outputdir, conf_base+'_post_summary.csv')
-    post_summary.to_csv(saveto, sep=',')
-
-    postfile = os.path.join(args.outputdir,
-                            '{}_post_obj.pkl'.format(conf_base))
-    post.writeto(postfile)
-
-    csvfn = os.path.join(args.outputdir, conf_base+'_chains.csv.tar.bz2')
-    chains.to_csv(csvfn, compression='bz2')
-
-
-    savestate = {'run': True,
-                 'postfile': os.path.abspath(postfile),
-                 'chainfile': os.path.abspath(csvfn),
-                 'summaryfile': os.path.abspath(saveto),
-                 'nwalkers': args.nwalkers,
-                 'nsteps': args.nsteps}
-    save_status(statfile, 'mcmc', savestate)
-
-
-
-def ic_compare(args):
-    """Compare different models and comparative statistics including
-          AICc and BIC statistics. 
-
-    Args:
-        args (ArgumentParser): command line arguments
-    """
-
-    config_file = args.setupfn
-    conf_base = os.path.basename(config_file).split('.')[0]
-    statfile = os.path.join(args.outputdir,
-                            "{}_radvel.stat".format(conf_base))
-
-    status = load_status(statfile)
-    savestate = {}
-
-    assert status.getboolean('fit', 'run'), \
-      "Must perform max-liklihood fit before running Information Criteria comparisons"
-    post = radvel.posterior.load(status.get('fit', 'postfile'))
-
-    choices=['nplanets', 'e', 'trend', 'jit', 'gp']
-    statsdictlist=[]
-    paramlist=[]
-    compareparams = args.type
-
-    ipost = copy.deepcopy(post)
-    if hasattr(args, 'fixjitter') and args.fixjitter:
-        for param in ipost.params:
-             if len(param) >=3 and param[0:3] == 'jit':
-                 ipost.params[param].vary = False
-
-    for compareparam in compareparams:
-        assert compareparam in choices, \
-            "Valid parameter choices for 'ic -t' are combinations of: "\
-            + " ".join(choices)
-        paramlist.append(compareparam)
-        if hasattr(args, 'mixed') and not args.mixed:
-            statsdictlist += radvel.fitting.model_comp(ipost, \
-                params=[compareparam], verbose=args.verbose)
-    if hasattr(args, 'mixed') and not args.mixed:
-        new_statsdictlist = []
-        for dicti in statsdictlist:
-            anymatch = False
-            for seendict in new_statsdictlist:
-                if collections.Counter(dicti['Free Params'][0]) == \
-                        collections.Counter(seendict['Free Params'][0]):
-                    anymatch = True
-                    continue
-            if not anymatch:
-                new_statsdictlist.append(dicti)
-        statsdictlist = new_statsdictlist
-
-    if not hasattr(args, 'mixed') or (hasattr(args, 'mixed') and args.mixed):
-        statsdictlist += radvel.fitting.model_comp(ipost, \
-            params=paramlist, verbose=args.verbose)
-
-    savestate = {'ic': statsdictlist}
-    save_status(statfile, 'ic_compare', savestate)
-
-
-def tables(args):
-    """Generate TeX code for tables in summary report
-
-    Args:
-        args (ArgumentParser): command line arguments
-    """
-
-    config_file = args.setupfn
-    conf_base = os.path.basename(config_file).split('.')[0]
-    statfile = os.path.join(args.outputdir,
-                            "{}_radvel.stat".format(conf_base))
-    status = load_status(statfile)
-
-    assert status.getboolean('mcmc', 'run'), \
-        "Must run MCMC before making tables"
-
-    P, post = radvel.utils.initialize_posterior(config_file)
-    post = radvel.posterior.load(status.get('fit', 'postfile'))
-    chains = pd.read_csv(status.get('mcmc', 'chainfile'))
-    report = radvel.report.RadvelReport(P, post, chains)
-    tabletex = radvel.report.TexTable(report)
-    attrdict = {'priors':'tab_prior_summary', 'rv':'tab_rv', \
-                'params':'tab_params'}
-    for tabtype in args.type:
-        print("Generating LaTeX code for {} table".format(tabtype))
-
-        if tabtype == 'ic_compare':
-            assert status.has_option('ic_compare', 'ic'), \
-                "Must run Information Criteria comparison before making comparison tables"
-
-            compstats = eval(status.get('ic_compare', 'ic'))
-            report = radvel.report.RadvelReport(
-                P, post, chains, compstats=compstats
-            )
-            tabletex = radvel.report.TexTable(report)
-            tex = tabletex.tab_comparison()
-        else:
-            assert tabtype in attrdict, 'Invalid Table Type %s ' % tabtype
-            tex = getattr(tabletex, attrdict[tabtype])(name_in_title=args.name_in_title)
-        saveto = os.path.join(
-            args.outputdir, '{}_{}_.tex'.format(conf_base,tabtype)
-        )
-        with open(saveto, 'w+') as f:
-           # print(tex, file=f)
-           f.write(tex)
-
-        savestate = {'{}_tex'.format(tabtype): os.path.abspath(saveto)}
-        save_status(statfile, 'table', savestate)
-
-
-def derive(args):
-    """Derive physical parameters from posterior samples
-
-    Args:
-        args (ArgumentParser): command line arguments
-    """
-
-    config_file = args.setupfn
-    conf_base = os.path.basename(config_file).split('.')[0]
-    statfile = os.path.join(args.outputdir,
-                            "{}_radvel.stat".format(conf_base))
-    status = load_status(statfile)
-
-    msg = "Multiplying mcmc chains by physical parameters for {}".format(
-        conf_base
-    )
-    print(msg)
-
-    assert status.getboolean('mcmc', 'run'), \
-        "Must run MCMC before making tables"
-
-    P, post = radvel.utils.initialize_posterior(config_file)
-    post = radvel.posterior.load(status.get('fit', 'postfile'))
-    chains = pd.read_csv(status.get('mcmc', 'chainfile'))
-
-    mstar = np.random.normal(
-        loc=P.stellar['mstar'], scale=P.stellar['mstar_err'], 
-        size=len(chains)
-        )
-
-    if (mstar <= 0.0).any():
-        num_nan = np.sum(mstar <= 0.0)
-        nan_perc = float(num_nan) / len(chains)
-        mstar[mstar <= 0] = np.abs(mstar[mstar <= 0])
-        print("WARNING: {} ({:.2f} %) of Msini samples are NaN. The stellar mass posterior may contain negative \
-values. Interpret posterior with caution.".format(num_nan, nan_perc))
-
-    # Convert chains into synth basis
-    synthchains = chains.copy()
-    for par in post.params.keys():
-        if not post.params[par].vary:
-            synthchains[par] = post.params[par].value
-
-    synthchains = post.params.basis.to_synth(synthchains)
-
-    savestate = {'run': True}
-    outcols = []
-    for i in np.arange(1, P.nplanets +1, 1):
-        # Grab parameters from the chain
-        def _has_col(key):
-            cols = list(synthchains.columns)
-            return cols.count('{}{}'.format(key,i))==1
-
-        def _get_param(key):
-            if _has_col(key):
-                return synthchains['{}{}'.format(key,i)]
-            else:
-                return P.params['{}{}'.format(key,i)].value
-
-        def _set_param(key, value):
-            chains['{}{}'.format(key,i)] = value
-
-        def _get_colname(key):
-            return '{}{}'.format(key,i)
-
-        per = _get_param('per')
-        k = _get_param('k')
-        e = _get_param('e')
-
-        mpsini = radvel.utils.Msini(k, per, mstar, e, Msini_units='earth')
-        _set_param('mpsini',mpsini)
-        outcols.append(_get_colname('mpsini'))
-
-        a = radvel.utils.semi_major_axis(per, mstar)
-        _set_param('a', a)
-        outcols.append(_get_colname('a'))
-
-        musini = (mpsini * c.M_earth) / (mstar * c.M_sun)
-        _set_param('musini', musini)
-        outcols.append(_get_colname('musini'))
-
-        try:
-            rp = np.random.normal(
-                loc=P.planet['rp{}'.format(i)], 
-                scale=P.planet['rp_err{}'.format(i)],
-                size=len(chains)
-            )
-
-            _set_param('rp',rp)
-            _set_param('rhop', radvel.utils.density(mpsini, rp))
-
-            outcols.append(_get_colname('rhop'))
-        except (AttributeError, KeyError):
-            pass
-
-    print("Derived parameters:", outcols)
-
-    csvfn = os.path.join(args.outputdir, conf_base+'_derived.csv.tar.bz2')
-    chains.to_csv(csvfn, columns=outcols, compression='bz2')
-    savestate['chainfile'] = os.path.abspath(csvfn)
-
-    save_status(statfile, 'derive', savestate)
-
-
-def report(args):
-    """Generate summary report
-
-    Args:
-        args (ArgumentParser): command line arguments
-    """
-
-    
-    config_file = args.setupfn
-    conf_base = os.path.basename(config_file).split('.')[0]
-    print("Assembling report for {}".format(conf_base))
-
-    statfile = os.path.join(args.outputdir,
-                            "{}_radvel.stat".format(conf_base))
-
-    status = load_status(statfile)
-
-    P, post = radvel.utils.initialize_posterior(config_file)
-    post = radvel.posterior.load(status.get('fit', 'postfile'))
-    chains = pd.read_csv(status.get('mcmc', 'chainfile'))
-
-    try:
-        compstats = eval(status.get('ic_compare', args.comptype))
-    except:
-        print("WARNING: Could not find {} model comparison \
-in {}.\nPlease make sure that you have run `radvel ic` (or, e.g., `radvel \
-ic -t nplanets e trend jit gp`)\
-\nif you would like to include the model comparison table in the \
-report.".format(args.comptype,
-                             statfile,
-                             args.comptype))
-        compstats = None
-
-    report = radvel.report.RadvelReport(P, post, chains, compstats=compstats)
-    report.runname = conf_base
-
-    report_depfiles = []
-    for ptype,pfile in status.items('plot'):
-        report_depfiles.append(pfile)
-
-    with radvel.utils.working_directory(args.outputdir):
-        rfile = os.path.join(conf_base+"_results.pdf")
-        report_depfiles = [os.path.basename(p) for p in report_depfiles]
-        report.compile(
-            rfile, depfiles=report_depfiles, latex_compiler=args.latex_compiler
-        )
-
-    
-def save_status(statfile, section, statevars):
-    """Save pipeline status
-
-    Args:
-        statfile (string): name of output file
-        section (string): name of section to write
-        statevars (dict): dictionary of all options to populate
-           the specified section
-    """
-
-    config = configparser.RawConfigParser()
-    
-    if os.path.isfile(statfile):
-        config.read(statfile)
-
-    if not config.has_section(section):
-        config.add_section(section)
-        
-    for key,val in statevars.items():
-        config.set(section, key, val)
-
-    with open(statfile, 'w') as f:
-        config.write(f)
-
-
-def load_status(statfile):
-    """Load pipeline status
-
-    Args:
-        statfile (string): name of configparser file
-
-    Returns:
-        configparser.RawConfigParser
-    """
-    
-    config = configparser.RawConfigParser()
-    gl = config.read(statfile)
-
-    return config
+            searcher = pickle.load(open(sfile, 'rb'))
+
+        for ptype in args.type:
+            print("Creating {} plot for {}".format(ptype, run_name))
+
+            if ptype == 'recovery':
+                rfile = os.path.abspath('recoveries.csv')
+                if not os.path.exists(rfile):
+                    print("No recovery file found in {}".format(sdir))
+                    os._exit(1)
+
+                xcol = 'inj_au'
+                ycol = 'inj_msini'
+                xlabel = '$a$ [AU]'
+                ylabel = r'M$\sin{i_p}$ [M$_\oplus$]'
+                print("Plotting {} vs. {}".format(ycol, xcol))
+
+                mstar = args.mstar
+
+                comp = rvsearch.Completeness.from_csv(rfile, xcol=xcol,
+                                                      ycol=ycol, mstar=mstar)
+                cplt = rvsearch.plots.CompletenessPlots(comp)
+
+                fig = cplt.completeness_plot(title=run_name,
+                                             xlabel=xlabel,
+                                             ylabel=ylabel)
+
+                saveto = os.path.join(run_name+'_recoveries.{}'.format(args.fmt))
+
+                fig.savefig(saveto)
+                print("Recovery plot saved to {}".format(
+                      os.path.abspath(saveto)))
+
+            if ptype == 'summary':
+                plotter = rvsearch.plots.PeriodModelPlot(searcher,
+                            saveplot='{}_summary.{}'.format(searcher.starname, args.fmt))
+                plotter.plot_summary()
