@@ -143,7 +143,25 @@ class Search(object):
         post3.params['curv'].vary  = False
 
         flat_bic = post3.likelihood.bic()
+        '''
+        if trend_curve_bic < trend_bic - 5:
+            # Quadratic
+            self.post.params['dvdt'].value = post1.params['dvdt'].value
+            self.post.params['curv'].value = post1.params['curv'].value
 
+        elif trend_bic < flat_bic - 5:
+            # Linear
+            self.post.params['curv'].value = 0
+            self.post.params['dvdt'].value = post2.params['dvdt'].value
+            self.post.params['curv'].vary  = False
+
+        else:
+            # Flat
+            self.post.params['dvdt'].value = 0
+            self.post.params['curv'].value = 0
+            self.post.params['dvdt'].vary  = False
+            self.post.params['curv'].vary  = False
+        '''
         if trend_bic < flat_bic - 5:
             if trend_curve_bic < trend_bic - 5:
                 # Quadratic
