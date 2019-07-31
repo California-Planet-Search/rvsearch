@@ -144,9 +144,6 @@ class Injections(object):
 
         return outdf
 
-    def interpolate(self, period, k):
-        pass
-
     def save(self):
         self.recoveries.to_csv(os.path.join('recoveries.csv'), index=False)
 
@@ -203,8 +200,6 @@ class Completeness(object):
         Compute a 2D moving average in loglog space
 
         Args:
-            xcol (string): x column label from self.recoveries
-            ycol (string): y column label from self.recoveries
             xlim (tuple): min and max x limits
             ylim (tuple): min and max y limits
             resolution (int): (optional) grid is sampled at this resolution
@@ -234,7 +229,7 @@ class Completeness(object):
                 yhigh = 10**(np.log10(y) + ylogwin/2)
 
                 xbox = yinj[np.where((xinj <= xhigh) & (xinj >= xlow))[0]]
-                if y > max(xbox) or y < min(xbox):
+                if len(xbox) == 0 or y > max(xbox) or y < min(xbox):
                     z[j, i] = np.nan
                     continue
 

@@ -314,21 +314,10 @@ class Periodogram(object):
         # Save the empirical-FAP of the DBIC global maximum.
         self.fap_min = fap_min
 
-<<<<<<< HEAD
     def save_per(self, filename, ls=False):
         df = pd.DataFrame([])
         df['period'] = self.pers
         if not ls:
-=======
-    def save_per(self, ls=False):
-        """Save BIC periodogram as csv.
-
-        Args:
-            ls (bool): Save Lomb-Scargle periodogram?
-
-        """
-        if ls==False:
->>>>>>> dd0a242068862b486ef8a8761f8f6ab640ad59d4
             try:
                 np.savetxt((self.pers, self.power['bic']), filename=\
                                                 'BIC_periodogram.csv')
@@ -336,14 +325,8 @@ class Periodogram(object):
                 print('Have not generated a delta-BIC periodogram.')
         else:
             try:
-<<<<<<< HEAD
                 df['power'] = self.power['ls']
             except KeyError:
-=======
-                np.savetxt((self.pers, self.power['ls']), filename=\
-                                                'LS_periodogram.csv')
-            except:
->>>>>>> dd0a242068862b486ef8a8761f8f6ab640ad59d4
                 print('Have not generated a Lomb-Scargle periodogram.')
 
     def plot_per(self, alias=True, floor=True, save=False):
