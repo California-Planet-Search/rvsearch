@@ -4,6 +4,9 @@ import pdb
 import numpy as np
 import matplotlib.pyplot as plt
 import astropy.stats
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+
 import radvel
 import radvel.fitting
 from radvel.plot import orbit_plots
@@ -276,7 +279,7 @@ class Periodogram(object):
         """Compute Lomb-Scargle periodogram with astropy.
 
         """
-        #FOR TESTING
+        # FOR TESTING
         print("Calculating Lomb-Scargle periodogram")
         periodogram = astropy.stats.LombScargle(self.times, self.vel,
                                                         self.errvel)
@@ -311,14 +314,10 @@ class Periodogram(object):
         # Save the empirical-FAP of the DBIC global maximum.
         self.fap_min = fap_min
 
-    def save_per(self, ls=False):
-        """Save BIC periodogram as csv.
-
-        Args:
-            ls (bool): Save Lomb-Scargle periodogram?
-
-        """
-        if ls==False:
+    def save_per(self, filename, ls=False):
+        df = pd.DataFrame([])
+        df['period'] = self.pers
+        if not ls:
             try:
                 np.savetxt((self.pers, self.power['bic']), filename=\
                                                 'BIC_periodogram.csv')
@@ -326,9 +325,8 @@ class Periodogram(object):
                 print('Have not generated a delta-BIC periodogram.')
         else:
             try:
-                np.savetxt((self.pers, self.power['ls']), filename=\
-                                                'LS_periodogram.csv')
-            except:
+                df['power'] = self.power['ls']
+            except KeyError:
                 print('Have not generated a Lomb-Scargle periodogram.')
 
     def plot_per(self, alias=True, floor=True, save=False):
@@ -389,6 +387,10 @@ class Periodogram(object):
         ax.set_ylabel(r'$\Delta$BIC')  # TO-DO: WORK IN AIC/BIC OPTION
         ax.set_title('Planet {} vs. planet {}'.format(self.num_known_planets+1,
                                                       self.num_known_planets))
+
+        formatter = ticker.ScalarFormatter()
+        formatter.set_scientific(False)
+        ax.xaxis.set_major_formatter(formatter)
 
         # Store figure as object attribute, make separate saving functionality?
         self.fig = fig

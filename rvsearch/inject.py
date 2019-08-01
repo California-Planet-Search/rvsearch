@@ -3,11 +3,10 @@
 import os
 import numpy as np
 import pandas as pd
-from scipy.interpolate import interp2d, SmoothBivariateSpline, RegularGridInterpolator
+from scipy.interpolate import RegularGridInterpolator
 import pickle
 import pathos.multiprocessing as mp
 import radvel
-import tqdm
 
 import rvsearch.utils
 
@@ -145,9 +144,6 @@ class Injections(object):
 
         return outdf
 
-    def interpolate(self, period, k):
-        pass
-
     def save(self):
         self.recoveries.to_csv(os.path.join('recoveries.csv'), index=False)
 
@@ -159,7 +155,7 @@ class Completeness(object):
         recoveries (DataFrame): DataFrame with injection/recovery tests from Injections.save
     """
 
-    def __init__(self, recoveries, xcol='inj_au', ycol='inj_msini', mstar=1.0):
+    def __init__(self, recoveries, xcol='inj_au', ycol='inj_msini', mstar=None):
         """Object to handle a suite of injection/recovery tests
 
         Args:
@@ -175,15 +171,16 @@ class Completeness(object):
 
         self.mstar = np.zeros_like(self.recoveries['inj_period']) + mstar
 
-        self.recoveries['inj_msini'] = radvel.utils.Msini(self.recoveries['inj_k'],
-                                                          self.recoveries['inj_period'],
-                                                          self.mstar, self.recoveries['inj_e'])
-        self.recoveries['rec_msini'] = radvel.utils.Msini(self.recoveries['rec_k'],
-                                                          self.recoveries['rec_period'],
-                                                          self.mstar, self.recoveries['rec_e'])
+        if mstar is not None:
+            self.recoveries['inj_msini'] = radvel.utils.Msini(self.recoveries['inj_k'],
+                                                              self.recoveries['inj_period'],
+                                                              self.mstar, self.recoveries['inj_e'])
+            self.recoveries['rec_msini'] = radvel.utils.Msini(self.recoveries['rec_k'],
+                                                              self.recoveries['rec_period'],
+                                                              self.mstar, self.recoveries['rec_e'])
 
-        self.recoveries['inj_au'] = radvel.utils.semi_major_axis(self.recoveries['inj_period'], mstar)
-        self.recoveries['rec_au'] = radvel.utils.semi_major_axis(self.recoveries['rec_period'], mstar)
+            self.recoveries['inj_au'] = radvel.utils.semi_major_axis(self.recoveries['inj_period'], mstar)
+            self.recoveries['rec_au'] = radvel.utils.semi_major_axis(self.recoveries['rec_period'], mstar)
 
         self.xcol = xcol
         self.ycol = ycol
@@ -204,8 +201,6 @@ class Completeness(object):
         Compute a 2D moving average in loglog space
 
         Args:
-            xcol (string): x column label from self.recoveries
-            ycol (string): y column label from self.recoveries
             xlim (tuple): min and max x limits
             ylim (tuple): min and max y limits
             resolution (int): (optional) grid is sampled at this resolution
@@ -235,7 +230,7 @@ class Completeness(object):
                 yhigh = 10**(np.log10(y) + ylogwin/2)
 
                 xbox = yinj[np.where((xinj <= xhigh) & (xinj >= xlow))[0]]
-                if y > max(xbox) or y < min(xbox):
+                if len(xbox) == 0 or y > max(xbox) or y < min(xbox):
                     z[j, i] = np.nan
                     continue
 
