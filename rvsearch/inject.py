@@ -155,7 +155,7 @@ class Completeness(object):
         recoveries (DataFrame): DataFrame with injection/recovery tests from Injections.save
     """
 
-    def __init__(self, recoveries, xcol='inj_au', ycol='inj_msini', mstar=1.0):
+    def __init__(self, recoveries, xcol='inj_au', ycol='inj_msini', mstar=None):
         """Object to handle a suite of injection/recovery tests
 
         Args:
@@ -171,15 +171,16 @@ class Completeness(object):
 
         self.mstar = np.zeros_like(self.recoveries['inj_period']) + mstar
 
-        self.recoveries['inj_msini'] = radvel.utils.Msini(self.recoveries['inj_k'],
-                                                          self.recoveries['inj_period'],
-                                                          self.mstar, self.recoveries['inj_e'])
-        self.recoveries['rec_msini'] = radvel.utils.Msini(self.recoveries['rec_k'],
-                                                          self.recoveries['rec_period'],
-                                                          self.mstar, self.recoveries['rec_e'])
+        if mstar is not None:
+            self.recoveries['inj_msini'] = radvel.utils.Msini(self.recoveries['inj_k'],
+                                                              self.recoveries['inj_period'],
+                                                              self.mstar, self.recoveries['inj_e'])
+            self.recoveries['rec_msini'] = radvel.utils.Msini(self.recoveries['rec_k'],
+                                                              self.recoveries['rec_period'],
+                                                              self.mstar, self.recoveries['rec_e'])
 
-        self.recoveries['inj_au'] = radvel.utils.semi_major_axis(self.recoveries['inj_period'], mstar)
-        self.recoveries['rec_au'] = radvel.utils.semi_major_axis(self.recoveries['rec_period'], mstar)
+            self.recoveries['inj_au'] = radvel.utils.semi_major_axis(self.recoveries['inj_period'], mstar)
+            self.recoveries['rec_au'] = radvel.utils.semi_major_axis(self.recoveries['rec_period'], mstar)
 
         self.xcol = xcol
         self.ycol = ycol
