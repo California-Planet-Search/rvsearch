@@ -394,8 +394,8 @@ class Search(object):
         run = True
         while run:
             if self.num_planets != 0:
-                # if self.basebic is None:
-                #     self.basebic = self.post.likelihood.bic()
+                if self.basebic is None:
+                    self.basebic = self.post.likelihood.bic()
                 self.add_planet()
 
             perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
@@ -627,7 +627,8 @@ class Search(object):
         self.mcmc = False
         self.save_outputs = False
         self.verbose = False
-        self.basebic = None
+        # 8/2: Trying to fix injections, possibly basebic error. Commenting out.
+        # self.basebic = None
         self.manual_grid = [injected_orbel[0]]
         # self.manual_grid = self.pers[::4]
 
