@@ -75,7 +75,8 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
                  summary_ncols=2, uparams=None, telfmts=plot.telfmts_default,
                  legend=True, phase_limits=[], nobin=False, phasetext_size='small',
                  rv_phase_space=0.06, figwidth=9.5, fit_linewidth=2.0,
-                 set_xlim=None, text_size=9, legend_kwargs=dict(loc='best')):
+                 show_rms=False, highlight_last=False, set_xlim=None,
+                 text_size=9, legend_kwargs=dict(loc='best')):
 
         self.search = search
         self.starname = self.search.starname
@@ -106,6 +107,8 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
         self.phasetext_size = phasetext_size
         self.rv_phase_space = rv_phase_space
         self.figwidth = figwidth
+        self.show_rms = show_rms
+        self.highlight_last = highlight_last
         self.fit_linewidth = fit_linewidth
         self.set_xlim = set_xlim
         self.text_size = text_size
