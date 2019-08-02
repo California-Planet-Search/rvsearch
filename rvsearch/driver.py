@@ -35,10 +35,12 @@ def run_search(args):
     else:
         post = None
 
+
     searcher = rvsearch.search.Search(data, starname=starname,
                                       min_per=args.minP,
                                       workers=args.num_cpus,
                                       post=post,
+                                      trend=args.trend,
                                       verbose=True)
     searcher.run_search()
 

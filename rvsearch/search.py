@@ -169,8 +169,8 @@ class Search(object):
                 self.post.params['curv'].value = post1.params['curv'].value
             else:
                 # Linear
-                self.post.params['curv'].value = 0
                 self.post.params['dvdt'].value = post2.params['dvdt'].value
+                self.post.params['curv'].value = 0
                 self.post.params['curv'].vary  = False
         else:
             # Flat
@@ -394,8 +394,8 @@ class Search(object):
         run = True
         while run:
             if self.num_planets != 0:
-                if self.basebic is None:
-                    self.basebic = self.post.likelihood.bic()
+                # if self.basebic is None:
+                #     self.basebic = self.post.likelihood.bic()
                 self.add_planet()
 
             perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
@@ -446,7 +446,7 @@ class Search(object):
 
                 self.fit_orbit()
                 self.all_params.append(self.post.params)
-                self.basebic = self.post.bic()
+                self.basebic = self.post.likelihood.bic()
             else:
                 self.sub_planet()
                 run = False
