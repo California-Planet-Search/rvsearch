@@ -169,9 +169,9 @@ class Completeness(object):
         """
         self.recoveries = recoveries
 
-        self.mstar = np.zeros_like(self.recoveries['inj_period']) + mstar
-
         if mstar is not None:
+            self.mstar = np.zeros_like(self.recoveries['inj_period']) + mstar
+
             self.recoveries['inj_msini'] = radvel.utils.Msini(self.recoveries['inj_k'],
                                                               self.recoveries['inj_period'],
                                                               self.mstar, self.recoveries['inj_e'])
