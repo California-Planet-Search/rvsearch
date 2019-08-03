@@ -449,6 +449,8 @@ class Search(object):
                 self.basebic = self.post.likelihood.bic()
             else:
                 self.sub_planet()
+                # 8/3: Update the basebic anyway, for injections.
+                self.basebic = self.post.likelihood.bic()
                 run = False
             if self.num_planets >= self.max_planets:
                 run = False
