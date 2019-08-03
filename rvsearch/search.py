@@ -61,9 +61,11 @@ class Search(object):
             self.post   = utils.initialize_post(data, params=self.params,
                                                 priors=self.priors)
             self.setup  = False
+            self.setup_planets = -1
         else:
             self.post   = post
             self.setup  = True
+            self.setup_planets = self.post.params.num_planets
 
         self.all_params = []
 
@@ -395,10 +397,9 @@ class Search(object):
         run = True
         while run:
             if self.num_planets != 0:
-                if self.setup:
+                if self.setup and self.num_planets == self.setup_planets:
                     self.basebic = self.post.likelihood.bic()
                 self.add_planet()
-                print(self.num_planets)
 
             perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
                                                minsearchp=self.min_per, fap=self.fap,
@@ -609,7 +610,6 @@ class Search(object):
         """
         if self.num_planets == 0:
             self.add_planet()
-            print(self.num_planets)
         last_thresh = max(self.bic_threshes.keys())
         fixed_threshold = self.bic_threshes[last_thresh]
 
