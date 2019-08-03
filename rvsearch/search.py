@@ -398,6 +398,7 @@ class Search(object):
                 if self.setup:
                     self.basebic = self.post.likelihood.bic()
                 self.add_planet()
+                print(self.num_planets)
 
             perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
                                                minsearchp=self.min_per, fap=self.fap,
