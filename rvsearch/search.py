@@ -60,9 +60,10 @@ class Search(object):
                                                         times=data.time)
             self.post   = utils.initialize_post(data, params=self.params,
                                                 priors=self.priors)
+            self.setup  = False
         else:
             self.post   = post
-            # self.priors = post.priors
+            self.setup  = True
 
         self.all_params = []
 
@@ -394,7 +395,7 @@ class Search(object):
         run = True
         while run:
             if self.num_planets != 0:
-                if self.basebic is None:
+                if self.setup:
                     self.basebic = self.post.likelihood.bic()
                 self.add_planet()
 
@@ -607,6 +608,7 @@ class Search(object):
         """
         if self.num_planets == 0:
             self.add_planet()
+            print(self.num_planets)
         last_thresh = max(self.bic_threshes.keys())
         fixed_threshold = self.bic_threshes[last_thresh]
 
@@ -629,8 +631,8 @@ class Search(object):
         self.mcmc = False
         self.save_outputs = False
         self.verbose = False
-        # 8/2: Trying to fix injections, possibly basebic error. Commenting out.
-        # self.basebic = None
+        # 8/2: Trying to fix injections, possibly basebic error.
+        self.basebic = None
         self.manual_grid = [injected_orbel[0]]
         # self.manual_grid = self.pers[::4]
 
