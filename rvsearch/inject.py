@@ -36,6 +36,7 @@ class Injections(object):
         self.verbose = verbose
 
         self.search = pickle.load(open(searchpath, 'rb'))
+        self.search.verbose = False
         seed = np.round(self.search.data['time'].values[0] * 1000).astype(int)
 
         self.injected_planets = self.random_planets(seed)
