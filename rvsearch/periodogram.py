@@ -56,7 +56,7 @@ class Periodogram(object):
 
     def __init__(self, post, basebic=None, minsearchp=3, maxsearchp=10000,
                  baseline=True, basefactor=5., oversampling=1., manual_grid=None,
-                 fap=0.01, num_pers=None, eccentric=False, workers=1,
+                 fap=0.001, num_pers=None, eccentric=False, workers=1,
                  verbose=True):
         self.post = copy.deepcopy(post)
         self.default_pdict = {}

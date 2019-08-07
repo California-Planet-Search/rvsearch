@@ -93,6 +93,11 @@ def main():
                           type=int, action='store', default=100,
                           help="Number of injections [default=100]"
                           )
+    psr_inj.add_argument('--full_grid',
+                          action='store_true',
+                          help="Run search over full period grid [default=False]"
+                          )
+
 
     psr_search.set_defaults(func=rvsearch.driver.run_search)
     psr_inj.set_defaults(func=rvsearch.driver.injections)
