@@ -102,6 +102,7 @@ class Injections(object):
         def _run_one(orbel):
             sfile = open(self.searchpath, 'rb')
             search = pickle.load(sfile)
+            search.verbose = False
             sfile.close()
 
             recovered, recovered_orbel = search.inject_recover(orbel, num_cpus=1, full_grid=self.full_grid)
