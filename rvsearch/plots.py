@@ -456,14 +456,15 @@ class CompletenessPlots(object):
 
         self.xgrid, self.ygrid, self.comp_array = completeness.completeness_grid(self.xlim, self.ylim)
 
-    def completeness_plot(self, title='', xlabel='', ylabel='', hide_points=False):
+    def completeness_plot(self, title='', xlabel='', ylabel='', colorbar=True, hide_points=False):
         """Plot completeness contours
 
         Args:
             title (string): (optional) plot title
             xlabel (string): (optional) x-axis label
             ylabel (string): (optional) y-axis label
-            hide_points (bool): if true hide individual injection/recovery points
+            colorbar (bool): (optional) plot colorbar
+            hide_points (bool): (optional) if true hide individual injection/recovery points
         """
         good = self.comp.recoveries.query('recovered == True')
         bad = self.comp.recoveries.query('recovered == False')
@@ -493,6 +494,9 @@ class CompletenessPlots(object):
         pl.ylabel(ylabel)
 
         pl.grid(True)
+
+        if colorbar:
+            pl.colorbar(pad=0, label='probability of detection')
 
         fig = pl.gcf()
 
