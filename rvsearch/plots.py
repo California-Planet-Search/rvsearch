@@ -456,13 +456,14 @@ class CompletenessPlots(object):
 
         self.xgrid, self.ygrid, self.comp_array = completeness.completeness_grid(self.xlim, self.ylim)
 
-    def completeness_plot(self, title='', xlabel='', ylabel=''):
+    def completeness_plot(self, title='', xlabel='', ylabel='', hide_points=False):
         """Plot completeness contours
 
         Args:
             title (string): (optional) plot title
             xlabel (string): (optional) x-axis label
             ylabel (string): (optional) y-axis label
+            hide_points (bool): if true hide individual injection/recovery points
         """
         good = self.comp.recoveries.query('recovered == True')
         bad = self.comp.recoveries.query('recovered == False')
@@ -471,8 +472,9 @@ class CompletenessPlots(object):
         pl.subplots_adjust(bottom=0.18, left=0.22, right=0.95)
 
         CS = pl.contourf(self.xgrid, self.ygrid, self.comp_array, 10, cmap=pl.cm.Reds_r, vmax=0.9)
-        pl.plot(good[self.comp.xcol], good[self.comp.ycol], 'b.', alpha=0.3, label='recovered')
-        pl.plot(bad[self.comp.xcol], bad[self.comp.ycol], 'r.', alpha=0.3, label='missed')
+        if not hide_points:
+            pl.plot(good[self.comp.xcol], good[self.comp.ycol], 'b.', alpha=0.3, label='recovered')
+            pl.plot(bad[self.comp.xcol], bad[self.comp.ycol], 'r.', alpha=0.3, label='missed')
         ax = pl.gca()
         ax.set_xscale('log')
         ax.set_yscale('log')
