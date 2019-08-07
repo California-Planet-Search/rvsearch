@@ -592,12 +592,14 @@ class Search(object):
 
         self.run_search(fixed_threshold=fixed_threshold, mkoutdir=False)
 
-    def inject_recover(self, injected_orbel, num_cpus=None):
+    def inject_recover(self, injected_orbel, num_cpus=None, full_grid=True):
         """Inject and recover
         Inject and attempt to recover a synthetic planet signal
         Args:
             injected_orbel (array): array of orbital elements sent to radvel.kepler.rv_drive
             num_cpus (int): Number of CPUs to utilize. Will default to self.workers
+            full_grid (bool): calculate periodogram on full grid, if False only calculate
+                at single period
         Returns:
             tuple: (recovered? (T/F), recovered_orbel)
         """
@@ -610,7 +612,8 @@ class Search(object):
         self.save_outputs = False
         self.verbose = False
         self.basebic = None
-        self.manual_grid = [injected_orbel[0]]
+        if not full_grid:
+            self.manual_grid = [injected_orbel[0]]
         # self.manual_grid = self.pers[::4]
 
         mod = radvel.kepler.rv_drive(self.data['time'].values, injected_orbel)

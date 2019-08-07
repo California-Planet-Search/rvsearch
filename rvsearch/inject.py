@@ -23,12 +23,13 @@ class Injections(object):
         num_sim (int): number of planets to simulate
     """
 
-    def __init__(self, searchpath, plim, klim, elim, num_sim=1):
+    def __init__(self, searchpath, plim, klim, elim, num_sim=1, full_grid=True):
         self.searchpath = searchpath
         self.plim = plim
         self.klim = klim
         self.elim = elim
         self.num_sim = num_sim
+        self.full_grid = self.full_grid
 
         self.search = pickle.load(open(searchpath, 'rb'))
         seed = np.round(self.search.data['time'].values[0] * 1000).astype(int)
