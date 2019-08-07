@@ -6,13 +6,13 @@ the `cli.py` command line interface.
 from __future__ import print_function
 import os
 import copy
-import pylab as pl
 import pandas as pd
 import pickle
 
 import radvel
 from radvel.utils import working_directory
 import rvsearch
+
 
 def run_search(args):
     """Run a search from a given RadVel setup file
@@ -40,7 +40,7 @@ def run_search(args):
                                       workers=args.num_cpus,
                                       post=post,
                                       trend=args.trend,
-                                      verbose=True)
+                                      verbose=args.verbose)
     searcher.run_search()
 
 

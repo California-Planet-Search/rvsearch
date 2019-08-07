@@ -26,7 +26,7 @@ class Injections(object):
         verbose (bool): show progress bar
     """
 
-    def __init__(self, searchpath, plim, klim, elim, num_sim=1, full_grid=True, verbose=False):
+    def __init__(self, searchpath, plim, klim, elim, num_sim=1, full_grid=True, verbose=True):
         self.searchpath = searchpath
         self.plim = plim
         self.klim = klim
