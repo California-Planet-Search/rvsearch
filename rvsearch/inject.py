@@ -125,8 +125,6 @@ class Injections(object):
                              columns=outcols)
         outdf[self.injected_planets.columns] = self.injected_planets
 
-        pool = mp.Pool(processes=num_cpus)
-
         in_orbels = []
         out_orbels = []
         recs = []
@@ -142,6 +140,7 @@ class Injections(object):
             counter = Value('i', 0, lock=True)
             pbar = TqdmUpTo(total=len(in_orbels), position=0)
 
+        pool = mp.Pool(processes=num_cpus)
         outputs = pool.map(_run_one, in_orbels)
 
         for out in outputs:
