@@ -35,7 +35,6 @@ def run_search(args):
     else:
         post = None
 
-
     searcher = rvsearch.search.Search(data, starname=starname,
                                       min_per=args.minP,
                                       workers=args.num_cpus,
@@ -69,7 +68,8 @@ def injections(args):
             try:
                 inj = rvsearch.inject.Injections(sfile, plim, klim, elim,
                                                  num_sim=args.num_inject,
-                                                 full_grid=args.full_grid)
+                                                 full_grid=args.full_grid,
+                                                 verbose=args.verbose)
                 recoveries = inj.run_injections(num_cpus=args.num_cpus)
                 inj.save()
             except IOError:

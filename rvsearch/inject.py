@@ -6,7 +6,9 @@ import pandas as pd
 from scipy.interpolate import RegularGridInterpolator
 import pickle
 import pathos.multiprocessing as mp
+from multiprocessing import Value
 import radvel
+from .periodogram import TqdmUpTo
 
 import rvsearch.utils
 
@@ -21,15 +23,17 @@ class Injections(object):
         klim (tuple): lower and upper k bounds for injections
         elim (tuple): lower and upper e bounds for injections
         num_sim (int): number of planets to simulate
+        verbose (bool): show progress bar
     """
 
-    def __init__(self, searchpath, plim, klim, elim, num_sim=1, full_grid=True):
+    def __init__(self, searchpath, plim, klim, elim, num_sim=1, full_grid=True, verbose=False):
         self.searchpath = searchpath
         self.plim = plim
         self.klim = klim
         self.elim = elim
         self.num_sim = num_sim
         self.full_grid = full_grid
+        self.verbose = verbose
 
         self.search = pickle.load(open(searchpath, 'rb'))
         seed = np.round(self.search.data['time'].values[0] * 1000).astype(int)
@@ -104,8 +108,13 @@ class Injections(object):
 
             last_bic = max(search.best_bics.keys())
             bic = search.best_bics[last_bic]
+            thresh = search.bic_threshes[last_bic]
 
-            return recovered, recovered_orbel, bic
+            if self.verbose:
+                counter.value += 1
+                pbar.update_to(counter.value)
+
+            return recovered, recovered_orbel, bic, thresh
 
         outcols = ['inj_period', 'inj_tp', 'inj_e', 'inj_w', 'inj_k',
                    'rec_period', 'rec_tp', 'rec_e', 'rec_w', 'rec_k',
@@ -120,16 +129,25 @@ class Injections(object):
         out_orbels = []
         recs = []
         bics = []
+        threshes = []
         for i, row in self.injected_planets.iterrows():
             in_orbels.append(list(row.values))
+
+        if self.verbose:
+            global pbar
+            global counter
+
+            counter = Value('i', 0, lock=True)
+            pbar = TqdmUpTo(total=len(in_orbels), position=0)
 
         outputs = pool.map(_run_one, in_orbels)
 
         for out in outputs:
-            recovered, recovered_orbel, bic = out
+            recovered, recovered_orbel, bic, thresh = out
             out_orbels.append(recovered_orbel)
             recs.append(recovered)
             bics.append(bic)
+            threshes.append(thresh)
 
         out_orbels = np.array(out_orbels)
         outdf['rec_period'] = out_orbels[:, 0]
@@ -140,6 +158,7 @@ class Injections(object):
 
         outdf['recovered'] = recs
         outdf['bic'] = bics
+        outdf['bic_thresh'] = threshes
 
         self.recoveries = outdf
 

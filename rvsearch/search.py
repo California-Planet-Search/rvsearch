@@ -622,7 +622,7 @@ class Search(object):
             fixed_threshold = True
         else:
             fixed_threshold = False
-        # self.manual_grid = self.pers[::4]
+            # self.manual_grid = self.pers[::4]
 
         mod = radvel.kepler.rv_drive(self.data['time'].values, injected_orbel)
 

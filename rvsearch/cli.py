@@ -35,6 +35,10 @@ def main():
                           type=str,
                           help="path to existing radvel-search output directory"
                           )
+    psr_parent.add_argument('--verbose',
+                          action='store_true',
+                          help="Print extra messages and progress bars"
+                          )
 
 
     # Search
