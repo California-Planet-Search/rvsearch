@@ -581,16 +581,21 @@ class Search(object):
             np.savetxt(outdir+'/thresholds_bics_faps.csv', threshs_bics_faps,
                        header='threshold  best_bic  fap')
 
-    def continue_search(self):
+    def continue_search(self, fixed_threshold=True):
         """Continue a search by trying to add one more planet
 
+        Args:
+            fixed_threshold (bool): fix the BIC threshold at the last threshold, or re-derive for each periodogram
         """
         if self.num_planets == 0:
             self.add_planet()
         last_thresh = max(self.bic_threshes.keys())
-        fixed_threshold = self.bic_threshes[last_thresh]
+        if fixed_threshold:
+            thresh = self.bic_threshes[last_thresh]
+        else:
+            thresh = None
 
-        self.run_search(fixed_threshold=fixed_threshold, mkoutdir=False)
+        self.run_search(fixed_threshold=thresh, mkoutdir=False)
 
     def inject_recover(self, injected_orbel, num_cpus=None, full_grid=False):
         """Inject and recover
@@ -614,13 +619,16 @@ class Search(object):
         self.basebic = None
         if not full_grid:
             self.manual_grid = [injected_orbel[0]]
+            fixed_threshold = True
+        else:
+            fixed_threshold = False
         # self.manual_grid = self.pers[::4]
 
         mod = radvel.kepler.rv_drive(self.data['time'].values, injected_orbel)
 
         self.data['mnvel'] += mod
 
-        self.continue_search()
+        self.continue_search(fixed_threshold)
 
         # Determine successful recovery
         last_planet = self.num_planets
