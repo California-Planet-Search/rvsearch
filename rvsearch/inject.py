@@ -29,7 +29,7 @@ class Injections(object):
         self.klim = klim
         self.elim = elim
         self.num_sim = num_sim
-        self.full_grid = self.full_grid
+        self.full_grid = full_grid
 
         self.search = pickle.load(open(searchpath, 'rb'))
         seed = np.round(self.search.data['time'].values[0] * 1000).astype(int)
@@ -100,7 +100,7 @@ class Injections(object):
             search = pickle.load(sfile)
             sfile.close()
 
-            recovered, recovered_orbel = search.inject_recover(orbel, num_cpus=1)
+            recovered, recovered_orbel = search.inject_recover(orbel, num_cpus=1, full_grid=self.full_grid)
 
             last_bic = max(search.best_bics.keys())
             bic = search.best_bics[last_bic]
