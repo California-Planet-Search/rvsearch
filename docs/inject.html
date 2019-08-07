@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Injection and Recovery Tests &mdash; rvsearch 0.1.0 documentation</title>
+  <title>Injection and Recovery Tests &mdash; rvsearch 0.1.1 documentation</title>
   
 
   
@@ -17,34 +17,36 @@
   
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Plotting" href="plots.html" />
     <link rel="prev" title="Blind Search" href="search_class.html" /> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -187,7 +189,7 @@
 <span class="target" id="module-rvsearch.inject"></span><p>Injection and recovery class</p>
 <dl class="class">
 <dt id="rvsearch.inject.Completeness">
-<em class="property">class </em><code class="descclassname">rvsearch.inject.</code><code class="descname">Completeness</code><span class="sig-paren">(</span><em>recoveries</em>, <em>xcol='inj_au'</em>, <em>ycol='inj_msini'</em>, <em>mstar=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/inject.html#Completeness"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.inject.Completeness" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">rvsearch.inject.</code><code class="descname">Completeness</code><span class="sig-paren">(</span><em>recoveries</em>, <em>xcol='inj_au'</em>, <em>ycol='inj_msini'</em>, <em>mstar=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/inject.html#Completeness"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.inject.Completeness" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate completeness surface from a suite of injections</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -199,7 +201,7 @@
 </table>
 <dl class="method">
 <dt id="rvsearch.inject.Completeness.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>recoveries</em>, <em>xcol='inj_au'</em>, <em>ycol='inj_msini'</em>, <em>mstar=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/inject.html#Completeness.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.inject.Completeness.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>recoveries</em>, <em>xcol='inj_au'</em>, <em>ycol='inj_msini'</em>, <em>mstar=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/inject.html#Completeness.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.inject.Completeness.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Object to handle a suite of injection/recovery tests</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -235,8 +237,6 @@ interpolator will work in these axes</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>xcol</strong> (<em>string</em>) – x column label from self.recoveries</li>
-<li><strong>ycol</strong> (<em>string</em>) – y column label from self.recoveries</li>
 <li><strong>xlim</strong> (<em>tuple</em>) – min and max x limits</li>
 <li><strong>ylim</strong> (<em>tuple</em>) – min and max y limits</li>
 <li><strong>resolution</strong> (<em>int</em>) – (optional) grid is sampled at this resolution</li>
@@ -286,7 +286,7 @@ units as self.xcol and self.ycol</p>
 
 <dl class="class">
 <dt id="rvsearch.inject.Injections">
-<em class="property">class </em><code class="descclassname">rvsearch.inject.</code><code class="descname">Injections</code><span class="sig-paren">(</span><em>searchpath</em>, <em>plim</em>, <em>klim</em>, <em>elim</em>, <em>num_sim=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/inject.html#Injections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.inject.Injections" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">rvsearch.inject.</code><code class="descname">Injections</code><span class="sig-paren">(</span><em>searchpath</em>, <em>plim</em>, <em>klim</em>, <em>elim</em>, <em>num_sim=1</em>, <em>full_grid=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/inject.html#Injections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.inject.Injections" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class to perform and record injection and recovery tests for a planetary system.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -305,7 +305,7 @@ units as self.xcol and self.ycol</p>
 </table>
 <dl class="method">
 <dt id="rvsearch.inject.Injections.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>searchpath</em>, <em>plim</em>, <em>klim</em>, <em>elim</em>, <em>num_sim=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/inject.html#Injections.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.inject.Injections.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>searchpath</em>, <em>plim</em>, <em>klim</em>, <em>elim</em>, <em>num_sim=1</em>, <em>full_grid=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/inject.html#Injections.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.inject.Injections.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
@@ -369,7 +369,7 @@ on a separate CPU. Individual injections are forced to be single-threaded</td>
         <a href="plots.html" class="btn btn-neutral float-right" title="Plotting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="search_class.html" class="btn btn-neutral" title="Blind Search" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="search_class.html" class="btn btn-neutral float-left" title="Blind Search" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -378,7 +378,7 @@ on a separate CPU. Individual injections are forced to be single-threaded</td>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Lee Rosenthal and BJ Fulton.
+        &copy; Copyright 2019, Lee Rosenthal and BJ Fulton
 
     </p>
   </div>
@@ -395,33 +395,16 @@ on a separate CPU. Individual injections are forced to be single-threaded</td>
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'0.1.0',
-            LANGUAGE:'None',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="_static/language_data.js"></script>
-
-  
-
-  <script type="text/javascript" src="_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>
