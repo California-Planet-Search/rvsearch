@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Plotting &mdash; rvsearch 0.1.0 documentation</title>
+  <title>Plotting &mdash; rvsearch 0.1.1 documentation</title>
   
 
   
@@ -17,34 +17,36 @@
   
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Miscellaneous Utilities" href="utils.html" />
     <link rel="prev" title="Injection and Recovery Tests" href="inject.html" /> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -243,7 +245,7 @@
 
 <dl class="class">
 <dt id="rvsearch.plots.PeriodModelPlot">
-<em class="property">class </em><code class="descclassname">rvsearch.plots.</code><code class="descname">PeriodModelPlot</code><span class="sig-paren">(</span><em>search</em>, <em>saveplot=None</em>, <em>epoch=2450000</em>, <em>yscale_auto=False</em>, <em>yscale_sigma=3.0</em>, <em>phase_nrows=None</em>, <em>phase_ncols=None</em>, <em>summary_ncols=2</em>, <em>uparams=None</em>, <em>telfmts={'APF': {'color': 'g'</em>, <em>'fmt': 'd'</em>, <em>'label': 'APF'}</em>, <em>'HARPS': {'color': 'firebrick'</em>, <em>'fmt': 's'</em>, <em>'label': 'HARPS'}</em>, <em>'HARPS-N': {'color': 'firebrick'</em>, <em>'fmt': '^'</em>, <em>'label': 'HARPS-N'}</em>, <em>'HIRES': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'HIRES_RJ': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'HIRES_RK': {'color': 'k'</em>, <em>'fmt': 's'</em>, <em>'label': 'HIRES pre 2004'</em>, <em>'mew': 1</em>, <em>'mfc': 'none'}</em>, <em>'LICK': {'color': 'g'</em>, <em>'fmt': '*'</em>, <em>'label': 'LICK'}</em>, <em>'PFS': {'color': 'magenta'</em>, <em>'fmt': 'p'</em>, <em>'label': 'PFS'}</em>, <em>'a': {'color': 'g'</em>, <em>'fmt': 'd'</em>, <em>'label': 'APF'}</em>, <em>'apf': {'color': 'g'</em>, <em>'fmt': 'd'</em>, <em>'label': 'APF'}</em>, <em>'h': {'color': 'firebrick'</em>, <em>'fmt': 's'</em>, <em>'label': 'HARPS'}</em>, <em>'harps': {'color': 'firebrick'</em>, <em>'fmt': 's'</em>, <em>'label': 'HARPS'}</em>, <em>'harps-n': {'color': 'firebrick'</em>, <em>'fmt': '^'</em>, <em>'label': 'HARPS-N'}</em>, <em>'hires': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'hires_rj': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'hires_rk': {'color': 'k'</em>, <em>'fmt': 's'</em>, <em>'label': 'HIRES pre 2004'</em>, <em>'mew': 1</em>, <em>'mfc': 'none'}</em>, <em>'j': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'k': {'color': 'k'</em>, <em>'fmt': 's'</em>, <em>'label': 'HIRES pre 2004'</em>, <em>'mew': 1</em>, <em>'mfc': 'none'}</em>, <em>'l': {'color': 'g'</em>, <em>'fmt': '*'</em>, <em>'label': 'LICK'}</em>, <em>'lick': {'color': 'g'</em>, <em>'fmt': '*'</em>, <em>'label': 'LICK'}</em>, <em>'pfs': {'color': 'magenta'</em>, <em>'fmt': 'p'</em>, <em>'label': 'PFS'}}</em>, <em>legend=True</em>, <em>phase_limits=[]</em>, <em>nobin=False</em>, <em>phasetext_size='small'</em>, <em>rv_phase_space=0.06</em>, <em>figwidth=9.5</em>, <em>fit_linewidth=2.0</em>, <em>set_xlim=None</em>, <em>text_size=9</em>, <em>legend_kwargs={'loc': 'best'}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">rvsearch.plots.</code><code class="descname">PeriodModelPlot</code><span class="sig-paren">(</span><em>search</em>, <em>saveplot=None</em>, <em>epoch=2450000</em>, <em>yscale_auto=False</em>, <em>yscale_sigma=3.0</em>, <em>phase_nrows=None</em>, <em>phase_ncols=None</em>, <em>summary_ncols=2</em>, <em>uparams=None</em>, <em>telfmts={'APF': {'color': 'g'</em>, <em>'fmt': 'd'</em>, <em>'label': 'APF'}</em>, <em>'HARPS': {'color': 'firebrick'</em>, <em>'fmt': 's'</em>, <em>'label': 'HARPS'}</em>, <em>'HARPS-N': {'color': 'firebrick'</em>, <em>'fmt': '^'</em>, <em>'label': 'HARPS-N'}</em>, <em>'HIRES': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'HIRES_RJ': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'HIRES_RK': {'color': 'k'</em>, <em>'fmt': 's'</em>, <em>'label': 'HIRES pre 2004'</em>, <em>'mew': 1</em>, <em>'mfc': 'none'}</em>, <em>'LICK': {'color': 'g'</em>, <em>'fmt': '*'</em>, <em>'label': 'LICK'}</em>, <em>'PFS': {'color': 'magenta'</em>, <em>'fmt': 'p'</em>, <em>'label': 'PFS'}</em>, <em>'a': {'color': 'g'</em>, <em>'fmt': 'd'</em>, <em>'label': 'APF'}</em>, <em>'apf': {'color': 'g'</em>, <em>'fmt': 'd'</em>, <em>'label': 'APF'}</em>, <em>'h': {'color': 'firebrick'</em>, <em>'fmt': 's'</em>, <em>'label': 'HARPS'}</em>, <em>'harps': {'color': 'firebrick'</em>, <em>'fmt': 's'</em>, <em>'label': 'HARPS'}</em>, <em>'harps-n': {'color': 'firebrick'</em>, <em>'fmt': '^'</em>, <em>'label': 'HARPS-N'}</em>, <em>'hires': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'hires_rj': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'hires_rk': {'color': 'k'</em>, <em>'fmt': 's'</em>, <em>'label': 'HIRES pre 2004'</em>, <em>'mew': 1</em>, <em>'mfc': 'none'}</em>, <em>'j': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'k': {'color': 'k'</em>, <em>'fmt': 's'</em>, <em>'label': 'HIRES pre 2004'</em>, <em>'mew': 1</em>, <em>'mfc': 'none'}</em>, <em>'l': {'color': 'g'</em>, <em>'fmt': '*'</em>, <em>'label': 'LICK'}</em>, <em>'lick': {'color': 'g'</em>, <em>'fmt': '*'</em>, <em>'label': 'LICK'}</em>, <em>'pfs': {'color': 'magenta'</em>, <em>'fmt': 'p'</em>, <em>'label': 'PFS'}}</em>, <em>legend=True</em>, <em>phase_limits=[]</em>, <em>nobin=False</em>, <em>phasetext_size='small'</em>, <em>rv_phase_space=0.06</em>, <em>figwidth=9.5</em>, <em>fit_linewidth=2.0</em>, <em>show_rms=False</em>, <em>highlight_last=False</em>, <em>set_xlim=None</em>, <em>text_size=9</em>, <em>legend_kwargs={'loc': 'best'}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>Class to jointly plot the periodograms, best model phaseplots, and</dt>
 <dd>window function for each search iteration.</dd>
@@ -306,7 +308,7 @@ JD - <cite>epoch</cite>. Ex: [7000., 70005.]</li>
 </table>
 <dl class="method">
 <dt id="rvsearch.plots.PeriodModelPlot.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>search</em>, <em>saveplot=None</em>, <em>epoch=2450000</em>, <em>yscale_auto=False</em>, <em>yscale_sigma=3.0</em>, <em>phase_nrows=None</em>, <em>phase_ncols=None</em>, <em>summary_ncols=2</em>, <em>uparams=None</em>, <em>telfmts={'APF': {'color': 'g'</em>, <em>'fmt': 'd'</em>, <em>'label': 'APF'}</em>, <em>'HARPS': {'color': 'firebrick'</em>, <em>'fmt': 's'</em>, <em>'label': 'HARPS'}</em>, <em>'HARPS-N': {'color': 'firebrick'</em>, <em>'fmt': '^'</em>, <em>'label': 'HARPS-N'}</em>, <em>'HIRES': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'HIRES_RJ': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'HIRES_RK': {'color': 'k'</em>, <em>'fmt': 's'</em>, <em>'label': 'HIRES pre 2004'</em>, <em>'mew': 1</em>, <em>'mfc': 'none'}</em>, <em>'LICK': {'color': 'g'</em>, <em>'fmt': '*'</em>, <em>'label': 'LICK'}</em>, <em>'PFS': {'color': 'magenta'</em>, <em>'fmt': 'p'</em>, <em>'label': 'PFS'}</em>, <em>'a': {'color': 'g'</em>, <em>'fmt': 'd'</em>, <em>'label': 'APF'}</em>, <em>'apf': {'color': 'g'</em>, <em>'fmt': 'd'</em>, <em>'label': 'APF'}</em>, <em>'h': {'color': 'firebrick'</em>, <em>'fmt': 's'</em>, <em>'label': 'HARPS'}</em>, <em>'harps': {'color': 'firebrick'</em>, <em>'fmt': 's'</em>, <em>'label': 'HARPS'}</em>, <em>'harps-n': {'color': 'firebrick'</em>, <em>'fmt': '^'</em>, <em>'label': 'HARPS-N'}</em>, <em>'hires': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'hires_rj': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'hires_rk': {'color': 'k'</em>, <em>'fmt': 's'</em>, <em>'label': 'HIRES pre 2004'</em>, <em>'mew': 1</em>, <em>'mfc': 'none'}</em>, <em>'j': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'k': {'color': 'k'</em>, <em>'fmt': 's'</em>, <em>'label': 'HIRES pre 2004'</em>, <em>'mew': 1</em>, <em>'mfc': 'none'}</em>, <em>'l': {'color': 'g'</em>, <em>'fmt': '*'</em>, <em>'label': 'LICK'}</em>, <em>'lick': {'color': 'g'</em>, <em>'fmt': '*'</em>, <em>'label': 'LICK'}</em>, <em>'pfs': {'color': 'magenta'</em>, <em>'fmt': 'p'</em>, <em>'label': 'PFS'}}</em>, <em>legend=True</em>, <em>phase_limits=[]</em>, <em>nobin=False</em>, <em>phasetext_size='small'</em>, <em>rv_phase_space=0.06</em>, <em>figwidth=9.5</em>, <em>fit_linewidth=2.0</em>, <em>set_xlim=None</em>, <em>text_size=9</em>, <em>legend_kwargs={'loc': 'best'}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>search</em>, <em>saveplot=None</em>, <em>epoch=2450000</em>, <em>yscale_auto=False</em>, <em>yscale_sigma=3.0</em>, <em>phase_nrows=None</em>, <em>phase_ncols=None</em>, <em>summary_ncols=2</em>, <em>uparams=None</em>, <em>telfmts={'APF': {'color': 'g'</em>, <em>'fmt': 'd'</em>, <em>'label': 'APF'}</em>, <em>'HARPS': {'color': 'firebrick'</em>, <em>'fmt': 's'</em>, <em>'label': 'HARPS'}</em>, <em>'HARPS-N': {'color': 'firebrick'</em>, <em>'fmt': '^'</em>, <em>'label': 'HARPS-N'}</em>, <em>'HIRES': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'HIRES_RJ': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'HIRES_RK': {'color': 'k'</em>, <em>'fmt': 's'</em>, <em>'label': 'HIRES pre 2004'</em>, <em>'mew': 1</em>, <em>'mfc': 'none'}</em>, <em>'LICK': {'color': 'g'</em>, <em>'fmt': '*'</em>, <em>'label': 'LICK'}</em>, <em>'PFS': {'color': 'magenta'</em>, <em>'fmt': 'p'</em>, <em>'label': 'PFS'}</em>, <em>'a': {'color': 'g'</em>, <em>'fmt': 'd'</em>, <em>'label': 'APF'}</em>, <em>'apf': {'color': 'g'</em>, <em>'fmt': 'd'</em>, <em>'label': 'APF'}</em>, <em>'h': {'color': 'firebrick'</em>, <em>'fmt': 's'</em>, <em>'label': 'HARPS'}</em>, <em>'harps': {'color': 'firebrick'</em>, <em>'fmt': 's'</em>, <em>'label': 'HARPS'}</em>, <em>'harps-n': {'color': 'firebrick'</em>, <em>'fmt': '^'</em>, <em>'label': 'HARPS-N'}</em>, <em>'hires': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'hires_rj': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'hires_rk': {'color': 'k'</em>, <em>'fmt': 's'</em>, <em>'label': 'HIRES pre 2004'</em>, <em>'mew': 1</em>, <em>'mfc': 'none'}</em>, <em>'j': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'k': {'color': 'k'</em>, <em>'fmt': 's'</em>, <em>'label': 'HIRES pre 2004'</em>, <em>'mew': 1</em>, <em>'mfc': 'none'}</em>, <em>'l': {'color': 'g'</em>, <em>'fmt': '*'</em>, <em>'label': 'LICK'}</em>, <em>'lick': {'color': 'g'</em>, <em>'fmt': '*'</em>, <em>'label': 'LICK'}</em>, <em>'pfs': {'color': 'magenta'</em>, <em>'fmt': 'p'</em>, <em>'label': 'PFS'}}</em>, <em>legend=True</em>, <em>phase_limits=[]</em>, <em>nobin=False</em>, <em>phasetext_size='small'</em>, <em>rv_phase_space=0.06</em>, <em>figwidth=9.5</em>, <em>fit_linewidth=2.0</em>, <em>show_rms=False</em>, <em>highlight_last=False</em>, <em>set_xlim=None</em>, <em>text_size=9</em>, <em>legend_kwargs={'loc': 'best'}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
@@ -361,7 +363,7 @@ Default: True.</td>
         <a href="utils.html" class="btn btn-neutral float-right" title="Miscellaneous Utilities" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="inject.html" class="btn btn-neutral" title="Injection and Recovery Tests" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="inject.html" class="btn btn-neutral float-left" title="Injection and Recovery Tests" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -370,7 +372,7 @@ Default: True.</td>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Lee Rosenthal and BJ Fulton.
+        &copy; Copyright 2019, Lee Rosenthal and BJ Fulton
 
     </p>
   </div>
@@ -387,33 +389,16 @@ Default: True.</td>
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'0.1.0',
-            LANGUAGE:'None',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="_static/language_data.js"></script>
-
-  
-
-  <script type="text/javascript" src="_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>
