@@ -175,8 +175,6 @@ class Periodogram(object):
             # Handle the case where there is at least one known planet.
             else:
                 baseline_bic = self.post.likelihood.bic()
-                #baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
-                #baseline_bic = baseline_fit.likelihood.bic()
         else:
             baseline_bic = self.basebic
 
