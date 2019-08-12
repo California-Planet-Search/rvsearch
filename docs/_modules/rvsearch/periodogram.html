@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rvsearch.periodogram &mdash; rvsearch 0.1.0 documentation</title>
+  <title>rvsearch.periodogram &mdash; rvsearch 0.1.1 documentation</title>
   
 
   
@@ -17,32 +17,34 @@
   
 
   
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
-
-  
-  <script src="../../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -152,6 +154,9 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">astropy.stats</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib.ticker</span> <span class="k">as</span> <span class="nn">ticker</span>
+
 <span class="kn">import</span> <span class="nn">radvel</span>
 <span class="kn">import</span> <span class="nn">radvel.fitting</span>
 <span class="kn">from</span> <span class="nn">radvel.plot</span> <span class="k">import</span> <span class="n">orbit_plots</span>
@@ -201,7 +206,7 @@
 
 <div class="viewcode-block" id="Periodogram.__init__"><a class="viewcode-back" href="../../periodogram.html#rvsearch.periodogram.Periodogram.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">post</span><span class="p">,</span> <span class="n">basebic</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">minsearchp</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">maxsearchp</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
                  <span class="n">baseline</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">basefactor</span><span class="o">=</span><span class="mf">5.</span><span class="p">,</span> <span class="n">oversampling</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">manual_grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">fap</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">num_pers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">eccentric</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">fap</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">num_pers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">eccentric</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                  <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">post</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">post</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">default_pdict</span> <span class="o">=</span> <span class="p">{}</span>
@@ -308,7 +313,6 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Calculating BIC periodogram for </span><span class="si">{}</span><span class="s2"> planets vs. </span><span class="si">{}</span><span class="s2"> planets&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">plstr</span><span class="p">,</span> <span class="n">prvstr</span><span class="p">))</span>
         <span class="c1"># This assumes nth planet parameters, and all periods, are fixed.</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">basebic</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Handle the case where there are no known planets.</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">num_planets</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;k1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
@@ -318,7 +322,7 @@
                 <span class="c1"># Vary ONLY gamma, jitter, dvdt, curv. All else fixed, and k=0</span>
                 <span class="n">baseline_fit</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">fitting</span><span class="o">.</span><span class="n">maxlike_fitting</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                 <span class="n">baseline_bic</span> <span class="o">=</span> <span class="n">baseline_fit</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">bic</span><span class="p">()</span>
-            <span class="c1"># Handle the case where there is at least known planet.</span>
+            <span class="c1"># Handle the case where there is at least one known planet.</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">baseline_bic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">bic</span><span class="p">()</span>
                 <span class="c1">#baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)</span>
@@ -346,9 +350,6 @@
         <span class="k">def</span> <span class="nf">_fit_period</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
             <span class="n">post</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="p">)</span>
             <span class="n">per_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sub_pers</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-            <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">            TO DECIDE: WRITE PER_ARRAY AS SUB_PERS COPY, OR REFERENCE SUB_PERS?</span>
-<span class="sd">            &#39;&#39;&#39;</span>
             <span class="n">fit_params</span> <span class="o">=</span> <span class="p">[{}</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">per_array</span><span class="p">))]</span>
             <span class="n">bic</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">per_array</span><span class="p">)</span>
 
@@ -356,8 +357,6 @@
                 <span class="c1"># Reset posterior parameters to default values.</span>
                 <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_pdict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                     <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_pdict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
-
-                <span class="c1">#Set new period, and fit a circular orbit.</span>
                 <span class="n">perkey</span> <span class="o">=</span> <span class="s1">&#39;per</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
                 <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">perkey</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">per</span>
                 <span class="n">post</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">fitting</span><span class="o">.</span><span class="n">maxlike_fitting</span><span class="p">(</span><span class="n">post</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -376,7 +375,7 @@
                     <span class="c1"># If the fit is still bad, reset tc to better value and try again.</span>
                     <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_pdict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                         <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_pdict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
-                    <span class="n">veldiff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">y</span><span class="p">))</span>
+                    <span class="n">veldiff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">y</span><span class="p">))</span>
                     <span class="n">tc_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">times</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">veldiff</span><span class="p">)]</span>
                     <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;tc</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">num_planets</span><span class="p">)]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">tc_new</span>
                     <span class="n">post</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">fitting</span><span class="o">.</span><span class="n">maxlike_fitting</span><span class="p">(</span><span class="n">post</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -430,7 +429,7 @@
         <span class="sd">&quot;&quot;&quot;Compute Lomb-Scargle periodogram with astropy.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1">#FOR TESTING</span>
+        <span class="c1"># FOR TESTING</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Calculating Lomb-Scargle periodogram&quot;</span><span class="p">)</span>
         <span class="n">periodogram</span> <span class="o">=</span> <span class="n">astropy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">LombScargle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">times</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vel</span><span class="p">,</span>
                                                         <span class="bp">self</span><span class="o">.</span><span class="n">errvel</span><span class="p">)</span>
@@ -465,14 +464,10 @@
         <span class="c1"># Save the empirical-FAP of the DBIC global maximum.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fap_min</span> <span class="o">=</span> <span class="n">fap_min</span></div>
 
-<div class="viewcode-block" id="Periodogram.save_per"><a class="viewcode-back" href="../../periodogram.html#rvsearch.periodogram.Periodogram.save_per">[docs]</a>    <span class="k">def</span> <span class="nf">save_per</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Save BIC periodogram as csv.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            ls (bool): Save Lomb-Scargle periodogram?</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">ls</span><span class="o">==</span><span class="kc">False</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">save_per</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">ls</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([])</span>
+        <span class="n">df</span><span class="p">[</span><span class="s1">&#39;period&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pers</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ls</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">pers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">power</span><span class="p">[</span><span class="s1">&#39;bic&#39;</span><span class="p">]),</span> <span class="n">filename</span><span class="o">=</span>\
                                                 <span class="s1">&#39;BIC_periodogram.csv&#39;</span><span class="p">)</span>
@@ -480,10 +475,9 @@
                 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Have not generated a delta-BIC periodogram.&#39;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">pers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">power</span><span class="p">[</span><span class="s1">&#39;ls&#39;</span><span class="p">]),</span> <span class="n">filename</span><span class="o">=</span>\
-                                                <span class="s1">&#39;LS_periodogram.csv&#39;</span><span class="p">)</span>
-            <span class="k">except</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Have not generated a Lomb-Scargle periodogram.&#39;</span><span class="p">)</span></div>
+                <span class="n">df</span><span class="p">[</span><span class="s1">&#39;power&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power</span><span class="p">[</span><span class="s1">&#39;ls&#39;</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Have not generated a Lomb-Scargle periodogram.&#39;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Periodogram.plot_per"><a class="viewcode-back" href="../../periodogram.html#rvsearch.periodogram.Periodogram.plot_per">[docs]</a>    <span class="k">def</span> <span class="nf">plot_per</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">floor</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Plot periodogram.</span>
@@ -525,7 +519,11 @@
             <span class="c1"># Plot sidereal day, lunation period, and sidereal year aliases.</span>
             <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">]</span>
             <span class="n">alias</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.997</span><span class="p">,</span> <span class="mf">29.531</span><span class="p">,</span> <span class="mf">365.256</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pers</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">1.</span><span class="p">:</span>
+                <span class="n">alii</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">alii</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">alii</span><span class="p">:</span>
                 <span class="n">f_ap</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="n">alias</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">f_real</span>
                 <span class="n">f_am</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="n">alias</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">f_real</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="n">f_am</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
@@ -539,6 +537,10 @@
         <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\Delta$BIC&#39;</span><span class="p">)</span>  <span class="c1"># TO-DO: WORK IN AIC/BIC OPTION</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Planet </span><span class="si">{}</span><span class="s1"> vs. planet </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span>
                                                       <span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span><span class="p">))</span>
+
+        <span class="n">formatter</span> <span class="o">=</span> <span class="n">ticker</span><span class="o">.</span><span class="n">ScalarFormatter</span><span class="p">()</span>
+        <span class="n">formatter</span><span class="o">.</span><span class="n">set_scientific</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_formatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
 
         <span class="c1"># Store figure as object attribute, make separate saving functionality?</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">fig</span>
@@ -556,7 +558,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Lee Rosenthal and BJ Fulton.
+        &copy; Copyright 2019, Lee Rosenthal and BJ Fulton
 
     </p>
   </div>
@@ -573,33 +575,16 @@
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'../../',
-            VERSION:'0.1.0',
-            LANGUAGE:'None',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="../../_static/jquery.js"></script>
-      <script type="text/javascript" src="../../_static/underscore.js"></script>
-      <script type="text/javascript" src="../../_static/doctools.js"></script>
-      <script type="text/javascript" src="../../_static/language_data.js"></script>
-
-  
-
-  <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>
