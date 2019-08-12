@@ -35,6 +35,10 @@ def main():
                           type=str,
                           help="path to existing radvel-search output directory"
                           )
+    psr_parent.add_argument('--verbose',
+                          action='store_true',
+                          help="Print extra messages and progress bars"
+                          )
 
 
     # Search
@@ -93,6 +97,11 @@ def main():
                           type=int, action='store', default=100,
                           help="Number of injections [default=100]"
                           )
+    psr_inj.add_argument('--full_grid',
+                          action='store_true',
+                          help="Run search over full period grid [default=False]"
+                          )
+
 
     psr_search.set_defaults(func=rvsearch.driver.run_search)
     psr_inj.set_defaults(func=rvsearch.driver.injections)

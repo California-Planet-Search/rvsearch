@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rvsearch.utils &mdash; rvsearch 0.1.0 documentation</title>
+  <title>rvsearch.utils &mdash; rvsearch 0.1.1 documentation</title>
   
 
   
@@ -17,32 +17,34 @@
   
 
   
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
-
-  
-  <script src="../../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -170,7 +172,7 @@
     <span class="k">return</span> <span class="n">post</span>
 
 
-<div class="viewcode-block" id="initialize_default_pars"><a class="viewcode-back" href="../../utils.html#rvsearch.utils.initialize_default_pars">[docs]</a><span class="k">def</span> <span class="nf">initialize_default_pars</span><span class="p">(</span><span class="n">instnames</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;inst&#39;</span><span class="p">],</span>
+<div class="viewcode-block" id="initialize_default_pars"><a class="viewcode-back" href="../../utils.html#rvsearch.utils.initialize_default_pars">[docs]</a><span class="k">def</span> <span class="nf">initialize_default_pars</span><span class="p">(</span><span class="n">instnames</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;inst&#39;</span><span class="p">],</span> <span class="n">times</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                             <span class="n">fitting_basis</span><span class="o">=</span><span class="s1">&#39;per tc secosw sesinw k&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Set up a default Parameters object.</span>
 
@@ -179,6 +181,7 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        instnames (list): codes of instruments used</span>
+<span class="sd">        times (array): optional, timestamps of observations.</span>
 <span class="sd">        fitting_basis: optional</span>
 
 <span class="sd">    Returns:</span>
@@ -187,7 +190,10 @@
 
     <span class="n">anybasis_params</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">Parameters</span><span class="p">(</span><span class="n">num_planets</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;per tc e w k&#39;</span><span class="p">)</span>
 
-    <span class="n">anybasis_params</span><span class="p">[</span><span class="s1">&#39;tc1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mf">2455200.0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">times</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">anybasis_params</span><span class="p">[</span><span class="s1">&#39;tc1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mf">2455200.0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">anybasis_params</span><span class="p">[</span><span class="s1">&#39;tc1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">times</span><span class="p">))</span>
     <span class="n">anybasis_params</span><span class="p">[</span><span class="s1">&#39;w1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mf">2.</span><span class="p">)</span>
     <span class="n">anybasis_params</span><span class="p">[</span><span class="s1">&#39;k1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
     <span class="n">anybasis_params</span><span class="p">[</span><span class="s1">&#39;e1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
@@ -197,7 +203,9 @@
     <span class="n">anybasis_params</span><span class="p">[</span><span class="s1">&#39;curv&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">instnames</span><span class="p">:</span>
-        <span class="n">anybasis_params</span><span class="p">[</span><span class="s1">&#39;gamma_&#39;</span><span class="o">+</span><span class="n">inst</span><span class="p">]</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">vary</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">anybasis_params</span><span class="p">[</span><span class="s1">&#39;gamma_&#39;</span><span class="o">+</span><span class="n">inst</span><span class="p">]</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                                                          <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                          <span class="n">vary</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">anybasis_params</span><span class="p">[</span><span class="s1">&#39;jit_&#39;</span><span class="o">+</span><span class="n">inst</span><span class="p">]</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
 
     <span class="n">params</span> <span class="o">=</span> <span class="n">anybasis_params</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">to_any_basis</span><span class="p">(</span><span class="n">anybasis_params</span><span class="p">,</span> <span class="n">fitting_basis</span><span class="p">)</span>
@@ -222,7 +230,7 @@
 
     <span class="k">if</span> <span class="n">params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># params = radvel.Parameters(1, basis=&#39;per tc secosw sesinw logk&#39;)</span>
-        <span class="n">params</span> <span class="o">=</span> <span class="n">initialize_default_pars</span><span class="p">(</span><span class="n">instnames</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">tel</span><span class="p">)</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">initialize_default_pars</span><span class="p">(</span><span class="n">instnames</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">tel</span><span class="p">,</span> <span class="n">times</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
     <span class="n">iparams</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">_copy_params</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
 
     <span class="c1"># Allow for time to be listed as &#39;time&#39; or &#39;jd&#39; (Julian Date).</span>
@@ -251,8 +259,8 @@
     <span class="k">if</span> <span class="n">priors</span> <span class="o">==</span> <span class="p">[]:</span>
         <span class="n">priors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">radvel</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">PositiveKPrior</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">num_planets</span><span class="p">))</span>
         <span class="n">priors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">radvel</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">EccentricityPrior</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">num_planets</span><span class="p">))</span>
-    <span class="c1"># priors.append([radvel.prior.HardBounds(&#39;jit_&#39;+inst, 0.0, 20.0)</span>
-    <span class="c1"># for inst in telgrps.keys()])</span>
+        <span class="c1">#for inst in telgrps.keys():</span>
+        <span class="c1">#    priors.append(radvel.prior.HardBounds(&#39;jit_&#39;+inst, 0.0, 20.0))</span>
     <span class="n">post</span><span class="o">.</span><span class="n">priors</span> <span class="o">=</span> <span class="n">priors</span>
 
     <span class="k">return</span> <span class="n">post</span></div>
@@ -404,7 +412,7 @@
                 <span class="n">star_index</span> <span class="o">=</span> <span class="n">star_db</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">star_db</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="n">star</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
                 <span class="k">continue</span>
-            <span class="c1"># Save star mass, to be used in planet mass &amp; semi-major axis calculations.</span>
+            <span class="c1"># Save stellar mass, to be used in mass and orbital calculations.</span>
             <span class="n">Mtot</span> <span class="o">=</span> <span class="n">star_db</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">star_index</span><span class="p">,</span> <span class="s1">&#39;mstar&#39;</span><span class="p">]</span>
             <span class="n">props</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">props_index</span><span class="p">,</span> <span class="s1">&#39;Mstar&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Mtot</span>
 
@@ -492,7 +500,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Lee Rosenthal and BJ Fulton.
+        &copy; Copyright 2019, Lee Rosenthal and BJ Fulton
 
     </p>
   </div>
@@ -509,33 +517,16 @@
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'../../',
-            VERSION:'0.1.0',
-            LANGUAGE:'None',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="../../_static/jquery.js"></script>
-      <script type="text/javascript" src="../../_static/underscore.js"></script>
-      <script type="text/javascript" src="../../_static/doctools.js"></script>
-      <script type="text/javascript" src="../../_static/language_data.js"></script>
-
-  
-
-  <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>
