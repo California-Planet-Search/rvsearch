@@ -432,20 +432,27 @@ class Search(object):
                 for k in self.post.params.keys():
                     self.post.params[k].value = perioder.bestfit_params[k]
 
-                # 7/12/19: Try re-fitting with re-set tc. Highly particular fix.
-                if self.num_planets == 1 and self.post.params['tc1'].value < \
-                                                     np.amin(self.data.time):
-                    self.post.params['tc1'].value = np.median(self.data.time)
-                    self.post.params['k1'].vary = False
-                    self.post.params['per1'].vary = False
-                    self.post.params['secosw1'].vary = False
-                    self.post.params['secosw1'].vary = False
+                # 8/23/19: Generalizing tc reset to each new find.
+                tckey = 'tc{}'.format(self.num_planets)
+                if self.post.params[tckey].value < np.amin(self.data.time):
+                    self.post.params[tckey].value = np.median(self.data.time)
+                    for n in np.arange(1, self.num_planets+1):
+                        self.post.params['k{}'.format(n)].vary = False
+                        self.post.params['per{}'.format(n)].vary = False
+                        self.post.params['secosw{}'.format(n)].vary = False
+                        self.post.params['secosw{}'.format(n)].vary = False
+                        if n != self.num_planets:
+                            self.post.params['tc{}'.format(n)].vary = False
+
                     self.post = radvel.fitting.maxlike_fitting(self.post,
                                                                verbose=False)
-                    self.post.params['k1'].vary = True
-                    self.post.params['per1'].vary = True
-                    self.post.params['secosw1'].vary = True
-                    self.post.params['secosw1'].vary = True
+
+                    for n in np.arange(1, self.num_planets+1):
+                        self.post.params['k{}'.format(n)].vary = True
+                        self.post.params['per{}'.format(n)].vary = True
+                        self.post.params['secosw{}'.format(n)].vary = True
+                        self.post.params['secosw{}'.format(n)].vary = True
+                        self.post.params['tc{}'.format(n)].vary = True
 
                 self.fit_orbit()
                 self.all_params.append(self.post.params)
