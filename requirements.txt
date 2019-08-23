@@ -4,7 +4,7 @@ matplotlib
 pandas
 astropy
 PyAstronomy
-radvel
+radvel==1.2.12
 pathos
 tqdm
 sphinx_rtd_theme

@@ -6,7 +6,9 @@ import pandas as pd
 from scipy.interpolate import RegularGridInterpolator
 import pickle
 import pathos.multiprocessing as mp
+from multiprocessing import Value
 import radvel
+from .periodogram import TqdmUpTo
 
 import rvsearch.utils
 
@@ -21,16 +23,20 @@ class Injections(object):
         klim (tuple): lower and upper k bounds for injections
         elim (tuple): lower and upper e bounds for injections
         num_sim (int): number of planets to simulate
+        verbose (bool): show progress bar
     """
 
-    def __init__(self, searchpath, plim, klim, elim, num_sim=1):
+    def __init__(self, searchpath, plim, klim, elim, num_sim=1, full_grid=True, verbose=True):
         self.searchpath = searchpath
         self.plim = plim
         self.klim = klim
         self.elim = elim
         self.num_sim = num_sim
+        self.full_grid = full_grid
+        self.verbose = verbose
 
         self.search = pickle.load(open(searchpath, 'rb'))
+        self.search.verbose = False
         seed = np.round(self.search.data['time'].values[0] * 1000).astype(int)
 
         self.injected_planets = self.random_planets(seed)
@@ -97,14 +103,20 @@ class Injections(object):
         def _run_one(orbel):
             sfile = open(self.searchpath, 'rb')
             search = pickle.load(sfile)
+            search.verbose = False
             sfile.close()
 
-            recovered, recovered_orbel = search.inject_recover(orbel, num_cpus=1)
+            recovered, recovered_orbel = search.inject_recover(orbel, num_cpus=1, full_grid=self.full_grid)
 
             last_bic = max(search.best_bics.keys())
             bic = search.best_bics[last_bic]
+            thresh = search.bic_threshes[last_bic]
 
-            return recovered, recovered_orbel, bic
+            if self.verbose:
+                counter.value += 1
+                pbar.update_to(counter.value)
+
+            return recovered, recovered_orbel, bic, thresh
 
         outcols = ['inj_period', 'inj_tp', 'inj_e', 'inj_w', 'inj_k',
                    'rec_period', 'rec_tp', 'rec_e', 'rec_w', 'rec_k',
@@ -113,22 +125,30 @@ class Injections(object):
                              columns=outcols)
         outdf[self.injected_planets.columns] = self.injected_planets
 
-        pool = mp.Pool(processes=num_cpus)
-
         in_orbels = []
         out_orbels = []
         recs = []
         bics = []
+        threshes = []
         for i, row in self.injected_planets.iterrows():
             in_orbels.append(list(row.values))
 
+        if self.verbose:
+            global pbar
+            global counter
+
+            counter = Value('i', 0, lock=True)
+            pbar = TqdmUpTo(total=len(in_orbels), position=0)
+
+        pool = mp.Pool(processes=num_cpus)
         outputs = pool.map(_run_one, in_orbels)
 
         for out in outputs:
-            recovered, recovered_orbel, bic = out
+            recovered, recovered_orbel, bic, thresh = out
             out_orbels.append(recovered_orbel)
             recs.append(recovered)
             bics.append(bic)
+            threshes.append(thresh)
 
         out_orbels = np.array(out_orbels)
         outdf['rec_period'] = out_orbels[:, 0]
@@ -139,6 +159,7 @@ class Injections(object):
 
         outdf['recovered'] = recs
         outdf['bic'] = bics
+        outdf['bic_thresh'] = threshes
 
         self.recoveries = outdf
 
@@ -169,9 +190,9 @@ class Completeness(object):
         """
         self.recoveries = recoveries
 
-        self.mstar = np.zeros_like(self.recoveries['inj_period']) + mstar
-
         if mstar is not None:
+            self.mstar = np.zeros_like(self.recoveries['inj_period']) + mstar
+
             self.recoveries['inj_msini'] = radvel.utils.Msini(self.recoveries['inj_k'],
                                                               self.recoveries['inj_period'],
                                                               self.mstar, self.recoveries['inj_e'])

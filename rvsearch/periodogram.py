@@ -108,14 +108,11 @@ class Periodogram(object):
         # Automatically generate a period grid upon initialization.
         self.make_per_grid()
 
-    def per_spacing(self, verbose=True):
+    def per_spacing(self):
         """Get the number of sampled frequencies and return a period grid.
 
         Condition for spacing: delta nu such that during the
         entire duration of observations, phase slip is no more than P/4
-
-        Args:
-            verbose (bool): (optional) print extra messages
 
         Returns:
             array: Array of test periods
@@ -130,7 +127,7 @@ class Periodogram(object):
         num_freq *= self.oversampling
         num_freq  = int(num_freq)
 
-        if verbose:
+        if self.verbose:
             print("Number of test periods:", num_freq)
 
         freqs = np.linspace(fmax, fmin, num_freq)
@@ -175,8 +172,6 @@ class Periodogram(object):
             # Handle the case where there is at least one known planet.
             else:
                 baseline_bic = self.post.likelihood.bic()
-                #baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
-                #baseline_bic = baseline_fit.likelihood.bic()
         else:
             baseline_bic = self.basebic
 
