@@ -271,26 +271,6 @@ class Search(object):
         new_post = utils.initialize_post(self.data, new_params, priors)
         self.post = new_post
 
-    # def trend_swap(self):
-    #     """Perform a BIC test for trend versus long-period Keplerian fit.
-    #
-    #     """
-    #     kpost = copy.deepcopy(self.post)
-    #
-    #     times    = self.post.likelihood.x
-    #     baseline = times[-1] - times[0]
-    #
-    #     # THIS CAN BE USED ONCE SUB_PLANET() GENERALIZED TO ANY N
-    #     #for n in np.arange(1, self.num_planets+1):
-    #     #    if self.post.params['per{}'.format(n)].value > 1.5*baseline:
-    #     #        self.sub_planet()
-    #
-    #     per = self.post.params['per{}'.format(self.num_planets)].value
-    #     if per > 1.5*baseline:
-    #         k = kpost.params['k{}'.format(self.num_planets)].value
-    #         self.sub_planet()
-    #         self.post.params['dvdt'] = True
-    #         self.post.params['dvdt'].value = 2*np.pi*k/per
 
     def fit_orbit(self):
         """Perform a max-likelihood fit with all parameters free.
@@ -492,8 +472,8 @@ class Search(object):
                 nensembles = os.cpu_count()
             # Set custom mcmc scales for e/w parameters.
             for n in np.arange(1, self.num_planets+1):
-                secoswscale = 0.005#*np.abs(self.post.params['secosw{}'.format(n)].value)
-                sesinwscale = 0.005#*np.abs(self.post.params['sesinw{}'.format(n)].value)
+                secoswscale = 0.005
+                sesinwscale = 0.005
                 self.post.params['secosw{}'.format(n)].mcmcscale = secoswscale
                 self.post.params['sesinw{}'.format(n)].mcmcscale = sesinwscale
 
@@ -599,7 +579,6 @@ class Search(object):
             pickle.dump(self, pickle_out)
             pickle_out.close()
 
-            # if len(self.pers) == len(self.periodograms.values()):
             periodograms_plus_pers = np.append([self.pers], list(self.periodograms.values()), axis=0).T
             np.savetxt(outdir+'/pers_periodograms.csv', periodograms_plus_pers,
                        header='period  BIC_array')
