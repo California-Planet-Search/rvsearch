@@ -28,6 +28,7 @@ class Search(object):
         crit (str): Either 'bic' or 'aic', depending on which criterion to use.
         fap (float): False-alarm-probability to pass to the periodogram object.
         min_per (float): Minimum search period, to pass to the periodogram object.
+        max_per (float): Maximum search period, to pass to the periodogram object.
         dvdt (bool): Whether to include a linear trend in the search.
         curv (bool): Whether to include a quadratic trend in the search.
         fix (bool): Whether to fix known planet parameters during search.
@@ -38,9 +39,10 @@ class Search(object):
     """
 
     def __init__(self, data, post=None, starname='star', max_planets=8,
-                priors=[], crit='bic', fap=0.001, min_per=3, manual_grid=None,
-                oversampling=1., trend=False, fix=False, polish=True, mcmc=True,
-                workers=1, verbose=True, save_outputs=True):
+                priors=[], crit='bic', fap=0.001, min_per=3, max_per=10000,
+                manual_grid=None, oversampling=1., trend=False, fix=False,
+                polish=True, mcmc=True, workers=1, verbose=True,
+                save_outputs=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
@@ -85,6 +87,7 @@ class Search(object):
 
         self.fap = fap
         self.min_per = min_per
+        self.max_per = max_per
 
         self.trend = trend
         self.fix = fix
@@ -382,6 +385,7 @@ class Search(object):
 
             perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
                                                minsearchp=self.min_per, fap=self.fap,
+                                               maxsearchp=self.max_per,
                                                manual_grid=self.manual_grid,
                                                oversampling=self.oversampling,
                                                workers=self.workers,

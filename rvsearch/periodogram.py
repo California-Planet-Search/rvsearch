@@ -264,6 +264,8 @@ class Periodogram(object):
             self.bic = [y for x in all_bics for y in x]
             self.fit_params = [y for x in all_params for y in x]
 
+            p.close()
+
         fit_index = np.argmax(self.bic)
         self.bestfit_params = self.fit_params[fit_index]
         self.best_bic = self.bic[fit_index]
