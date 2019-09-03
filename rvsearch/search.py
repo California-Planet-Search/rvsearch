@@ -626,7 +626,7 @@ class Search(object):
         self.save_outputs = False
         self.verbose = False
         # 8/2: Trying to fix injections, possibly basebic error.
-        #self.basebic = None
+        self.basebic = None
         if not full_grid:
             self.manual_grid = [injected_orbel[0]]
             fixed_threshold = True
