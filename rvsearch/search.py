@@ -377,7 +377,8 @@ class Search(object):
         run = True
         while run:
             if self.num_planets != 0:
-                if self.setup and self.num_planets == self.setup_planets:
+                #if self.setup and self.num_planets == self.setup_planets:
+                if self.basebic is None:
                     self.basebic = self.post.likelihood.bic()
                 self.add_planet()
 
