@@ -38,9 +38,10 @@ class Search(object):
     """
 
     def __init__(self, data, post=None, starname='star', max_planets=8,
-                priors=[], crit='bic', fap=0.001, min_per=3, manual_grid=None,
-                oversampling=1., trend=False, fix=False, polish=True, mcmc=True,
-                workers=1, verbose=True, save_outputs=True):
+                priors=[], crit='bic', fap=0.001, min_per=3, max_per=10000,
+                manual_grid=None, oversampling=1., trend=False, fix=False,
+                polish=True, baseline=True, mcmc=True, workers=1, verbose=True,
+                save_outputs=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
@@ -88,10 +89,12 @@ class Search(object):
 
         self.fap = fap
         self.min_per = min_per
+        self.max_per = max_per
 
         self.trend = trend
         self.fix = fix
         self.polish = polish
+        self.baseline = baseline
         self.mcmc = mcmc
 
         self.manual_grid = manual_grid
@@ -377,17 +380,18 @@ class Search(object):
         run = True
         while run:
             if self.num_planets != 0:
-                #if self.basebic is None:
-                #    self.basebic = self.post.likelihood.bic()
                 self.add_planet()
 
             perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
-                                               minsearchp=self.min_per, fap=self.fap,
+                                               minsearchp=self.min_per,
+                                               maxsearchp=self.max_per,
+                                               fap=self.fap,
                                                manual_grid=self.manual_grid,
                                                oversampling=self.oversampling,
+                                               baseline=self.baseline,
                                                workers=self.workers,
                                                verbose=self.verbose)
-
+            # Run the periodogram, store arrays and threshold (if computed).
             perioder.per_bic()
             self.periodograms[self.num_planets] = perioder.power[self.crit]
             if self.num_planets == 0 or self.pers is None:
