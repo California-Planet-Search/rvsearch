@@ -171,6 +171,9 @@ class Periodogram(object):
                 baseline_bic = baseline_fit.likelihood.bic()
             # Handle the case where there is at least one known planet.
             else:
+                self.post.params['per{}'.format(self.num_known_planets+1)].vary = False
+                self.post.params['tc{}'.format(self.num_known_planets+1)].vary = False
+                self.post.params['k{}'.format(self.num_known_planets+1)].vary = False
                 baseline_bic = self.post.likelihood.bic()
         else:
             baseline_bic = self.basebic
