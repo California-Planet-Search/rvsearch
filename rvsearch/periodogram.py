@@ -171,6 +171,9 @@ class Periodogram(object):
                 baseline_bic = baseline_fit.likelihood.bic()
             # Handle the case where there is at least one known planet.
             else:
+                self.post.params['per{}'.format(self.num_known_planets+1)].vary = False
+                self.post.params['tc{}'.format(self.num_known_planets+1)].vary = False
+                self.post.params['k{}'.format(self.num_known_planets+1)].vary = False
                 baseline_bic = self.post.likelihood.bic()
         else:
             baseline_bic = self.basebic
@@ -262,6 +265,9 @@ class Periodogram(object):
             self.bic = [y for x in all_bics for y in x]
             self.fit_params = [y for x in all_params for y in x]
 
+            # Close the pool object.
+            p.close()
+
         fit_index = np.argmax(self.bic)
         self.bestfit_params = self.fit_params[fit_index]
         self.best_bic = self.bic[fit_index]
@@ -277,7 +283,7 @@ class Periodogram(object):
         # FOR TESTING
         print("Calculating Lomb-Scargle periodogram")
         periodogram = astropy.stats.LombScargle(self.times, self.vel,
-                                                        self.errvel)
+                                                self.errvel)
         power = periodogram.power(np.flip(self.freqs))
         self.power['ls'] = power
 
