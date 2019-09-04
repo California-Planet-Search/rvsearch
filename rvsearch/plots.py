@@ -75,7 +75,8 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
                  summary_ncols=2, uparams=None, telfmts=plot.telfmts_default,
                  legend=True, phase_limits=[], nobin=False, phasetext_size='small',
                  rv_phase_space=0.06, figwidth=9.5, fit_linewidth=2.0,
-                 set_xlim=None, text_size=9, legend_kwargs=dict(loc='best')):
+                 show_rms=False, highlight_last=False, set_xlim=None,
+                 text_size=9, legend_kwargs=dict(loc='best')):
 
         self.search = search
         self.starname = self.search.starname
@@ -106,6 +107,8 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
         self.phasetext_size = phasetext_size
         self.rv_phase_space = rv_phase_space
         self.figwidth = figwidth
+        self.show_rms = show_rms
+        self.highlight_last = highlight_last
         self.fit_linewidth = fit_linewidth
         self.set_xlim = set_xlim
         self.text_size = text_size
@@ -453,13 +456,15 @@ class CompletenessPlots(object):
 
         self.xgrid, self.ygrid, self.comp_array = completeness.completeness_grid(self.xlim, self.ylim)
 
-    def completeness_plot(self, title='', xlabel='', ylabel=''):
+    def completeness_plot(self, title='', xlabel='', ylabel='', colorbar=True, hide_points=False):
         """Plot completeness contours
 
         Args:
             title (string): (optional) plot title
             xlabel (string): (optional) x-axis label
             ylabel (string): (optional) y-axis label
+            colorbar (bool): (optional) plot colorbar
+            hide_points (bool): (optional) if true hide individual injection/recovery points
         """
         good = self.comp.recoveries.query('recovered == True')
         bad = self.comp.recoveries.query('recovered == False')
@@ -468,8 +473,9 @@ class CompletenessPlots(object):
         pl.subplots_adjust(bottom=0.18, left=0.22, right=0.95)
 
         CS = pl.contourf(self.xgrid, self.ygrid, self.comp_array, 10, cmap=pl.cm.Reds_r, vmax=0.9)
-        pl.plot(good[self.comp.xcol], good[self.comp.ycol], 'b.', alpha=0.3, label='recovered')
-        pl.plot(bad[self.comp.xcol], bad[self.comp.ycol], 'r.', alpha=0.3, label='missed')
+        if not hide_points:
+            pl.plot(good[self.comp.xcol], good[self.comp.ycol], 'b.', alpha=0.3, label='recovered')
+            pl.plot(bad[self.comp.xcol], bad[self.comp.ycol], 'r.', alpha=0.3, label='missed')
         ax = pl.gca()
         ax.set_xscale('log')
         ax.set_yscale('log')
@@ -488,6 +494,9 @@ class CompletenessPlots(object):
         pl.ylabel(ylabel)
 
         pl.grid(True)
+
+        if colorbar:
+            pl.colorbar(pad=0, label='probability of detection')
 
         fig = pl.gcf()
 

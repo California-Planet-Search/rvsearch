@@ -4,6 +4,9 @@ import pdb
 import numpy as np
 import matplotlib.pyplot as plt
 import astropy.stats
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+
 import radvel
 import radvel.fitting
 from radvel.plot import orbit_plots
@@ -53,7 +56,7 @@ class Periodogram(object):
 
     def __init__(self, post, basebic=None, minsearchp=3, maxsearchp=10000,
                  baseline=True, basefactor=5., oversampling=1., manual_grid=None,
-                 fap=0.01, num_pers=None, eccentric=False, workers=1,
+                 fap=0.001, num_pers=None, eccentric=False, workers=1,
                  verbose=True):
         self.post = copy.deepcopy(post)
         self.default_pdict = {}
@@ -105,14 +108,11 @@ class Periodogram(object):
         # Automatically generate a period grid upon initialization.
         self.make_per_grid()
 
-    def per_spacing(self, verbose=True):
+    def per_spacing(self):
         """Get the number of sampled frequencies and return a period grid.
 
         Condition for spacing: delta nu such that during the
         entire duration of observations, phase slip is no more than P/4
-
-        Args:
-            verbose (bool): (optional) print extra messages
 
         Returns:
             array: Array of test periods
@@ -127,7 +127,7 @@ class Periodogram(object):
         num_freq *= self.oversampling
         num_freq  = int(num_freq)
 
-        if verbose:
+        if self.verbose:
             print("Number of test periods:", num_freq)
 
         freqs = np.linspace(fmax, fmin, num_freq)
@@ -171,9 +171,10 @@ class Periodogram(object):
                 baseline_bic = baseline_fit.likelihood.bic()
             # Handle the case where there is at least one known planet.
             else:
+                self.post.params['per{}'.format(self.num_known_planets+1)].vary = False
+                self.post.params['tc{}'.format(self.num_known_planets+1)].vary = False
+                self.post.params['k{}'.format(self.num_known_planets+1)].vary = False
                 baseline_bic = self.post.likelihood.bic()
-                #baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
-                #baseline_bic = baseline_fit.likelihood.bic()
         else:
             baseline_bic = self.basebic
 
@@ -264,6 +265,9 @@ class Periodogram(object):
             self.bic = [y for x in all_bics for y in x]
             self.fit_params = [y for x in all_params for y in x]
 
+            # Close the pool object.
+            p.close()
+
         fit_index = np.argmax(self.bic)
         self.bestfit_params = self.fit_params[fit_index]
         self.best_bic = self.bic[fit_index]
@@ -276,10 +280,10 @@ class Periodogram(object):
         """Compute Lomb-Scargle periodogram with astropy.
 
         """
-        #FOR TESTING
+        # FOR TESTING
         print("Calculating Lomb-Scargle periodogram")
         periodogram = astropy.stats.LombScargle(self.times, self.vel,
-                                                        self.errvel)
+                                                self.errvel)
         power = periodogram.power(np.flip(self.freqs))
         self.power['ls'] = power
 
@@ -311,14 +315,10 @@ class Periodogram(object):
         # Save the empirical-FAP of the DBIC global maximum.
         self.fap_min = fap_min
 
-    def save_per(self, ls=False):
-        """Save BIC periodogram as csv.
-
-        Args:
-            ls (bool): Save Lomb-Scargle periodogram?
-
-        """
-        if ls==False:
+    def save_per(self, filename, ls=False):
+        df = pd.DataFrame([])
+        df['period'] = self.pers
+        if not ls:
             try:
                 np.savetxt((self.pers, self.power['bic']), filename=\
                                                 'BIC_periodogram.csv')
@@ -326,9 +326,8 @@ class Periodogram(object):
                 print('Have not generated a delta-BIC periodogram.')
         else:
             try:
-                np.savetxt((self.pers, self.power['ls']), filename=\
-                                                'LS_periodogram.csv')
-            except:
+                df['power'] = self.power['ls']
+            except KeyError:
                 print('Have not generated a Lomb-Scargle periodogram.')
 
     def plot_per(self, alias=True, floor=True, save=False):
@@ -389,6 +388,10 @@ class Periodogram(object):
         ax.set_ylabel(r'$\Delta$BIC')  # TO-DO: WORK IN AIC/BIC OPTION
         ax.set_title('Planet {} vs. planet {}'.format(self.num_known_planets+1,
                                                       self.num_known_planets))
+
+        formatter = ticker.ScalarFormatter()
+        formatter.set_scientific(False)
+        ax.xaxis.set_major_formatter(formatter)
 
         # Store figure as object attribute, make separate saving functionality?
         self.fig = fig

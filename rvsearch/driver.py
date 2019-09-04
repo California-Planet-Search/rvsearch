@@ -6,13 +6,13 @@ the `cli.py` command line interface.
 from __future__ import print_function
 import os
 import copy
-import pylab as pl
 import pandas as pd
 import pickle
 
 import radvel
 from radvel.utils import working_directory
 import rvsearch
+
 
 def run_search(args):
     """Run a search from a given RadVel setup file
@@ -35,13 +35,12 @@ def run_search(args):
     else:
         post = None
 
-
     searcher = rvsearch.search.Search(data, starname=starname,
                                       min_per=args.minP,
                                       workers=args.num_cpus,
                                       post=post,
                                       trend=args.trend,
-                                      verbose=True)
+                                      verbose=args.verbose)
     searcher.run_search()
 
 
@@ -68,7 +67,9 @@ def injections(args):
         if not os.path.exists('recoveries.csv'):
             try:
                 inj = rvsearch.inject.Injections(sfile, plim, klim, elim,
-                                                 num_sim=args.num_inject)
+                                                 num_sim=args.num_inject,
+                                                 full_grid=args.full_grid,
+                                                 verbose=args.verbose)
                 recoveries = inj.run_injections(num_cpus=args.num_cpus)
                 inj.save()
             except IOError:

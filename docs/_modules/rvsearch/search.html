@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rvsearch.search &mdash; rvsearch 0.1.0 documentation</title>
+  <title>rvsearch.search &mdash; rvsearch 0.1.1 documentation</title>
   
 
   
@@ -17,32 +17,34 @@
   
 
   
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
-
-  
-  <script src="../../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -186,7 +188,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="Search.__init__"><a class="viewcode-back" href="../../search_class.html#rvsearch.search.Search.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">post</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">starname</span><span class="o">=</span><span class="s1">&#39;star&#39;</span><span class="p">,</span> <span class="n">max_planets</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
-                <span class="n">priors</span><span class="o">=</span><span class="p">[],</span> <span class="n">crit</span><span class="o">=</span><span class="s1">&#39;bic&#39;</span><span class="p">,</span> <span class="n">fap</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">min_per</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">manual_grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">priors</span><span class="o">=</span><span class="p">[],</span> <span class="n">crit</span><span class="o">=</span><span class="s1">&#39;bic&#39;</span><span class="p">,</span> <span class="n">fap</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">min_per</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">manual_grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">oversampling</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">trend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fix</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">polish</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">mcmc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="n">workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_outputs</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 
@@ -195,6 +197,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">tels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;tel&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
         <span class="k">elif</span> <span class="p">{</span><span class="s1">&#39;jd&#39;</span><span class="p">,</span> <span class="s1">&#39;mnvel&#39;</span><span class="p">,</span> <span class="s1">&#39;errvel&#39;</span><span class="p">,</span> <span class="s1">&#39;tel&#39;</span><span class="p">}</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">jd</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;tel&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Incorrect data input.&#39;</span><span class="p">)</span>
@@ -203,16 +206,13 @@
 
         <span class="k">if</span> <span class="n">post</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">priors</span> <span class="o">=</span> <span class="n">priors</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">initialize_default_pars</span><span class="p">(</span><span class="n">instnames</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tels</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">initialize_default_pars</span><span class="p">(</span><span class="n">instnames</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tels</span><span class="p">,</span>
+                                                        <span class="n">times</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">post</span>   <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">initialize_post</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
                                                 <span class="n">priors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">priors</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">post</span>   <span class="o">=</span> <span class="n">post</span>
             <span class="c1"># self.priors = post.priors</span>
-
-        <span class="c1"># self.post   = post</span>
-        <span class="c1"># self.params = self.post.params</span>
-        <span class="c1"># self.priors = self.post.priors</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">all_params</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -248,6 +248,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">save_outputs</span> <span class="o">=</span> <span class="n">save_outputs</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">basebic</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        if post == None:</span>
+<span class="sd">            self.basebic = None</span>
+<span class="sd">        else:</span>
+<span class="sd">            self.basebic = post.likelihood.bic()</span>
+<span class="sd">        &#39;&#39;&#39;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">pers</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">periodograms</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
@@ -261,37 +267,41 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">post1</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="p">)</span>
+        <span class="c1"># Fix all Keplerian parameters. K is zero, equivalent to no planet.</span>
         <span class="n">post1</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;per1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="n">post1</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;k1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="n">post1</span> <span class="o">=</span><span class="n">radvel</span><span class="o">.</span><span class="n">fitting</span><span class="o">.</span><span class="n">maxlike_fitting</span><span class="p">(</span><span class="n">post1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">post1</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;tc1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span>  <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">post1</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;k1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span>   <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">post1</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;secosw1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">post1</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;sesinw1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">post1</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">fitting</span><span class="o">.</span><span class="n">maxlike_fitting</span><span class="p">(</span><span class="n">post1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-        <span class="n">trend_curve_bic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">bic</span><span class="p">()</span>
+        <span class="n">trend_curve_bic</span> <span class="o">=</span> <span class="n">post1</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">bic</span><span class="p">()</span>
 
         <span class="c1"># Test without curvature</span>
-        <span class="n">post1</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;curv&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mf">0.0</span>
-        <span class="n">post1</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;curv&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="n">post1</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">fitting</span><span class="o">.</span><span class="n">maxlike_fitting</span><span class="p">(</span><span class="n">post1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="n">post1</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;dvdt&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">post2</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">post1</span><span class="p">)</span>
+        <span class="n">post2</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;curv&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">post2</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;curv&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span>  <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">post2</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">fitting</span><span class="o">.</span><span class="n">maxlike_fitting</span><span class="p">(</span><span class="n">post2</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-        <span class="n">trend_bic</span> <span class="o">=</span> <span class="n">post1</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">bic</span><span class="p">()</span>
+        <span class="n">trend_bic</span> <span class="o">=</span> <span class="n">post2</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">bic</span><span class="p">()</span>
 
         <span class="c1"># Test without trend or curvature</span>
-        <span class="n">post2</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">post1</span><span class="p">)</span>
+        <span class="n">post3</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">post2</span><span class="p">)</span>
+        <span class="n">post3</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;dvdt&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">post3</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;dvdt&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span>  <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">post3</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;curv&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">post3</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;curv&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span>  <span class="o">=</span> <span class="kc">False</span>
 
-        <span class="n">post2</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;dvdt&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mf">0.0</span>
-        <span class="n">post2</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;dvdt&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="n">post2</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">fitting</span><span class="o">.</span><span class="n">maxlike_fitting</span><span class="p">(</span><span class="n">post2</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="n">post1</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;curv&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">flat_bic</span> <span class="o">=</span> <span class="n">post3</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">bic</span><span class="p">()</span>
 
-        <span class="n">flat_bic</span> <span class="o">=</span> <span class="n">post2</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">bic</span><span class="p">()</span>
-
-        <span class="k">if</span> <span class="n">trend_bic</span> <span class="o">&lt;</span> <span class="n">flat_bic</span> <span class="o">-</span> <span class="mf">10.</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">trend_curve_bic</span> <span class="o">&lt;</span> <span class="n">trend_bic</span> <span class="o">-</span> <span class="mf">10.</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">trend_bic</span> <span class="o">&lt;</span> <span class="n">flat_bic</span> <span class="o">-</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">trend_curve_bic</span> <span class="o">&lt;</span> <span class="n">trend_bic</span> <span class="o">-</span> <span class="mi">5</span><span class="p">:</span>
                 <span class="c1"># Quadratic</span>
-                <span class="k">pass</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;dvdt&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">post1</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;dvdt&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;curv&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">post1</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;curv&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># Linear</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;dvdt&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">post1</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;dvdt&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;dvdt&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">post2</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;dvdt&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;curv&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mi">0</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;curv&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span>  <span class="o">=</span> <span class="kc">False</span>
         <span class="k">else</span><span class="p">:</span>
@@ -516,9 +526,9 @@
         <span class="n">run</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">while</span> <span class="n">run</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_planets</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># if self.basebic is None:</span>
+                <span class="c1">#     self.basebic = self.post.likelihood.bic()</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">add_planet</span><span class="p">()</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">basebic</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">basebic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">bic</span><span class="p">()</span>
 
             <span class="n">perioder</span> <span class="o">=</span> <span class="n">periodogram</span><span class="o">.</span><span class="n">Periodogram</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="p">,</span> <span class="n">basebic</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">basebic</span><span class="p">,</span>
                                                <span class="n">minsearchp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_per</span><span class="p">,</span> <span class="n">fap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fap</span><span class="p">,</span>
@@ -550,14 +560,36 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">num_planets</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">perioder</span><span class="o">.</span><span class="n">bestfit_params</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+                <span class="c1"># 7/12/19: Try re-fitting with re-set tc. Highly particular fix.</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_planets</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;tc1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;</span> \
+                                                     <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">time</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;tc1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;k1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;per1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;secosw1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;secosw1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">post</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">fitting</span><span class="o">.</span><span class="n">maxlike_fitting</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="p">,</span>
+                                                               <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;k1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;per1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;secosw1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;secosw1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">True</span>
+
                 <span class="bp">self</span><span class="o">.</span><span class="n">fit_orbit</span><span class="p">()</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">all_params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">basebic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">bic</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">basebic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">bic</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">sub_planet</span><span class="p">()</span>
                 <span class="n">run</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_planets</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_planets</span><span class="p">:</span>
                 <span class="n">run</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="c1"># If any jitter values are negative, flip them.</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="s1">&#39;jit&#39;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
 
             <span class="c1"># Generate an orbit plot.</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_outputs</span><span class="p">:</span>
@@ -569,17 +601,27 @@
                                                         <span class="bp">self</span><span class="o">.</span><span class="n">num_planets</span><span class="p">))</span>
 
         <span class="c1"># Run MCMC on final posterior, save new parameters and uncertainties.</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc</span> <span class="o">==</span> <span class="kc">True</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_planets</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc</span> <span class="o">==</span> <span class="kc">True</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_planets</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span>
+                                  <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;dvdt&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">==</span> <span class="kc">True</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">uparams</span>   <span class="o">=</span> <span class="p">{}</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">medparams</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">maxparams</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="c1"># Use minimal recommended parameters for mcmc.</span>
+            <span class="c1"># Use recommended parameters for mcmc.</span>
             <span class="n">nensembles</span> <span class="o">=</span> <span class="mi">16</span>
             <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">nensembles</span><span class="p">:</span>
                 <span class="n">nensembles</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
-            <span class="n">chains</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">mcmc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="p">,</span> <span class="n">thin</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">nwalkers</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">nrun</span><span class="o">=</span><span class="mi">20000</span><span class="p">,</span>
-                                 <span class="n">burnGR</span><span class="o">=</span><span class="mf">1.02</span><span class="p">,</span> <span class="n">minTz</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">minsteps</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span>
-                                 <span class="n">minpercent</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">ensembles</span><span class="o">=</span><span class="n">nensembles</span><span class="p">)</span>
+            <span class="c1"># Set custom mcmc scales for e/w parameters.</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">secoswscale</span> <span class="o">=</span> <span class="mf">0.005</span><span class="c1">#*np.abs(self.post.params[&#39;secosw{}&#39;.format(n)].value)</span>
+                <span class="n">sesinwscale</span> <span class="o">=</span> <span class="mf">0.005</span><span class="c1">#*np.abs(self.post.params[&#39;sesinw{}&#39;.format(n)].value)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;secosw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span><span class="o">.</span><span class="n">mcmcscale</span> <span class="o">=</span> <span class="n">secoswscale</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;sesinw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span><span class="o">.</span><span class="n">mcmcscale</span> <span class="o">=</span> <span class="n">sesinwscale</span>
+
+            <span class="c1"># Run MCMC.</span>
+            <span class="n">chains</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">mcmc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="p">,</span> <span class="n">nwalkers</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">nrun</span><span class="o">=</span><span class="mi">25000</span><span class="p">,</span>
+                                 <span class="n">burnGR</span><span class="o">=</span><span class="mf">1.01</span><span class="p">,</span> <span class="n">maxGR</span><span class="o">=</span><span class="mf">1.0075</span><span class="p">,</span> <span class="n">minTz</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span>
+                                 <span class="n">minsteps</span><span class="o">=</span><span class="mi">8000</span><span class="p">,</span> <span class="n">minpercent</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>
+                                 <span class="n">thin</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">ensembles</span><span class="o">=</span><span class="n">nensembles</span><span class="p">)</span>
             <span class="c1"># Convert chains to e, w basis.</span>
             <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">par</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span><span class="p">:</span>
@@ -616,8 +658,6 @@
                 <span class="n">max_w</span><span class="p">,</span> <span class="n">err_w</span><span class="p">,</span> <span class="n">errhigh_w</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">sigfig</span><span class="p">(</span>
                                           <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">w_key</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">err_w</span><span class="p">)</span>
 
-                <span class="c1"># self.post.params[e_key].value = med_e</span>
-                <span class="c1"># self.post.params[w_key].value = med_w</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">uparams</span><span class="p">[</span><span class="n">e_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">err_e</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">uparams</span><span class="p">[</span><span class="n">w_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">err_w</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">medparams</span><span class="p">[</span><span class="n">e_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">med_e</span>
@@ -637,7 +677,6 @@
                     <span class="nb">max</span><span class="p">,</span> <span class="n">err</span><span class="p">,</span> <span class="n">errhigh</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">sigfig</span><span class="p">(</span>
                                         <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">par</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
 
-                    <span class="c1"># self.post.params[par].value = med</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">uparams</span><span class="p">[</span><span class="n">par</span><span class="p">]</span> <span class="o">=</span> <span class="n">err</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">medparams</span><span class="p">[</span><span class="n">par</span><span class="p">]</span> <span class="o">=</span> <span class="n">med</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">maxparams</span><span class="p">[</span><span class="n">par</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span>
@@ -649,10 +688,15 @@
                     <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;per</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
                     <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;tc</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
                     <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;k</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
-                    <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;e</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
-                    <span class="c1">#labels.append(&#39;w{}&#39;.format(n))</span>
+                    <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;secosw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+                    <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;sesinw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;dvdt&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;dvdt&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;curv&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;curv&#39;</span><span class="p">)</span>
                 <span class="n">texlabels</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">tex_labels</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span>
                              <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">]</span>
+
                 <span class="n">plot</span> <span class="o">=</span> <span class="n">corner</span><span class="o">.</span><span class="n">corner</span><span class="p">(</span><span class="n">synthchains</span><span class="p">[</span><span class="n">labels</span><span class="p">],</span> <span class="n">labels</span><span class="o">=</span><span class="n">texlabels</span><span class="p">,</span>
                                      <span class="n">label_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;fontsize&quot;</span><span class="p">:</span> <span class="mi">14</span><span class="p">},</span>
                                      <span class="n">plot_datapoints</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
@@ -680,9 +724,9 @@
             <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">outdir</span><span class="o">+</span><span class="s1">&#39;/pers_periodograms.csv&#39;</span><span class="p">,</span> <span class="n">periodograms_plus_pers</span><span class="p">,</span>
                        <span class="n">header</span><span class="o">=</span><span class="s1">&#39;period  BIC_array&#39;</span><span class="p">)</span>
 
-            <span class="c1">#threshs_bics_faps = np.append([self.bic_threshes], [self.best_bics], axis=0).T</span>
             <span class="n">threshs_bics_faps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bic_threshes</span><span class="o">.</span><span class="n">values</span><span class="p">())],</span>
-                                          <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">best_bics</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eFAPs</span><span class="o">.</span><span class="n">values</span><span class="p">())],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+                                          <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">best_bics</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span>
+                                           <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eFAPs</span><span class="o">.</span><span class="n">values</span><span class="p">())],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
 
             <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">outdir</span><span class="o">+</span><span class="s1">&#39;/thresholds_bics_faps.csv&#39;</span><span class="p">,</span> <span class="n">threshs_bics_faps</span><span class="p">,</span>
                        <span class="n">header</span><span class="o">=</span><span class="s1">&#39;threshold  best_bic  fap&#39;</span><span class="p">)</span></div>
@@ -698,12 +742,14 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">run_search</span><span class="p">(</span><span class="n">fixed_threshold</span><span class="o">=</span><span class="n">fixed_threshold</span><span class="p">,</span> <span class="n">mkoutdir</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Search.inject_recover"><a class="viewcode-back" href="../../search_class.html#rvsearch.search.Search.inject_recover">[docs]</a>    <span class="k">def</span> <span class="nf">inject_recover</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">injected_orbel</span><span class="p">,</span> <span class="n">num_cpus</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Search.inject_recover"><a class="viewcode-back" href="../../search_class.html#rvsearch.search.Search.inject_recover">[docs]</a>    <span class="k">def</span> <span class="nf">inject_recover</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">injected_orbel</span><span class="p">,</span> <span class="n">num_cpus</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">full_grid</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Inject and recover</span>
 <span class="sd">        Inject and attempt to recover a synthetic planet signal</span>
 <span class="sd">        Args:</span>
 <span class="sd">            injected_orbel (array): array of orbital elements sent to radvel.kepler.rv_drive</span>
 <span class="sd">            num_cpus (int): Number of CPUs to utilize. Will default to self.workers</span>
+<span class="sd">            full_grid (bool): if True calculate periodogram on full grid, if False only calculate</span>
+<span class="sd">                at single period</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            tuple: (recovered? (T/F), recovered_orbel)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -716,7 +762,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">save_outputs</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">basebic</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">manual_grid</span> <span class="o">=</span> <span class="p">[</span><span class="n">injected_orbel</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">full_grid</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">manual_grid</span> <span class="o">=</span> <span class="p">[</span><span class="n">injected_orbel</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
         <span class="c1"># self.manual_grid = self.pers[::4]</span>
 
         <span class="n">mod</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">kepler</span><span class="o">.</span><span class="n">rv_drive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">injected_orbel</span><span class="p">)</span>
@@ -781,7 +828,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Lee Rosenthal and BJ Fulton.
+        &copy; Copyright 2019, Lee Rosenthal and BJ Fulton
 
     </p>
   </div>
@@ -798,33 +845,16 @@
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'../../',
-            VERSION:'0.1.0',
-            LANGUAGE:'None',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="../../_static/jquery.js"></script>
-      <script type="text/javascript" src="../../_static/underscore.js"></script>
-      <script type="text/javascript" src="../../_static/doctools.js"></script>
-      <script type="text/javascript" src="../../_static/language_data.js"></script>
-
-  
-
-  <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>
