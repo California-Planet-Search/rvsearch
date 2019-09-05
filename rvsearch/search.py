@@ -476,10 +476,8 @@ class Search(object):
                 nensembles = os.cpu_count()
             # Set custom mcmc scales for e/w parameters.
             for n in np.arange(1, self.num_planets+1):
-                secoswscale = 0.005
-                sesinwscale = 0.005
-                self.post.params['secosw{}'.format(n)].mcmcscale = secoswscale
-                self.post.params['sesinw{}'.format(n)].mcmcscale = sesinwscale
+                self.post.params['secosw{}'.format(n)].mcmcscale = 0.005
+                self.post.params['sesinw{}'.format(n)].mcmcscale = 0.005
 
             # Run MCMC.
             chains = radvel.mcmc(self.post, nwalkers=50, nrun=25000,
