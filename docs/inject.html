@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Injection and Recovery Tests &mdash; rvsearch 0.1.1 documentation</title>
+  <title>Injection and Recovery Tests &mdash; rvsearch 0.1.2 documentation</title>
   
 
   
@@ -191,34 +191,27 @@
 <dt id="rvsearch.inject.Completeness">
 <em class="property">class </em><code class="descclassname">rvsearch.inject.</code><code class="descname">Completeness</code><span class="sig-paren">(</span><em>recoveries</em>, <em>xcol='inj_au'</em>, <em>ycol='inj_msini'</em>, <em>mstar=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/inject.html#Completeness"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.inject.Completeness" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate completeness surface from a suite of injections</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>recoveries</strong> (<em>DataFrame</em>) – DataFrame with injection/recovery tests from Injections.save</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>recoveries</strong> (<em>DataFrame</em>) – DataFrame with injection/recovery tests from Injections.save</p>
+</dd>
+</dl>
 <dl class="method">
 <dt id="rvsearch.inject.Completeness.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><em>recoveries</em>, <em>xcol='inj_au'</em>, <em>ycol='inj_msini'</em>, <em>mstar=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/inject.html#Completeness.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.inject.Completeness.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Object to handle a suite of injection/recovery tests</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>recoveries</strong> (<em>DataFrame</em>) – DataFrame of injection/recovery tests from Injections class</li>
-<li><strong>mstar</strong> (<em>float</em>) – (optional) stellar mass to use in conversion from p, k to au, msini</li>
-<li><strong>xcol</strong> (<em>string</em>) – (optional) column name for independent variable. Completeness grids and
-interpolator will work in these axes</li>
-<li><strong>ycol</strong> (<em>string</em>) – (optional) column name for dependent variable. Completeness grids and
-interpolator will work in these axes</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>recoveries</strong> (<em>DataFrame</em>) – DataFrame of injection/recovery tests from Injections class</p></li>
+<li><p><strong>mstar</strong> (<em>float</em>) – (optional) stellar mass to use in conversion from p, k to au, msini</p></li>
+<li><p><strong>xcol</strong> (<em>string</em>) – (optional) column name for independent variable. Completeness grids and
+interpolator will work in these axes</p></li>
+<li><p><strong>ycol</strong> (<em>string</em>) – (optional) column name for dependent variable. Completeness grids and
+interpolator will work in these axes</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="attribute">
@@ -232,21 +225,17 @@ interpolator will work in these axes</li>
 <code class="descname">completeness_grid</code><span class="sig-paren">(</span><em>xlim</em>, <em>ylim</em>, <em>resolution=30</em>, <em>xlogwin=0.5</em>, <em>ylogwin=0.5</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/inject.html#Completeness.completeness_grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.inject.Completeness.completeness_grid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate completeness on a fine grid</p>
 <p>Compute a 2D moving average in loglog space</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>xlim</strong> (<em>tuple</em>) – min and max x limits</li>
-<li><strong>ylim</strong> (<em>tuple</em>) – min and max y limits</li>
-<li><strong>resolution</strong> (<em>int</em>) – (optional) grid is sampled at this resolution</li>
-<li><strong>xlogwin</strong> (<em>float</em>) – (optional) x width of moving average</li>
-<li><strong>ylogwin</strong> (<em>float</em>) – (optional) y width of moving average</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>xlim</strong> (<em>tuple</em>) – min and max x limits</p></li>
+<li><p><strong>ylim</strong> (<em>tuple</em>) – min and max y limits</p></li>
+<li><p><strong>resolution</strong> (<em>int</em>) – (optional) grid is sampled at this resolution</p></li>
+<li><p><strong>xlogwin</strong> (<em>float</em>) – (optional) x width of moving average</p></li>
+<li><p><strong>ylogwin</strong> (<em>float</em>) – (optional) y width of moving average</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="classmethod">
@@ -261,51 +250,44 @@ interpolator will work in these axes</li>
 <dd><p>Interpolate completeness surface</p>
 <p>Interpolate completeness surface at x, y. X, y should be in the same
 units as self.xcol and self.ycol</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>x</strong> (<em>array</em>) – x points to interpolate to</li>
-<li><strong>y</strong> (<em>array</em>) – y points to interpolate to</li>
-<li><strong>refresh</strong> (<em>bool</em>) – (optional) refresh the interpolator?</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>array</em>) – x points to interpolate to</p></li>
+<li><p><strong>y</strong> (<em>array</em>) – y points to interpolate to</p></li>
+<li><p><strong>refresh</strong> (<em>bool</em>) – (optional) refresh the interpolator?</p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">completeness value at x and y</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">array</p>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>completeness value at x and y</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="rvsearch.inject.Injections">
-<em class="property">class </em><code class="descclassname">rvsearch.inject.</code><code class="descname">Injections</code><span class="sig-paren">(</span><em>searchpath</em>, <em>plim</em>, <em>klim</em>, <em>elim</em>, <em>num_sim=1</em>, <em>full_grid=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/inject.html#Injections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.inject.Injections" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">rvsearch.inject.</code><code class="descname">Injections</code><span class="sig-paren">(</span><em>searchpath</em>, <em>plim</em>, <em>klim</em>, <em>elim</em>, <em>num_sim=1</em>, <em>full_grid=True</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/inject.html#Injections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.inject.Injections" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class to perform and record injection and recovery tests for a planetary system.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>searchpath</strong> (<em>string</em>) – Path to a saved rvsearch.Search object</li>
-<li><strong>plim</strong> (<em>tuple</em>) – lower and upper period bounds for injections</li>
-<li><strong>klim</strong> (<em>tuple</em>) – lower and upper k bounds for injections</li>
-<li><strong>elim</strong> (<em>tuple</em>) – lower and upper e bounds for injections</li>
-<li><strong>num_sim</strong> (<em>int</em>) – number of planets to simulate</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>searchpath</strong> (<em>string</em>) – Path to a saved rvsearch.Search object</p></li>
+<li><p><strong>plim</strong> (<em>tuple</em>) – lower and upper period bounds for injections</p></li>
+<li><p><strong>klim</strong> (<em>tuple</em>) – lower and upper k bounds for injections</p></li>
+<li><p><strong>elim</strong> (<em>tuple</em>) – lower and upper e bounds for injections</p></li>
+<li><p><strong>num_sim</strong> (<em>int</em>) – number of planets to simulate</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – show progress bar</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 <dl class="method">
 <dt id="rvsearch.inject.Injections.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>searchpath</em>, <em>plim</em>, <em>klim</em>, <em>elim</em>, <em>num_sim=1</em>, <em>full_grid=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/inject.html#Injections.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.inject.Injections.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>searchpath</em>, <em>plim</em>, <em>klim</em>, <em>elim</em>, <em>num_sim=1</em>, <em>full_grid=True</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/inject.html#Injections.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.inject.Injections.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
@@ -320,18 +302,17 @@ units as self.xcol and self.ycol</p>
 <code class="descname">random_planets</code><span class="sig-paren">(</span><em>seed</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/inject.html#Injections.random_planets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.inject.Injections.random_planets" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate random planets</p>
 <p>Produce a DataFrame with random planet parameters</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>seed</strong> (<em>int</em>) – seed for random number generator</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">with columns inj_period, inj_tp, inj_e, inj_w, inj_k</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">DataFrame</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>seed</strong> (<em>int</em>) – seed for random number generator</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>with columns inj_period, inj_tp, inj_e, inj_w, inj_k</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>DataFrame</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -339,19 +320,18 @@ units as self.xcol and self.ycol</p>
 <code class="descname">run_injections</code><span class="sig-paren">(</span><em>num_cpus=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/inject.html#Injections.run_injections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.inject.Injections.run_injections" title="Permalink to this definition">¶</a></dt>
 <dd><p>Launch injection/recovery tests</p>
 <p>Try to recover all planets defined in self.simulated_planets</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>num_cpus</strong> (<em>int</em>) – number of CPUs to utilize. Each injection will run
-on a separate CPU. Individual injections are forced to be single-threaded</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">summary of injection/recovery tests</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">DataFrame</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>num_cpus</strong> (<em>int</em>) – number of CPUs to utilize. Each injection will run
+on a separate CPU. Individual injections are forced to be single-threaded</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>summary of injection/recovery tests</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>DataFrame</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
