@@ -354,14 +354,15 @@ class Search(object):
         """
         self.post.writeto(filename)
 
-    def run_search(self, fixed_threshold=None, mkoutdir=True):
+    def run_search(self, fixed_threshold=None, outdir=None, mkoutdir=True):
         """Run an iterative search for planets not given in posterior.
 
         Args:
             fixed_threshold (float): (optional) use a fixed delta BIC threshold
             mkoutdir (bool): create the output directory?
         """
-        outdir = os.path.join(os.getcwd(), self.starname)
+        if outdir is None:
+            outdir = os.path.join(os.getcwd(), self.starname)
         if mkoutdir and not os.path.exists(outdir):
             os.mkdir(outdir)
 
