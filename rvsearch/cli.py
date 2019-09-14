@@ -68,6 +68,9 @@ def main():
                           action='store_true',
                           help="Trend free during periodogram calculation"
                           )
+    psr_search.add_argument('--mcmc', action='store_true',
+                          help="Run MCMC after search [default=False]"
+                          )
 
 
     # Injections

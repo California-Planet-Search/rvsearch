@@ -40,7 +40,8 @@ def run_search(args):
                                       workers=args.num_cpus,
                                       post=post,
                                       trend=args.trend,
-                                      verbose=args.verbose)
+                                      verbose=args.verbose,
+                                      mcmc=args.mcmc)
     searcher.run_search(outdir=args.output_dir)
 
 
