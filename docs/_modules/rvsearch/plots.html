@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rvsearch.plots &mdash; rvsearch 0.1.1 documentation</title>
+  <title>rvsearch.plots &mdash; rvsearch 0.1.2 documentation</title>
   
 
   
@@ -148,9 +148,10 @@
            <div itemprop="articleBody">
             
   <h1>Source code for rvsearch.plots</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">pdb</span>
+<span></span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">pl</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
 <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="k">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">pl</span>
 <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="k">import</span> <span class="n">rcParams</span><span class="p">,</span> <span class="n">gridspec</span>
 <span class="kn">from</span> <span class="nn">matplotlib.ticker</span> <span class="k">import</span> <span class="n">MaxNLocator</span><span class="p">,</span> <span class="n">LogFormatterSciNotation</span><span class="p">,</span> <span class="n">FuncFormatter</span>
@@ -161,8 +162,6 @@
 <span class="kn">from</span> <span class="nn">radvel.utils</span> <span class="k">import</span> <span class="n">t_to_phase</span><span class="p">,</span> <span class="n">fastbin</span><span class="p">,</span> <span class="n">sigfig</span>
 
 <span class="kn">import</span> <span class="nn">rvsearch.utils</span> <span class="k">as</span> <span class="nn">utils</span>
-<span class="c1"># IMPORTANT: AT SOME POINT, REDEFINE AS CLASS INHERITING FROM RADVEL MULTIPLOT.</span>
-
 
 <div class="viewcode-block" id="CustomTicker"><a class="viewcode-back" href="../../plots.html#rvsearch.plots.CustomTicker">[docs]</a><span class="k">class</span> <span class="nc">CustomTicker</span><span class="p">(</span><span class="n">LogFormatterSciNotation</span><span class="p">):</span>
 <div class="viewcode-block" id="CustomTicker.__call__"><a class="viewcode-back" href="../../plots.html#rvsearch.plots.CustomTicker.__call__">[docs]</a>    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -606,13 +605,15 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">xgrid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ygrid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_array</span> <span class="o">=</span> <span class="n">completeness</span><span class="o">.</span><span class="n">completeness_grid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xlim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ylim</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CompletenessPlots.completeness_plot"><a class="viewcode-back" href="../../plots.html#rvsearch.plots.CompletenessPlots.completeness_plot">[docs]</a>    <span class="k">def</span> <span class="nf">completeness_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="CompletenessPlots.completeness_plot"><a class="viewcode-back" href="../../plots.html#rvsearch.plots.CompletenessPlots.completeness_plot">[docs]</a>    <span class="k">def</span> <span class="nf">completeness_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">colorbar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">hide_points</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Plot completeness contours</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            title (string): (optional) plot title</span>
 <span class="sd">            xlabel (string): (optional) x-axis label</span>
 <span class="sd">            ylabel (string): (optional) y-axis label</span>
+<span class="sd">            colorbar (bool): (optional) plot colorbar</span>
+<span class="sd">            hide_points (bool): (optional) if true hide individual injection/recovery points</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">good</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp</span><span class="o">.</span><span class="n">recoveries</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">&#39;recovered == True&#39;</span><span class="p">)</span>
         <span class="n">bad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp</span><span class="o">.</span><span class="n">recoveries</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s1">&#39;recovered == False&#39;</span><span class="p">)</span>
@@ -621,8 +622,9 @@
         <span class="n">pl</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">bottom</span><span class="o">=</span><span class="mf">0.18</span><span class="p">,</span> <span class="n">left</span><span class="o">=</span><span class="mf">0.22</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
 
         <span class="n">CS</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">contourf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xgrid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ygrid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_array</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">pl</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">Reds_r</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span>
-        <span class="n">pl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">good</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">comp</span><span class="o">.</span><span class="n">xcol</span><span class="p">],</span> <span class="n">good</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">comp</span><span class="o">.</span><span class="n">ycol</span><span class="p">],</span> <span class="s1">&#39;b.&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;recovered&#39;</span><span class="p">)</span>
-        <span class="n">pl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">bad</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">comp</span><span class="o">.</span><span class="n">xcol</span><span class="p">],</span> <span class="n">bad</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">comp</span><span class="o">.</span><span class="n">ycol</span><span class="p">],</span> <span class="s1">&#39;r.&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;missed&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">hide_points</span><span class="p">:</span>
+            <span class="n">pl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">good</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">comp</span><span class="o">.</span><span class="n">xcol</span><span class="p">],</span> <span class="n">good</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">comp</span><span class="o">.</span><span class="n">ycol</span><span class="p">],</span> <span class="s1">&#39;b.&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;recovered&#39;</span><span class="p">)</span>
+            <span class="n">pl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">bad</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">comp</span><span class="o">.</span><span class="n">xcol</span><span class="p">],</span> <span class="n">bad</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">comp</span><span class="o">.</span><span class="n">ycol</span><span class="p">],</span> <span class="s1">&#39;r.&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;missed&#39;</span><span class="p">)</span>
         <span class="n">ax</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
@@ -641,6 +643,9 @@
         <span class="n">pl</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">ylabel</span><span class="p">)</span>
 
         <span class="n">pl</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">colorbar</span><span class="p">:</span>
+            <span class="n">pl</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">pad</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;probability of detection&#39;</span><span class="p">)</span>
 
         <span class="n">fig</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
 

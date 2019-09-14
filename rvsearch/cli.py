@@ -39,6 +39,10 @@ def main():
                           action='store_true', default=True,
                           help="Print extra messages and progress bars"
                           )
+    psr_parent.add_argument('-o', '--output_dir', metavar='output directory',
+                          type=str,
+                          help="path to place outputs", default=None
+                          )
 
 
     # Search
