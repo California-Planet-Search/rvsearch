@@ -110,7 +110,7 @@ def initialize_post(data, params=None, priors=[]):
         priors.append(radvel.prior.PositiveKPrior(post.params.num_planets))
         priors.append(radvel.prior.EccentricityPrior(post.params.num_planets))
         #for inst in telgrps.keys():
-        #    priors.append(radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0))
+        #    priors.append(radvel.prior.Jeffrey('jit_'+inst, 0.05, 20.0))
     post.priors = priors
 
     return post

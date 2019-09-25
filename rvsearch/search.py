@@ -40,8 +40,8 @@ class Search(object):
     def __init__(self, data, post=None, starname='star', max_planets=8,
                 priors=[], crit='bic', fap=0.001, min_per=3, max_per=10000,
                 manual_grid=None, oversampling=1., trend=False, fix=False,
-                polish=True, baseline=True, mcmc=True, workers=1, verbose=True,
-                save_outputs=True):
+                eccentric=False, polish=True, baseline=True, mcmc=True,
+                workers=1, verbose=True, save_outputs=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
@@ -93,6 +93,7 @@ class Search(object):
 
         self.trend = trend
         self.fix = fix
+        self.eccentric = eccentric
         self.polish = polish
         self.baseline = baseline
         self.mcmc = mcmc
@@ -389,6 +390,7 @@ class Search(object):
                                                manual_grid=self.manual_grid,
                                                oversampling=self.oversampling,
                                                baseline=self.baseline,
+                                               eccentric=self.eccentric,
                                                workers=self.workers,
                                                verbose=self.verbose)
             # Run the periodogram, store arrays and threshold (if computed).
