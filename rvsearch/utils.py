@@ -15,10 +15,17 @@ except:
 """
 
 def GaussianDiffFunc(inp_list):
+    """Function to use in the HIRES gamma offset prior.
+    Args:
+        inp_list(list): pair of floats, the difference of which we want to
+                        constrain with a Gaussian prior. Hard-coded params,
+                        derived empirically from HIRES analysis.
+
+    """
     x     = inp_list[1] - inp_list[0]
-    mu    = 0#inp_list[2]
-    sigma = 5#inp_list[3]
-    return -0.5 * ((x - mu) / sigma)**2 - 0.5*np.log((self.sigma**2)*2.*np.pi)
+    mu    = 0.#inp_list[2]
+    sigma = 5.#inp_list[3]
+    return -0.5 * ((x - mu) / sigma)**2 - 0.5*np.log((sigma**2)*2.*np.pi)
 
 def reset_params(post, default_pdict):
     # Reset post.params values to default values
@@ -27,7 +34,7 @@ def reset_params(post, default_pdict):
     return post
 
 
-def initialize_default_pars(instnames=['inst'], times=None,
+def initialize_default_pars(instnames=['inst'], times=None, linear=True,
                             fitting_basis='per tc secosw sesinw k'):
     """Set up a default Parameters object.
 
@@ -37,6 +44,7 @@ def initialize_default_pars(instnames=['inst'], times=None,
     Args:
         instnames (list): codes of instruments used
         times (array): optional, timestamps of observations.
+        linear (bool): Determine whether to optimize gammas linearly.
         fitting_basis: optional
 
     Returns:
@@ -58,7 +66,12 @@ def initialize_default_pars(instnames=['inst'], times=None,
     anybasis_params['curv'] = radvel.Parameter(value=0.0)
 
     for inst in instnames:
-        anybasis_params['gamma_'+inst] = radvel.Parameter(value=0.0)#, linear=True, vary=False)
+        if linear:
+            anybasis_params['gamma_'+inst] = radvel.Parameter(value=0.0,
+                                                              linear=True,
+                                                              vary=False)
+        else:
+            anybasis_params['gamma_'+inst] = radvel.Parameter(value=0.0)
         anybasis_params['jit_'+inst] = radvel.Parameter(value=2.0)
 
     params = anybasis_params.basis.to_any_basis(anybasis_params, fitting_basis)
@@ -70,7 +83,7 @@ def initialize_default_pars(instnames=['inst'], times=None,
     return params
 
 
-def initialize_post(data, params=None, priors=[]):
+def initialize_post(data, params=None, priors=[], linear=True):
     """Initialize a posterior object with data, params, and priors.
     Args:
         data: a pandas dataframe.
@@ -113,11 +126,12 @@ def initialize_post(data, params=None, priors=[]):
         priors.append(radvel.prior.PositiveKPrior(post.params.num_planets))
         priors.append(radvel.prior.EccentricityPrior(post.params.num_planets))
 
-        if ('j' in telgrps.keys()) and ('k' in telgrps.keys()):
-            TexStr = 'Gaussian Prior on HIRES offset'
-            OffsetPrior = radvel.prior.UserDefinedPrior(['gamma_j', 'gamma_k'],
-                                                        GaussianDiffFunc,
-                                                        TexStr)
+        if not linear:
+            if ('j' in telgrps.keys()) and ('k' in telgrps.keys()):
+                TexStr = 'Gaussian Prior on HIRES offset'
+                OffsetPrior = radvel.prior.UserDefinedPrior(['gamma_j', 'gamma_k'],
+                                                            GaussianDiffFunc,
+                                                            TexStr)
             priors.append(OffsetPrior)
         #for inst in telgrps.keys():
         #    priors.append(radvel.prior.Jeffrey('jit_'+inst, 0.05, 20.0))
