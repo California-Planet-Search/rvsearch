@@ -71,10 +71,12 @@ class Periodogram(object):
         self.errvel = self.post.likelihood.yerr
         self.timelen = np.amax(self.times) - np.amin(self.times)
 
-        self.tels = []
+        self.tels = np.unique(self.post.likelihood.telvec)
+        '''
         for val in self.post.params.keys():
             if 'gamma_' in val:
                 self.tels.append(val.split('_')[1])
+        '''
 
         self.minsearchP = minsearchp
         self.maxsearchP = maxsearchp
@@ -103,7 +105,10 @@ class Periodogram(object):
 
         self.bic_thresh = None
         # Pre-compute good-fit floor of the BIC periodogram.
-        self.floor = -2*np.log(len(self.times))
+        if self.eccentric:
+            self.floor = -4*np.log(len(self.times))
+        else:
+            self.floor = -2*np.log(len(self.times))
 
         # Automatically generate a period grid upon initialization.
         self.make_per_grid()
@@ -166,6 +171,8 @@ class Periodogram(object):
                 self.post.params['per'+plstr].vary = False
                 self.post.params['tc'+plstr].vary = False
                 self.post.params['k'+plstr].vary = False
+                self.post.params['secosw'+plstr].vary = False
+                self.post.params['sesinw'+plstr].vary = False
                 # Vary ONLY gamma, jitter, dvdt, curv. All else fixed, and k=0
                 baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
                 baseline_bic = baseline_fit.likelihood.bic()
@@ -174,6 +181,8 @@ class Periodogram(object):
                 self.post.params['per{}'.format(self.num_known_planets+1)].vary = False
                 self.post.params['tc{}'.format(self.num_known_planets+1)].vary = False
                 self.post.params['k{}'.format(self.num_known_planets+1)].vary = False
+                self.post.params['secosw{}'.format(self.num_known_planets+1)].vary = False
+                self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary = False
                 baseline_bic = self.post.likelihood.bic()
         else:
             baseline_bic = self.basebic
@@ -183,7 +192,11 @@ class Periodogram(object):
 
         # Allow amplitude and time offset to vary, fix period (and ecc. if asked.)
         self.post.params['per{}'.format(self.num_known_planets+1)].vary = False
-        if self.eccentric == False:
+        if self.eccentric == True:
+            # If eccentric set to True, Free eccentricity.
+            self.post.params['secosw{}'.format(self.num_known_planets+1)].vary = True
+            self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary = True
+        else:
             # If eccentric set to False, fix eccentricity to zero.
             self.post.params['secosw{}'.format(self.num_known_planets+1)].vary = False
             self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary = False

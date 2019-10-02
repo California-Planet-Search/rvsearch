@@ -226,8 +226,9 @@ class Search(object):
             new_params['curv'].vary = False
 
         new_params['per{}'.format(new_num_planets)].vary = False
-        new_params['secosw{}'.format(new_num_planets)].vary = False
-        new_params['sesinw{}'.format(new_num_planets)].vary = False
+        if not self.eccentric:
+            new_params['secosw{}'.format(new_num_planets)].vary = False
+            new_params['sesinw{}'.format(new_num_planets)].vary = False
 
         new_params.num_planets = new_num_planets
 
