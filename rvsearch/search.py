@@ -40,8 +40,8 @@ class Search(object):
     def __init__(self, data, post=None, starname='star', max_planets=8,
                 priors=[], crit='bic', fap=0.001, min_per=3, max_per=10000,
                 manual_grid=None, oversampling=1., trend=False, fix=False,
-                polish=True, baseline=True, mcmc=True, workers=1, verbose=True,
-                save_outputs=True):
+                eccentric=False, polish=True, baseline=True, mcmc=True,
+                workers=1, verbose=True, save_outputs=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
@@ -93,6 +93,7 @@ class Search(object):
 
         self.trend = trend
         self.fix = fix
+        self.eccentric = eccentric
         self.polish = polish
         self.baseline = baseline
         self.mcmc = mcmc
@@ -225,8 +226,9 @@ class Search(object):
             new_params['curv'].vary = False
 
         new_params['per{}'.format(new_num_planets)].vary = False
-        new_params['secosw{}'.format(new_num_planets)].vary = False
-        new_params['sesinw{}'.format(new_num_planets)].vary = False
+        if not self.eccentric:
+            new_params['secosw{}'.format(new_num_planets)].vary = False
+            new_params['sesinw{}'.format(new_num_planets)].vary = False
 
         new_params.num_planets = new_num_planets
 
@@ -390,6 +392,7 @@ class Search(object):
                                                manual_grid=self.manual_grid,
                                                oversampling=self.oversampling,
                                                baseline=self.baseline,
+                                               eccentric=self.eccentric,
                                                workers=self.workers,
                                                verbose=self.verbose)
             # Run the periodogram, store arrays and threshold (if computed).
@@ -477,15 +480,13 @@ class Search(object):
                 nensembles = os.cpu_count()
             # Set custom mcmc scales for e/w parameters.
             for n in np.arange(1, self.num_planets+1):
-                secoswscale = 0.005
-                sesinwscale = 0.005
-                self.post.params['secosw{}'.format(n)].mcmcscale = secoswscale
-                self.post.params['sesinw{}'.format(n)].mcmcscale = sesinwscale
+                self.post.params['secosw{}'.format(n)].mcmcscale = 0.005
+                self.post.params['sesinw{}'.format(n)].mcmcscale = 0.005
 
             # Run MCMC.
             chains = radvel.mcmc(self.post, nwalkers=50, nrun=25000,
-                                 burnGR=1.01, maxGR=1.0075, minTz=2000,
-                                 minsteps=8000, minpercent=25,
+                                 burnGR=1.03, maxGR=1.0075, minTz=2000,
+                                 minsteps=10000, minpercent=33,
                                  thin=5, ensembles=nensembles)
             # Convert chains to e, w basis.
             for par in self.post.params.keys():
