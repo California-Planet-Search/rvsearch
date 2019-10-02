@@ -14,6 +14,11 @@ except:
 """Functions for posterior modification (resetting, intializing, etc.)
 """
 
+def GaussianDiffFunc(inp_list):
+    x     = inp_list[1] - inp_list[0]
+    mu    = 0#inp_list[2]
+    sigma = 5#inp_list[3]
+    return -0.5 * ((x - mu) / sigma)**2 - 0.5*np.log((self.sigma**2)*2.*np.pi)
 
 def reset_params(post, default_pdict):
     # Reset post.params values to default values
@@ -53,9 +58,7 @@ def initialize_default_pars(instnames=['inst'], times=None,
     anybasis_params['curv'] = radvel.Parameter(value=0.0)
 
     for inst in instnames:
-        anybasis_params['gamma_'+inst] = radvel.Parameter(value=0.0,
-                                                          linear=True,
-                                                          vary=False)
+        anybasis_params['gamma_'+inst] = radvel.Parameter(value=0.0)#, linear=True, vary=False)
         anybasis_params['jit_'+inst] = radvel.Parameter(value=2.0)
 
     params = anybasis_params.basis.to_any_basis(anybasis_params, fitting_basis)
@@ -109,6 +112,13 @@ def initialize_post(data, params=None, priors=[]):
     if priors == []:
         priors.append(radvel.prior.PositiveKPrior(post.params.num_planets))
         priors.append(radvel.prior.EccentricityPrior(post.params.num_planets))
+
+        if ('j' in telgrps.keys()) and ('k' in telgrps.keys()):
+            TexStr = 'Gaussian Prior on HIRES offset'
+            OffsetPrior = radvel.prior.UserDefinedPrior(['gamma_j', 'gamma_k'],
+                                                        GaussianDiffFunc,
+                                                        TexStr)
+            priors.append(OffsetPrior)
         #for inst in telgrps.keys():
         #    priors.append(radvel.prior.Jeffrey('jit_'+inst, 0.05, 20.0))
     post.priors = priors
