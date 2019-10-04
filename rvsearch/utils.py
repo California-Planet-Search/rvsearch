@@ -24,7 +24,7 @@ def GaussianDiffFunc(inp_list):
     """
     x     = inp_list[1] - inp_list[0]
     mu    = 0.#inp_list[2]
-    sigma = 5.#inp_list[3]
+    sigma = 1.#inp_list[3]
     return -0.5 * ((x - mu) / sigma)**2 - 0.5*np.log((sigma**2)*2.*np.pi)
 
 def reset_params(post, default_pdict):
