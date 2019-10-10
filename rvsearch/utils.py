@@ -83,12 +83,13 @@ def initialize_default_pars(instnames=['inst'], times=None, linear=True,
     return params
 
 
-def initialize_post(data, params=None, priors=[], linear=True):
+def initialize_post(data, params=None, priors=[], linear=True, decorrs=None):
     """Initialize a posterior object with data, params, and priors.
     Args:
         data: a pandas dataframe.
         params: a list of radvel parameter objects.
         priors: a list of priors to place on the posterior object.
+        decorrs: a list of decorrelation vectors.
     Returns:
         post (radvel Posterior object)
 
@@ -112,6 +113,7 @@ def initialize_post(data, params=None, priors=[], linear=True):
     likes = {}
 
     for inst in telgrps.keys():
+        # 10/8: ADD DECORRELATION VECTORS AND VARS, ONLY FOR SELECTED INST.
         likes[inst] = radvel.likelihood.RVLikelihood(
             mod, data.iloc[telgrps[inst]].time, data.iloc[telgrps[inst]].mnvel,
             data.iloc[telgrps[inst]].errvel, suffix='_'+inst)
