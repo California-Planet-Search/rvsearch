@@ -65,8 +65,9 @@ def main():
                           help="Number of test frequencies"
                           )
     psr_search.add_argument('--trend',
-                          action='store_true',
-                          help="Trend free during periodogram calculation"
+                          action='store',
+                          help="Trend free during periodogram calculation [default=False]",
+                          default=False, type=bool
                           )
     psr_search.add_argument('--mcmc', action='store_true',
                           help="Run MCMC after search [default=False]"
