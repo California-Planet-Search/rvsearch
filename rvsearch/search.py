@@ -475,7 +475,7 @@ class Search(object):
             self.post.medparams = {}
             self.post.maxparams = {}
             # Use recommended parameters for mcmc.
-            nensembles = 16
+            nensembles = np.min([self.workers, 16])
             if os.cpu_count() < nensembles:
                 nensembles = os.cpu_count()
             # Set custom mcmc scales for e/w parameters.
