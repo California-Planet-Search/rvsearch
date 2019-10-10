@@ -110,7 +110,7 @@ def initialize_post(data, params=None, priors=[]):
         priors.append(radvel.prior.PositiveKPrior(post.params.num_planets))
         priors.append(radvel.prior.EccentricityPrior(post.params.num_planets))
         #for inst in telgrps.keys():
-        #    priors.append(radvel.prior.HardBounds('jit_'+inst, 0.0, 20.0))
+        #    priors.append(radvel.prior.Jeffrey('jit_'+inst, 0.05, 20.0))
     post.priors = priors
 
     return post
@@ -246,9 +246,9 @@ def scrape(starlist, star_db_name=None, filename='system_props.csv'):
         try:
             star_db = pd.read_csv(star_db_name)
         except (RuntimeError, FileNotFoundError):
-            print('That is not a pandas dataframe. Try again.')
+            print('That is not a readable table. Try again.')
 
-        # Add enough columns to for searched system with most planets.
+        # Add enough columns to account for system with the most signals.
         max_num_planets = np.amax(nplanets)
         for n in np.arange(1, max_num_planets+1):
             props['Mstar'] = np.nan

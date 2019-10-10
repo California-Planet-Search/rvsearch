@@ -38,8 +38,9 @@ class Search(object):
     """
 
     def __init__(self, data, post=None, starname='star', max_planets=8,
-                priors=[], crit='bic', fap=0.001, min_per=3, manual_grid=None,
-                oversampling=1., trend=False, fix=False, polish=True, mcmc=True,
+                priors=[], crit='bic', fap=0.001, min_per=3, max_per=10000,
+                manual_grid=None, oversampling=1., trend=False, fix=False,
+                eccentric=False, polish=True, baseline=True, mcmc=True,
                 workers=1, verbose=True, save_outputs=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
@@ -60,9 +61,12 @@ class Search(object):
                                                         times=data.time)
             self.post   = utils.initialize_post(data, params=self.params,
                                                 priors=self.priors)
+            self.setup  = False
+            self.setup_planets = -1
         else:
             self.post   = post
-            # self.priors = post.priors
+            self.setup  = True
+            self.setup_planets = self.post.params.num_planets
 
         self.all_params = []
 
@@ -85,10 +89,13 @@ class Search(object):
 
         self.fap = fap
         self.min_per = min_per
+        self.max_per = max_per
 
         self.trend = trend
         self.fix = fix
+        self.eccentric = eccentric
         self.polish = polish
+        self.baseline = baseline
         self.mcmc = mcmc
 
         self.manual_grid = manual_grid
@@ -143,7 +150,25 @@ class Search(object):
         post3.params['curv'].vary  = False
 
         flat_bic = post3.likelihood.bic()
+        '''
+        if trend_curve_bic < trend_bic - 5:
+            # Quadratic
+            self.post.params['dvdt'].value = post1.params['dvdt'].value
+            self.post.params['curv'].value = post1.params['curv'].value
 
+        elif trend_bic < flat_bic - 5:
+            # Linear
+            self.post.params['curv'].value = 0
+            self.post.params['dvdt'].value = post2.params['dvdt'].value
+            self.post.params['curv'].vary  = False
+
+        else:
+            # Flat
+            self.post.params['dvdt'].value = 0
+            self.post.params['curv'].value = 0
+            self.post.params['dvdt'].vary  = False
+            self.post.params['curv'].vary  = False
+        '''
         if trend_bic < flat_bic - 5:
             if trend_curve_bic < trend_bic - 5:
                 # Quadratic
@@ -201,8 +226,9 @@ class Search(object):
             new_params['curv'].vary = False
 
         new_params['per{}'.format(new_num_planets)].vary = False
-        new_params['secosw{}'.format(new_num_planets)].vary = False
-        new_params['sesinw{}'.format(new_num_planets)].vary = False
+        if not self.eccentric:
+            new_params['secosw{}'.format(new_num_planets)].vary = False
+            new_params['sesinw{}'.format(new_num_planets)].vary = False
 
         new_params.num_planets = new_num_planets
 
@@ -250,26 +276,6 @@ class Search(object):
         new_post = utils.initialize_post(self.data, new_params, priors)
         self.post = new_post
 
-    # def trend_swap(self):
-    #     """Perform a BIC test for trend versus long-period Keplerian fit.
-    #
-    #     """
-    #     kpost = copy.deepcopy(self.post)
-    #
-    #     times    = self.post.likelihood.x
-    #     baseline = times[-1] - times[0]
-    #
-    #     # THIS CAN BE USED ONCE SUB_PLANET() GENERALIZED TO ANY N
-    #     #for n in np.arange(1, self.num_planets+1):
-    #     #    if self.post.params['per{}'.format(n)].value > 1.5*baseline:
-    #     #        self.sub_planet()
-    #
-    #     per = self.post.params['per{}'.format(self.num_planets)].value
-    #     if per > 1.5*baseline:
-    #         k = kpost.params['k{}'.format(self.num_planets)].value
-    #         self.sub_planet()
-    #         self.post.params['dvdt'] = True
-    #         self.post.params['dvdt'].value = 2*np.pi*k/per
 
     def fit_orbit(self):
         """Perform a max-likelihood fit with all parameters free.
@@ -377,17 +383,19 @@ class Search(object):
         run = True
         while run:
             if self.num_planets != 0:
-                # if self.basebic is None:
-                #     self.basebic = self.post.likelihood.bic()
                 self.add_planet()
 
             perioder = periodogram.Periodogram(self.post, basebic=self.basebic,
-                                               minsearchp=self.min_per, fap=self.fap,
+                                               minsearchp=self.min_per,
+                                               maxsearchp=self.max_per,
+                                               fap=self.fap,
                                                manual_grid=self.manual_grid,
                                                oversampling=self.oversampling,
+                                               baseline=self.baseline,
+                                               eccentric=self.eccentric,
                                                workers=self.workers,
                                                verbose=self.verbose)
-
+            # Run the periodogram, store arrays and threshold (if computed).
             perioder.per_bic()
             self.periodograms[self.num_planets] = perioder.power[self.crit]
             if self.num_planets == 0 or self.pers is None:
@@ -412,26 +420,35 @@ class Search(object):
                 for k in self.post.params.keys():
                     self.post.params[k].value = perioder.bestfit_params[k]
 
-                # 7/12/19: Try re-fitting with re-set tc. Highly particular fix.
-                if self.num_planets == 1 and self.post.params['tc1'].value < \
-                                                     np.amin(self.data.time):
-                    self.post.params['tc1'].value = np.median(self.data.time)
-                    self.post.params['k1'].vary = False
-                    self.post.params['per1'].vary = False
-                    self.post.params['secosw1'].vary = False
-                    self.post.params['secosw1'].vary = False
+                # 8/23/19: Generalizing tc reset to each new find.
+                tckey = 'tc{}'.format(self.num_planets)
+                if self.post.params[tckey].value < np.amin(self.data.time):
+                    self.post.params[tckey].value = np.median(self.data.time)
+                    for n in np.arange(1, self.num_planets+1):
+                        self.post.params['k{}'.format(n)].vary = False
+                        self.post.params['per{}'.format(n)].vary = False
+                        self.post.params['secosw{}'.format(n)].vary = False
+                        self.post.params['secosw{}'.format(n)].vary = False
+                        if n != self.num_planets:
+                            self.post.params['tc{}'.format(n)].vary = False
+
                     self.post = radvel.fitting.maxlike_fitting(self.post,
                                                                verbose=False)
-                    self.post.params['k1'].vary = True
-                    self.post.params['per1'].vary = True
-                    self.post.params['secosw1'].vary = True
-                    self.post.params['secosw1'].vary = True
+
+                    for n in np.arange(1, self.num_planets+1):
+                        self.post.params['k{}'.format(n)].vary = True
+                        self.post.params['per{}'.format(n)].vary = True
+                        self.post.params['secosw{}'.format(n)].vary = True
+                        self.post.params['secosw{}'.format(n)].vary = True
+                        self.post.params['tc{}'.format(n)].vary = True
 
                 self.fit_orbit()
                 self.all_params.append(self.post.params)
                 self.basebic = self.post.likelihood.bic()
             else:
                 self.sub_planet()
+                # 8/3: Update the basebic anyway, for injections.
+                self.basebic = self.post.likelihood.bic()
                 run = False
             if self.num_planets >= self.max_planets:
                 run = False
@@ -463,15 +480,13 @@ class Search(object):
                 nensembles = os.cpu_count()
             # Set custom mcmc scales for e/w parameters.
             for n in np.arange(1, self.num_planets+1):
-                secoswscale = 0.005#*np.abs(self.post.params['secosw{}'.format(n)].value)
-                sesinwscale = 0.005#*np.abs(self.post.params['sesinw{}'.format(n)].value)
-                self.post.params['secosw{}'.format(n)].mcmcscale = secoswscale
-                self.post.params['sesinw{}'.format(n)].mcmcscale = sesinwscale
+                self.post.params['secosw{}'.format(n)].mcmcscale = 0.005
+                self.post.params['sesinw{}'.format(n)].mcmcscale = 0.005
 
             # Run MCMC.
             chains = radvel.mcmc(self.post, nwalkers=50, nrun=25000,
-                                 burnGR=1.01, maxGR=1.0075, minTz=2000,
-                                 minsteps=8000, minpercent=25,
+                                 burnGR=1.03, maxGR=1.0075, minTz=2000,
+                                 minsteps=10000, minpercent=33,
                                  thin=5, ensembles=nensembles)
             # Convert chains to e, w basis.
             for par in self.post.params.keys():
@@ -570,7 +585,6 @@ class Search(object):
             pickle.dump(self, pickle_out)
             pickle_out.close()
 
-            # if len(self.pers) == len(self.periodograms.values()):
             periodograms_plus_pers = np.append([self.pers], list(self.periodograms.values()), axis=0).T
             np.savetxt(outdir+'/pers_periodograms.csv', periodograms_plus_pers,
                        header='period  BIC_array')
@@ -617,6 +631,7 @@ class Search(object):
         self.mcmc = False
         self.save_outputs = False
         self.verbose = False
+        # 8/2: Trying to fix injections, possibly basebic error.
         self.basebic = None
         if not full_grid:
             self.manual_grid = [injected_orbel[0]]
