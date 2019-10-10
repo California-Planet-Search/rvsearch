@@ -28,8 +28,8 @@ class Search(object):
         crit (str): Either 'bic' or 'aic', depending on which criterion to use.
         fap (float): False-alarm-probability to pass to the periodogram object.
         min_per (float): Minimum search period, to pass to the periodogram object.
-        dvdt (bool): Whether to include a linear trend in the search.
-        curv (bool): Whether to include a quadratic trend in the search.
+        trend (bool): Whether to perform a DBIC test to select a trend model.
+        linear(bool): Wether to linearly optimize gamma offsets.
         fix (bool): Whether to fix known planet parameters during search.
         polish (bool): Whether to create finer period grid after planet is found.
         verbose (bool):
@@ -39,9 +39,9 @@ class Search(object):
 
     def __init__(self, data, post=None, starname='star', max_planets=8,
                 priors=[], crit='bic', fap=0.001, min_per=3, max_per=10000,
-                manual_grid=None, oversampling=1., trend=False, fix=False,
-                eccentric=False, polish=True, baseline=True, mcmc=True,
-                workers=1, verbose=True, save_outputs=True):
+                manual_grid=None, oversampling=1., trend=False, linear=True,
+                eccentric=False, fix=False, polish=True, baseline=True,
+                mcmc=True, workers=1, verbose=True, save_outputs=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
@@ -54,13 +54,16 @@ class Search(object):
             raise ValueError('Incorrect data input.')
 
         self.starname = starname
+        self.linear   = linear
 
         if post == None:
             self.priors = priors
             self.params = utils.initialize_default_pars(instnames=self.tels,
-                                                        times=data.time)
+                                                        times=data.time,
+                                                        linear=self.linear)
             self.post   = utils.initialize_post(data, params=self.params,
-                                                priors=self.priors)
+                                                priors=self.priors,
+                                                linear=self.linear)
             self.setup  = False
             self.setup_planets = -1
         else:
@@ -91,17 +94,17 @@ class Search(object):
         self.min_per = min_per
         self.max_per = max_per
 
-        self.trend = trend
-        self.fix = fix
+        self.trend     = trend
         self.eccentric = eccentric
-        self.polish = polish
-        self.baseline = baseline
-        self.mcmc = mcmc
+        self.fix       = fix
+        self.polish    = polish
+        self.baseline  = baseline
+        self.mcmc      = mcmc
 
-        self.manual_grid = manual_grid
+        self.manual_grid  = manual_grid
         self.oversampling = oversampling
-        self.workers = workers
-        self.verbose = verbose
+        self.workers      = workers
+        self.verbose      = verbose
         self.save_outputs = save_outputs
 
         self.basebic = None
