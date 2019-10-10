@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rvsearch.search &mdash; rvsearch 0.1.1 documentation</title>
+  <title>rvsearch.search &mdash; rvsearch 0.1.2 documentation</title>
   
 
   
@@ -504,14 +504,15 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Search.run_search"><a class="viewcode-back" href="../../search_class.html#rvsearch.search.Search.run_search">[docs]</a>    <span class="k">def</span> <span class="nf">run_search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fixed_threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mkoutdir</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="Search.run_search"><a class="viewcode-back" href="../../search_class.html#rvsearch.search.Search.run_search">[docs]</a>    <span class="k">def</span> <span class="nf">run_search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fixed_threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">outdir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mkoutdir</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Run an iterative search for planets not given in posterior.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            fixed_threshold (float): (optional) use a fixed delta BIC threshold</span>
 <span class="sd">            mkoutdir (bool): create the output directory?</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">outdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">starname</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">outdir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">outdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">starname</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">mkoutdir</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">outdir</span><span class="p">):</span>
             <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
 
@@ -731,16 +732,21 @@
             <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">outdir</span><span class="o">+</span><span class="s1">&#39;/thresholds_bics_faps.csv&#39;</span><span class="p">,</span> <span class="n">threshs_bics_faps</span><span class="p">,</span>
                        <span class="n">header</span><span class="o">=</span><span class="s1">&#39;threshold  best_bic  fap&#39;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Search.continue_search"><a class="viewcode-back" href="../../search_class.html#rvsearch.search.Search.continue_search">[docs]</a>    <span class="k">def</span> <span class="nf">continue_search</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Search.continue_search"><a class="viewcode-back" href="../../search_class.html#rvsearch.search.Search.continue_search">[docs]</a>    <span class="k">def</span> <span class="nf">continue_search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fixed_threshold</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Continue a search by trying to add one more planet</span>
 
+<span class="sd">        Args:</span>
+<span class="sd">            fixed_threshold (bool): fix the BIC threshold at the last threshold, or re-derive for each periodogram</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_planets</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">add_planet</span><span class="p">()</span>
         <span class="n">last_thresh</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bic_threshes</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-        <span class="n">fixed_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bic_threshes</span><span class="p">[</span><span class="n">last_thresh</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">fixed_threshold</span><span class="p">:</span>
+            <span class="n">thresh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bic_threshes</span><span class="p">[</span><span class="n">last_thresh</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">thresh</span> <span class="o">=</span> <span class="kc">None</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">run_search</span><span class="p">(</span><span class="n">fixed_threshold</span><span class="o">=</span><span class="n">fixed_threshold</span><span class="p">,</span> <span class="n">mkoutdir</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run_search</span><span class="p">(</span><span class="n">fixed_threshold</span><span class="o">=</span><span class="n">thresh</span><span class="p">,</span> <span class="n">mkoutdir</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Search.inject_recover"><a class="viewcode-back" href="../../search_class.html#rvsearch.search.Search.inject_recover">[docs]</a>    <span class="k">def</span> <span class="nf">inject_recover</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">injected_orbel</span><span class="p">,</span> <span class="n">num_cpus</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">full_grid</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Inject and recover</span>
@@ -764,13 +770,16 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">basebic</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">full_grid</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">manual_grid</span> <span class="o">=</span> <span class="p">[</span><span class="n">injected_orbel</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
-        <span class="c1"># self.manual_grid = self.pers[::4]</span>
+            <span class="n">fixed_threshold</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fixed_threshold</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="c1"># self.manual_grid = self.pers[::4]</span>
 
         <span class="n">mod</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">kepler</span><span class="o">.</span><span class="n">rv_drive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">injected_orbel</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;mnvel&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">mod</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">continue_search</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">continue_search</span><span class="p">(</span><span class="n">fixed_threshold</span><span class="p">)</span>
 
         <span class="c1"># Determine successful recovery</span>
         <span class="n">last_planet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_planets</span>

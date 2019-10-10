@@ -39,6 +39,10 @@ def main():
                           action='store_true', default=True,
                           help="Print extra messages and progress bars"
                           )
+    psr_parent.add_argument('-o', '--output_dir', metavar='output directory',
+                          type=str,
+                          help="path to place outputs", default=None
+                          )
 
 
     # Search
@@ -61,8 +65,12 @@ def main():
                           help="Number of test frequencies"
                           )
     psr_search.add_argument('--trend',
-                          action='store_true',
-                          help="Trend free during periodogram calculation"
+                          action='store',
+                          help="Trend free during periodogram calculation [default=False]",
+                          default=False, type=bool
+                          )
+    psr_search.add_argument('--mcmc', action='store_true',
+                          help="Run MCMC after search [default=False]"
                           )
 
 

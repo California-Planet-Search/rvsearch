@@ -28,8 +28,8 @@ class Search(object):
         crit (str): Either 'bic' or 'aic', depending on which criterion to use.
         fap (float): False-alarm-probability to pass to the periodogram object.
         min_per (float): Minimum search period, to pass to the periodogram object.
-        dvdt (bool): Whether to include a linear trend in the search.
-        curv (bool): Whether to include a quadratic trend in the search.
+        trend (bool): Whether to perform a DBIC test to select a trend model.
+        linear(bool): Wether to linearly optimize gamma offsets.
         fix (bool): Whether to fix known planet parameters during search.
         polish (bool): Whether to create finer period grid after planet is found.
         verbose (bool):
@@ -39,9 +39,9 @@ class Search(object):
 
     def __init__(self, data, post=None, starname='star', max_planets=8,
                 priors=[], crit='bic', fap=0.001, min_per=3, max_per=10000,
-                manual_grid=None, oversampling=1., trend=False, fix=False,
-                polish=True, baseline=True, mcmc=True, workers=1, verbose=True,
-                save_outputs=True):
+                manual_grid=None, oversampling=1., trend=False, linear=True,
+                eccentric=False, fix=False, polish=True, baseline=True,
+                mcmc=True, workers=1, verbose=True, save_outputs=True):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
@@ -54,13 +54,16 @@ class Search(object):
             raise ValueError('Incorrect data input.')
 
         self.starname = starname
+        self.linear   = linear
 
         if post == None:
             self.priors = priors
             self.params = utils.initialize_default_pars(instnames=self.tels,
-                                                        times=data.time)
+                                                        times=data.time,
+                                                        linear=self.linear)
             self.post   = utils.initialize_post(data, params=self.params,
-                                                priors=self.priors)
+                                                priors=self.priors,
+                                                linear=self.linear)
             self.setup  = False
             self.setup_planets = -1
         else:
@@ -91,16 +94,17 @@ class Search(object):
         self.min_per = min_per
         self.max_per = max_per
 
-        self.trend = trend
-        self.fix = fix
-        self.polish = polish
-        self.baseline = baseline
-        self.mcmc = mcmc
+        self.trend     = trend
+        self.eccentric = eccentric
+        self.fix       = fix
+        self.polish    = polish
+        self.baseline  = baseline
+        self.mcmc      = mcmc
 
-        self.manual_grid = manual_grid
+        self.manual_grid  = manual_grid
         self.oversampling = oversampling
-        self.workers = workers
-        self.verbose = verbose
+        self.workers      = workers
+        self.verbose      = verbose
         self.save_outputs = save_outputs
 
         self.basebic = None
@@ -225,8 +229,9 @@ class Search(object):
             new_params['curv'].vary = False
 
         new_params['per{}'.format(new_num_planets)].vary = False
-        new_params['secosw{}'.format(new_num_planets)].vary = False
-        new_params['sesinw{}'.format(new_num_planets)].vary = False
+        if not self.eccentric:
+            new_params['secosw{}'.format(new_num_planets)].vary = False
+            new_params['sesinw{}'.format(new_num_planets)].vary = False
 
         new_params.num_planets = new_num_planets
 
@@ -358,14 +363,15 @@ class Search(object):
         """
         self.post.writeto(filename)
 
-    def run_search(self, fixed_threshold=None, mkoutdir=True):
+    def run_search(self, fixed_threshold=None, outdir=None, mkoutdir=True):
         """Run an iterative search for planets not given in posterior.
 
         Args:
             fixed_threshold (float): (optional) use a fixed delta BIC threshold
             mkoutdir (bool): create the output directory?
         """
-        outdir = os.path.join(os.getcwd(), self.starname)
+        if outdir is None:
+            outdir = os.path.join(os.getcwd(), self.starname)
         if mkoutdir and not os.path.exists(outdir):
             os.mkdir(outdir)
 
@@ -389,6 +395,7 @@ class Search(object):
                                                manual_grid=self.manual_grid,
                                                oversampling=self.oversampling,
                                                baseline=self.baseline,
+                                               eccentric=self.eccentric,
                                                workers=self.workers,
                                                verbose=self.verbose)
             # Run the periodogram, store arrays and threshold (if computed).
@@ -471,20 +478,18 @@ class Search(object):
             self.post.medparams = {}
             self.post.maxparams = {}
             # Use recommended parameters for mcmc.
-            nensembles = 16
+            nensembles = np.min([self.workers, 16])
             if os.cpu_count() < nensembles:
                 nensembles = os.cpu_count()
             # Set custom mcmc scales for e/w parameters.
             for n in np.arange(1, self.num_planets+1):
-                secoswscale = 0.005
-                sesinwscale = 0.005
-                self.post.params['secosw{}'.format(n)].mcmcscale = secoswscale
-                self.post.params['sesinw{}'.format(n)].mcmcscale = sesinwscale
+                self.post.params['secosw{}'.format(n)].mcmcscale = 0.005
+                self.post.params['sesinw{}'.format(n)].mcmcscale = 0.005
 
             # Run MCMC.
             chains = radvel.mcmc(self.post, nwalkers=50, nrun=25000,
-                                 burnGR=1.01, maxGR=1.0075, minTz=2000,
-                                 minsteps=8000, minpercent=25,
+                                 burnGR=1.03, maxGR=1.0075, minTz=2000,
+                                 minsteps=10000, minpercent=33,
                                  thin=5, ensembles=nensembles)
             # Convert chains to e, w basis.
             for par in self.post.params.keys():

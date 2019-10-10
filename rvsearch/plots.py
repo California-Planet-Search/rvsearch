@@ -1,6 +1,7 @@
-import pdb
+
 import numpy as np
 import pylab as pl
+import matplotlib
 from matplotlib import pyplot as pl
 from matplotlib import rcParams, gridspec
 from matplotlib.ticker import MaxNLocator, LogFormatterSciNotation, FuncFormatter
@@ -11,8 +12,6 @@ from radvel import plot
 from radvel.utils import t_to_phase, fastbin, sigfig
 
 import rvsearch.utils as utils
-# IMPORTANT: AT SOME POINT, REDEFINE AS CLASS INHERITING FROM RADVEL MULTIPLOT.
-
 
 class CustomTicker(LogFormatterSciNotation):
     def __call__(self, x, pos=None):
@@ -443,10 +442,12 @@ class CompletenessPlots(object):
 
     Args:
         completeness (inject.Completeness): completeness object
+        planets (numpy array): masses and semi-major axes for planets
 
     """
-    def __init__(self, completeness):
+    def __init__(self, completeness, planets=None):
         self.comp = completeness
+        self.planets = planets
 
         self.xlim = (min(completeness.recoveries[completeness.xcol]),
                      max(completeness.recoveries[completeness.xcol]))
@@ -479,6 +480,11 @@ class CompletenessPlots(object):
         ax = pl.gca()
         ax.set_xscale('log')
         ax.set_yscale('log')
+
+        # If there are known planets, overplot them in mass/semi-major axis space.
+        if self.planets is not None:
+            ax.scatter(self.planets[:, 0], self.planets[:, 1], c='g',
+                       alpha=0.9, label='known')
 
         xticks = pl.xticks()[0]
         pl.xticks(xticks, xticks)
