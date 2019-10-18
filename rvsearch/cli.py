@@ -97,8 +97,8 @@ def main():
                           help="Minimum injection eccentricity [default=0.0]"
                           )
     psr_inj.add_argument('--maxE',
-                          type=float, action='store', default=0.0,
-                          help="Maximum injection eccentricity [default=0.0]"
+                          type=float, action='store', default=0.9,
+                          help="Maximum injection eccentricity [default=0.9]"
                           )
 
     psr_inj.add_argument('--num_inject',
