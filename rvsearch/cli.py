@@ -113,6 +113,11 @@ def main():
                           action='store_true',
                           help="Run search over full period grid [default=False]"
                           )
+    psr_inj.add_argument('--overwrite',
+                          action='store_true',
+                          help="Force overwrite [default=False]"
+                          )
+
 
 
     psr_search.set_defaults(func=rvsearch.driver.run_search)

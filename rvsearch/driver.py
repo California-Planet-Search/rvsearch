@@ -76,7 +76,7 @@ def injections(args):
             print("No search file found in {}".format(sdir))
             os._exit(1)
 
-        if not os.path.exists('recoveries.csv'):
+        if not os.path.exists('recoveries.csv') or args.overwrite:
             try:
                 inj = rvsearch.inject.Injections(sfile, plim, klim, elim,
                                                  num_sim=args.num_inject,
