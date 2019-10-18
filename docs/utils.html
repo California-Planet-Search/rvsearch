@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Miscellaneous Utilities &mdash; rvsearch 0.1.1 documentation</title>
+  <title>Miscellaneous Utilities &mdash; rvsearch 0.1.2 documentation</title>
   
 
   
@@ -190,19 +190,19 @@
 <dt id="rvsearch.utils.cartesian_product">
 <code class="descclassname">rvsearch.utils.</code><code class="descname">cartesian_product</code><span class="sig-paren">(</span><em>*arrays</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#cartesian_product"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.cartesian_product" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>
-<div>Generate a cartesian product of input arrays.</div></blockquote>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>arrays</strong> (<em>arrays</em>) – 1-D arrays to form the cartesian product of.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">cartesian product of input arrays</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">array</td>
-</tr>
-</tbody>
-</table>
+<div><p>Generate a cartesian product of input arrays.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>arrays</strong> (<em>arrays</em>) – 1-D arrays to form the cartesian product of.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>cartesian product of input arrays</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
@@ -211,22 +211,18 @@
 <dd><p>Set up a default Parameters object.</p>
 <p>None of the basis values are free params, for the initial 0-planet fit.
 Remember to reset .vary to True for all relevant params.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>instnames</strong> (<em>list</em>) – codes of instruments used</li>
-<li><strong>times</strong> (<em>array</em>) – optional, timestamps of observations.</li>
-<li><strong>fitting_basis</strong> – optional</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instnames</strong> (<em>list</em>) – codes of instruments used</p></li>
+<li><p><strong>times</strong> (<em>array</em>) – optional, timestamps of observations.</p></li>
+<li><p><strong>fitting_basis</strong> – optional</p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Parameters object</p>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Parameters object</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
@@ -236,54 +232,43 @@ Remember to reset .vary to True for all relevant params.</p>
 :param data: a pandas dataframe.
 :param params: a list of radvel parameter objects.
 :param priors: a list of priors to place on the posterior object.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">post (radvel Posterior object)</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>post (radvel Posterior object)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
 <dt id="rvsearch.utils.read_from_csv">
 <code class="descclassname">rvsearch.utils.</code><code class="descname">read_from_csv</code><span class="sig-paren">(</span><em>filename</em>, <em>binsize=0.0</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#read_from_csv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.read_from_csv" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read radial velocity data from a csv file into a Pandas dataframe.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>filename</strong> (<em>string</em>) – Path to csv file</li>
-<li><strong>binsize</strong> (<em>float</em>) – Times in which to bin data, in given units</li>
-<li><strong>verbose</strong> (<em>bool</em>) – Notify user if instrument types not given?</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>string</em>) – Path to csv file</p></li>
+<li><p><strong>binsize</strong> (<em>float</em>) – Times in which to bin data, in given units</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – Notify user if instrument types not given?</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
 <dt id="rvsearch.utils.read_from_vst">
 <code class="descclassname">rvsearch.utils.</code><code class="descname">read_from_vst</code><span class="sig-paren">(</span><em>filename</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#read_from_vst"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.read_from_vst" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read radial velocity data from a vst file into a Pandas dataframe.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>filename</strong> (<em>string</em>) – Path to csv file</li>
-<li><strong>verbose</strong> (<em>bool</em>) – Notify user if instrument types not given?</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>string</em>) – Path to csv file</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – Notify user if instrument types not given?</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Only relevant for HIRES users.</p>
+<p class="admonition-title">Note</p>
+<p>Only relevant for HIRES users.</p>
 </div>
 </dd></dl>
 
@@ -291,22 +276,18 @@ Remember to reset .vary to True for all relevant params.</p>
 <dt id="rvsearch.utils.scrape">
 <code class="descclassname">rvsearch.utils.</code><code class="descname">scrape</code><span class="sig-paren">(</span><em>starlist</em>, <em>star_db_name=None</em>, <em>filename='system_props.csv'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#scrape"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.scrape" title="Permalink to this definition">¶</a></dt>
 <dd><p>Take data from completed searches and compile into one dataframe.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>starlist</strong> (<em>list</em>) – List of starnames to access in current directory</li>
-<li><strong>star_db_name</strong> (<em>string</em><em> [</em><em>optional</em><em>]</em>) – Filename of star properties dataframe</li>
-<li><strong>filename</strong> (<em>string</em>) – Path to which to save dataframe</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>starlist</strong> (<em>list</em>) – List of starnames to access in current directory</p></li>
+<li><p><strong>star_db_name</strong> (<em>string</em><em> [</em><em>optional</em><em>]</em>) – Filename of star properties dataframe</p></li>
+<li><p><strong>filename</strong> (<em>string</em>) – Path to which to save dataframe</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">If specified, compute planet masses and semi-major axes.</p>
+<p class="admonition-title">Note</p>
+<p>If specified, compute planet masses and semi-major axes.</p>
 </div>
 </dd></dl>
 
@@ -314,14 +295,11 @@ Remember to reset .vary to True for all relevant params.</p>
 <dt id="rvsearch.utils.window">
 <code class="descclassname">rvsearch.utils.</code><code class="descname">window</code><span class="sig-paren">(</span><em>times</em>, <em>freqs</em>, <em>plot=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.window" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function to generate, and plot, the window function of observations.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time</strong> – times of observations in a dataset. FOR SEPARATE TELESCOPES?</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>time</strong> – times of observations in a dataset. FOR SEPARATE TELESCOPES?</p>
+</dd>
+</dl>
 </dd></dl>
 
 </div>

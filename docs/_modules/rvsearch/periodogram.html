@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rvsearch.periodogram &mdash; rvsearch 0.1.1 documentation</title>
+  <title>rvsearch.periodogram &mdash; rvsearch 0.1.2 documentation</title>
   
 
   
@@ -258,14 +258,11 @@
         <span class="c1"># Automatically generate a period grid upon initialization.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">make_per_grid</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Periodogram.per_spacing"><a class="viewcode-back" href="../../periodogram.html#rvsearch.periodogram.Periodogram.per_spacing">[docs]</a>    <span class="k">def</span> <span class="nf">per_spacing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="Periodogram.per_spacing"><a class="viewcode-back" href="../../periodogram.html#rvsearch.periodogram.Periodogram.per_spacing">[docs]</a>    <span class="k">def</span> <span class="nf">per_spacing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get the number of sampled frequencies and return a period grid.</span>
 
 <span class="sd">        Condition for spacing: delta nu such that during the</span>
 <span class="sd">        entire duration of observations, phase slip is no more than P/4</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            verbose (bool): (optional) print extra messages</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            array: Array of test periods</span>
@@ -280,7 +277,7 @@
         <span class="n">num_freq</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">oversampling</span>
         <span class="n">num_freq</span>  <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_freq</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of test periods:&quot;</span><span class="p">,</span> <span class="n">num_freq</span><span class="p">)</span>
 
         <span class="n">freqs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">fmax</span><span class="p">,</span> <span class="n">fmin</span><span class="p">,</span> <span class="n">num_freq</span><span class="p">)</span>

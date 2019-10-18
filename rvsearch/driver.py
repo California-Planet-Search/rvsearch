@@ -26,12 +26,13 @@ def run_search(args):
 
     P, post = radvel.utils.initialize_posterior(config_file)
 
-    starname = conf_base
+    starname = P.starname + '_' + conf_base
     data = P.data
 
-    if args.known:
+    if args.known and P.nplanets > 0:
         ipost = copy.deepcopy(post)
         post = radvel.fitting.maxlike_fitting(post, verbose=True)
+        post.params['dvdt'].vary = args.trend
     else:
         post = None
 
@@ -40,8 +41,9 @@ def run_search(args):
                                       workers=args.num_cpus,
                                       post=post,
                                       trend=args.trend,
-                                      verbose=args.verbose)
-    searcher.run_search()
+                                      verbose=args.verbose,
+                                      mcmc=args.mcmc)
+    searcher.run_search(outdir=args.output_dir)
 
 
 def injections(args):

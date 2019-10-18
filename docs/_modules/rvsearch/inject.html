@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rvsearch.inject &mdash; rvsearch 0.1.1 documentation</title>
+  <title>rvsearch.inject &mdash; rvsearch 0.1.2 documentation</title>
   
 
   
@@ -156,7 +156,9 @@
 <span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="k">import</span> <span class="n">RegularGridInterpolator</span>
 <span class="kn">import</span> <span class="nn">pickle</span>
 <span class="kn">import</span> <span class="nn">pathos.multiprocessing</span> <span class="k">as</span> <span class="nn">mp</span>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="k">import</span> <span class="n">Value</span>
 <span class="kn">import</span> <span class="nn">radvel</span>
+<span class="kn">from</span> <span class="nn">.periodogram</span> <span class="k">import</span> <span class="n">TqdmUpTo</span>
 
 <span class="kn">import</span> <span class="nn">rvsearch.utils</span>
 
@@ -171,17 +173,20 @@
 <span class="sd">        klim (tuple): lower and upper k bounds for injections</span>
 <span class="sd">        elim (tuple): lower and upper e bounds for injections</span>
 <span class="sd">        num_sim (int): number of planets to simulate</span>
+<span class="sd">        verbose (bool): show progress bar</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Injections.__init__"><a class="viewcode-back" href="../../inject.html#rvsearch.inject.Injections.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">searchpath</span><span class="p">,</span> <span class="n">plim</span><span class="p">,</span> <span class="n">klim</span><span class="p">,</span> <span class="n">elim</span><span class="p">,</span> <span class="n">num_sim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">full_grid</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="Injections.__init__"><a class="viewcode-back" href="../../inject.html#rvsearch.inject.Injections.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">searchpath</span><span class="p">,</span> <span class="n">plim</span><span class="p">,</span> <span class="n">klim</span><span class="p">,</span> <span class="n">elim</span><span class="p">,</span> <span class="n">num_sim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">full_grid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">searchpath</span> <span class="o">=</span> <span class="n">searchpath</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">plim</span> <span class="o">=</span> <span class="n">plim</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">klim</span> <span class="o">=</span> <span class="n">klim</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">elim</span> <span class="o">=</span> <span class="n">elim</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_sim</span> <span class="o">=</span> <span class="n">num_sim</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">full_grid</span> <span class="o">=</span> <span class="n">full_grid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">search</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">searchpath</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">search</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="n">seed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">search</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">injected_planets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_planets</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
@@ -248,14 +253,20 @@
         <span class="k">def</span> <span class="nf">_run_one</span><span class="p">(</span><span class="n">orbel</span><span class="p">):</span>
             <span class="n">sfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">searchpath</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span>
             <span class="n">search</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">sfile</span><span class="p">)</span>
+            <span class="n">search</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="n">sfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
             <span class="n">recovered</span><span class="p">,</span> <span class="n">recovered_orbel</span> <span class="o">=</span> <span class="n">search</span><span class="o">.</span><span class="n">inject_recover</span><span class="p">(</span><span class="n">orbel</span><span class="p">,</span> <span class="n">num_cpus</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">full_grid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">full_grid</span><span class="p">)</span>
 
             <span class="n">last_bic</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">search</span><span class="o">.</span><span class="n">best_bics</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
             <span class="n">bic</span> <span class="o">=</span> <span class="n">search</span><span class="o">.</span><span class="n">best_bics</span><span class="p">[</span><span class="n">last_bic</span><span class="p">]</span>
+            <span class="n">thresh</span> <span class="o">=</span> <span class="n">search</span><span class="o">.</span><span class="n">bic_threshes</span><span class="p">[</span><span class="n">last_bic</span><span class="p">]</span>
 
-            <span class="k">return</span> <span class="n">recovered</span><span class="p">,</span> <span class="n">recovered_orbel</span><span class="p">,</span> <span class="n">bic</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                <span class="n">counter</span><span class="o">.</span><span class="n">value</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">pbar</span><span class="o">.</span><span class="n">update_to</span><span class="p">(</span><span class="n">counter</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">recovered</span><span class="p">,</span> <span class="n">recovered_orbel</span><span class="p">,</span> <span class="n">bic</span><span class="p">,</span> <span class="n">thresh</span>
 
         <span class="n">outcols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;inj_period&#39;</span><span class="p">,</span> <span class="s1">&#39;inj_tp&#39;</span><span class="p">,</span> <span class="s1">&#39;inj_e&#39;</span><span class="p">,</span> <span class="s1">&#39;inj_w&#39;</span><span class="p">,</span> <span class="s1">&#39;inj_k&#39;</span><span class="p">,</span>
                    <span class="s1">&#39;rec_period&#39;</span><span class="p">,</span> <span class="s1">&#39;rec_tp&#39;</span><span class="p">,</span> <span class="s1">&#39;rec_e&#39;</span><span class="p">,</span> <span class="s1">&#39;rec_w&#39;</span><span class="p">,</span> <span class="s1">&#39;rec_k&#39;</span><span class="p">,</span>
@@ -264,22 +275,30 @@
                              <span class="n">columns</span><span class="o">=</span><span class="n">outcols</span><span class="p">)</span>
         <span class="n">outdf</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">injected_planets</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">injected_planets</span>
 
-        <span class="n">pool</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="n">num_cpus</span><span class="p">)</span>
-
         <span class="n">in_orbels</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">out_orbels</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">recs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">bics</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">threshes</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">injected_planets</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
             <span class="n">in_orbels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">values</span><span class="p">))</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="k">global</span> <span class="n">pbar</span>
+            <span class="k">global</span> <span class="n">counter</span>
+
+            <span class="n">counter</span> <span class="o">=</span> <span class="n">Value</span><span class="p">(</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">lock</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">pbar</span> <span class="o">=</span> <span class="n">TqdmUpTo</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">in_orbels</span><span class="p">),</span> <span class="n">position</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">pool</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="n">num_cpus</span><span class="p">)</span>
         <span class="n">outputs</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">_run_one</span><span class="p">,</span> <span class="n">in_orbels</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">:</span>
-            <span class="n">recovered</span><span class="p">,</span> <span class="n">recovered_orbel</span><span class="p">,</span> <span class="n">bic</span> <span class="o">=</span> <span class="n">out</span>
+            <span class="n">recovered</span><span class="p">,</span> <span class="n">recovered_orbel</span><span class="p">,</span> <span class="n">bic</span><span class="p">,</span> <span class="n">thresh</span> <span class="o">=</span> <span class="n">out</span>
             <span class="n">out_orbels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">recovered_orbel</span><span class="p">)</span>
             <span class="n">recs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">recovered</span><span class="p">)</span>
             <span class="n">bics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bic</span><span class="p">)</span>
+            <span class="n">threshes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">thresh</span><span class="p">)</span>
 
         <span class="n">out_orbels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">out_orbels</span><span class="p">)</span>
         <span class="n">outdf</span><span class="p">[</span><span class="s1">&#39;rec_period&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">out_orbels</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
@@ -290,6 +309,7 @@
 
         <span class="n">outdf</span><span class="p">[</span><span class="s1">&#39;recovered&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">recs</span>
         <span class="n">outdf</span><span class="p">[</span><span class="s1">&#39;bic&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bics</span>
+        <span class="n">outdf</span><span class="p">[</span><span class="s1">&#39;bic_thresh&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">threshes</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">recoveries</span> <span class="o">=</span> <span class="n">outdf</span>
 

@@ -1,6 +1,7 @@
-import pdb
+
 import numpy as np
 import pylab as pl
+import matplotlib
 from matplotlib import pyplot as pl
 from matplotlib import rcParams, gridspec
 from matplotlib.ticker import MaxNLocator, LogFormatterSciNotation, FuncFormatter
@@ -11,8 +12,6 @@ from radvel import plot
 from radvel.utils import t_to_phase, fastbin, sigfig
 
 import rvsearch.utils as utils
-# IMPORTANT: AT SOME POINT, REDEFINE AS CLASS INHERITING FROM RADVEL MULTIPLOT.
-
 
 class CustomTicker(LogFormatterSciNotation):
     def __call__(self, x, pos=None):
