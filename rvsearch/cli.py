@@ -72,6 +72,10 @@ def main():
     psr_search.add_argument('--mcmc', action='store_true',
                           help="Run MCMC after search [default=False]"
                           )
+    psr_search.add_argument('--mstar',
+                         type=float, action='store', default=None,
+                         help="Stellar mass [msun]. Value set in the 'stellar' dictionary in the setup file will be used first."
+                         )
 
 
     # Injections
@@ -121,10 +125,6 @@ def main():
                           choices=['recovery', 'summary'],
                           help="type of plot(s) to generate"
                           )
-    psr_plot.add_argument('--mstar',
-                         type=float, action='store', default=1.0,
-                         help="Stellar mass [msun]"
-                         )
     psr_plot.add_argument('--fmt',
                          type=str, action='store', default='pdf',
                          help="format to save plot [pdf]"

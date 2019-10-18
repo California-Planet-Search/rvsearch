@@ -4,6 +4,7 @@ These functions are meant to be used only with\
 the `cli.py` command line interface.
 """
 from __future__ import print_function
+import warnings
 import os
 import copy
 import pandas as pd
@@ -25,6 +26,11 @@ def run_search(args):
     conf_base = os.path.basename(config_file).split('.')[0]
 
     P, post = radvel.utils.initialize_posterior(config_file)
+    if args.mstar is None:
+        try:
+            args.mstar = P.stellar['mstar']
+        except (AttributeError, KeyError):
+            pass
 
     starname = P.starname + '_' + conf_base
     data = P.data
@@ -42,7 +48,8 @@ def run_search(args):
                                       post=post,
                                       trend=args.trend,
                                       verbose=args.verbose,
-                                      mcmc=args.mcmc)
+                                      mcmc=args.mcmc,
+                                      mstar=args.mstar)
     searcher.run_search(outdir=args.output_dir)
 
 
@@ -114,11 +121,11 @@ def plots(args):
                 ylabel = r'M$\sin{i_p}$ [M$_\oplus$]'
                 print("Plotting {} vs. {}".format(ycol, xcol))
 
-                mstar = args.mstar
+                mstar = searcher.mstar
 
                 comp = rvsearch.Completeness.from_csv(rfile, xcol=xcol,
                                                       ycol=ycol, mstar=mstar)
-                cplt = rvsearch.plots.CompletenessPlots(comp)
+                cplt = rvsearch.plots.CompletenessPlots(comp, searches=[searcher])
 
                 fig = cplt.completeness_plot(title=run_name,
                                              xlabel=xlabel,

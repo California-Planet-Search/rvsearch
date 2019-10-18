@@ -364,3 +364,97 @@ class Beta(Prior):
 
         return s
 '''
+
+
+def derive(synthchains, mstar, mstar_err=0.0):
+    """Derive physical parameters from posterior samples
+
+    Args:
+        synthchains (chains in the radvel synth basis): MCMC chains
+        mstar (float): stellar mass in solar units
+        mstar_err (float): (optional) uncertainty on stellar mass
+    """
+
+    try:
+        mstar = np.random.normal(
+            loc=P.stellar['mstar'], scale=P.stellar['mstar_err'],
+            size=len(chains)
+        )
+    except AttributeError:
+        print("Unable to calculate derived parameters, stellar parameters not defined the config file.")
+        return
+
+    if (mstar <= 0.0).any():
+        num_nan = np.sum(mstar <= 0.0)
+        nan_perc = float(num_nan) / len(chains)
+        mstar[mstar <= 0] = np.abs(mstar[mstar <= 0])
+        print("WARNING: {} ({:.2f} %) of Msini samples are NaN. The stellar mass posterior may contain negative \
+values. Interpret posterior with caution.".format(num_nan, nan_perc))
+
+    # Convert chains into synth basis
+    synthchains = chains.copy()
+    for par in post.params.keys():
+        if not post.params[par].vary:
+            synthchains[par] = post.params[par].value
+
+    synthchains = post.params.basis.to_synth(synthchains)
+
+    savestate = {'run': True}
+    outcols = []
+    for i in np.arange(1, P.nplanets + 1, 1):
+        # Grab parameters from the chain
+        def _has_col(key):
+            cols = list(synthchains.columns)
+            return cols.count('{}{}'.format(key, i)) == 1
+
+        def _get_param(key):
+            if _has_col(key):
+                return synthchains['{}{}'.format(key, i)]
+            else:
+                return P.params['{}{}'.format(key, i)].value
+
+        def _set_param(key, value):
+            chains['{}{}'.format(key, i)] = value
+
+        def _get_colname(key):
+            return '{}{}'.format(key, i)
+
+        per = _get_param('per')
+        k = _get_param('k')
+        e = _get_param('e')
+
+        mpsini = radvel.utils.Msini(k, per, mstar, e, Msini_units='earth')
+        _set_param('mpsini', mpsini)
+        outcols.append(_get_colname('mpsini'))
+
+        mtotal = mstar + (mpsini * c.M_earth.value) / c.M_sun.value  # get total star plus planet mass
+        a = radvel.utils.semi_major_axis(per, mtotal)  # changed from mstar to mtotal
+
+        _set_param('a', a)
+        outcols.append(_get_colname('a'))
+
+        musini = (mpsini * c.M_earth) / (mstar * c.M_sun)
+        _set_param('musini', musini)
+        outcols.append(_get_colname('musini'))
+
+        try:
+            rp = np.random.normal(
+                loc=P.planet['rp{}'.format(i)],
+                scale=P.planet['rp_err{}'.format(i)],
+                size=len(chains)
+            )
+
+            _set_param('rp', rp)
+            _set_param('rhop', radvel.utils.density(mpsini, rp))
+
+            outcols.append(_get_colname('rhop'))
+        except (AttributeError, KeyError):
+            pass
+
+    print("Derived parameters:", outcols)
+
+    csvfn = os.path.join(args.outputdir, conf_base + '_derived.csv.tar.bz2')
+    chains.to_csv(csvfn, columns=outcols, compression='bz2')
+    savestate['chainfile'] = os.path.relpath(csvfn)
+
+    save_status(statfile, 'derive', savestate)

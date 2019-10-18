@@ -34,6 +34,7 @@ class Search(object):
         polish (bool): Whether to create finer period grid after planet is found.
         verbose (bool):
         save_outputs (bool): Save output plots and files? [default = True]
+        mstar (float): (optional) stellar mass in solar units
 
     """
 
@@ -41,7 +42,7 @@ class Search(object):
                 priors=[], crit='bic', fap=0.001, min_per=3, max_per=10000,
                 manual_grid=None, oversampling=1., trend=False, linear=True,
                 eccentric=False, fix=False, polish=True, baseline=True,
-                mcmc=True, workers=1, verbose=True, save_outputs=True):
+                mcmc=True, workers=1, verbose=True, save_outputs=True, mstar=None):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
@@ -55,6 +56,7 @@ class Search(object):
 
         self.starname = starname
         self.linear   = linear
+        self.mstar = mstar
 
         if post == None:
             self.priors = priors
@@ -549,6 +551,10 @@ class Search(object):
                     self.post.uparams[par] = err
                     self.post.medparams[par] = med
                     self.post.maxparams[par] = max
+
+            # Uncertainties on derived parameters
+
+
 
             if self.save_outputs:
                 # Generate a corner plot, sans nuisance parameters.
