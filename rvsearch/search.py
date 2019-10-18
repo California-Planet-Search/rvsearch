@@ -34,7 +34,7 @@ class Search(object):
         polish (bool): Whether to create finer period grid after planet is found.
         verbose (bool):
         save_outputs (bool): Save output plots and files? [default = True]
-        mstar (float): (optional) stellar mass in solar units
+        mstar (tuple): (optional) stellar mass and uncertainty in solar units
 
     """
 
@@ -56,7 +56,8 @@ class Search(object):
 
         self.starname = starname
         self.linear   = linear
-        self.mstar = mstar
+        self.mstar = mstar[0]
+        self.mstar_err = mstar[1]
 
         if post == None:
             self.priors = priors
@@ -493,6 +494,11 @@ class Search(object):
                                  burnGR=1.03, maxGR=1.0075, minTz=2000,
                                  minsteps=10000, minpercent=33,
                                  thin=5, ensembles=nensembles)
+            # chains = radvel.mcmc(self.post, nwalkers=50, nrun=2500,
+            #                      burnGR=1.1, maxGR=1.03, minTz=1000,
+            #                      minsteps=250, minpercent=33,
+            #                      thin=5, ensembles=nensembles)
+
             # Convert chains to e, w basis.
             for par in self.post.params.keys():
                 if not self.post.params[par].vary:
@@ -552,8 +558,8 @@ class Search(object):
                     self.post.medparams[par] = med
                     self.post.maxparams[par] = max
 
-            # Uncertainties on derived parameters
-
+            # Add uncertainties on derived parameters
+            self.post = utils.derive(self.post, synthchains, self.mstar, self.mstar_err)
 
 
             if self.save_outputs:

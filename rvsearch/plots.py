@@ -486,25 +486,34 @@ class CompletenessPlots(object):
         ax.set_yscale('log')
 
         if self.comp.xcol == 'inj_au' and self.comp.ycol == 'inj_msini':
-            planets_x = []
-            planets_y = []
-            planets_errx = []
-            planets_erry = []
             for search in self.searches:
                 post = search.post
                 synthparams = post.params.basis.to_synth(post.params)
                 for i in range(search.num_planets):
-                    p = i+1
-                    per = synthparams['per{:d}'.format(p)].value
-                    k = synthparams['k{:d}'.format(p)].value
-                    e = synthparams['e{:d}'.format(p)].value
-                    print(k, per, search.mstar, e)
-                    msini = radvel.utils.Msini(k, per, search.mstar, e)
-                    a = radvel.utils.semi_major_axis(per, search.mstar)
-                    planets_x.append(a)
-                    planets_y.append(msini)
+                    p = i + 1
+                    if search.mcmc:
+                        msini = post.medparams['mpsini{:d}'.format(p)]
+                        msini_err1 = -post.uparams['mpsini{:d}_err1'.format(p)]
+                        msini_err2 = post.uparams['mpsini{:d}_err2'.format(p)]
+                        a = post.medparams['a{:d}'.format(p)]
+                        a_err1 = -post.uparams['a{:d}_err1'.format(p)]
+                        a_err2 = post.uparams['a{:d}_err2'.format(p)]
 
-            ax.plot(planets_x, planets_y, 'ko', ms=10)
+                        a_err = np.array([[a_err1, a_err2]]).transpose()
+                        msini_err = np.array([[msini_err1, msini_err2]]).transpose()
+
+                        ax.errorbar([a], [msini], xerr=a_err, yerr=msini_err, fmt='ko', ms=10)
+                    else:
+                        per = synthparams['per{:d}'.format(p)].value
+                        k = synthparams['k{:d}'.format(p)].value
+                        e = synthparams['e{:d}'.format(p)].value
+                        print(k, per, search.mstar, e)
+                        msini = radvel.utils.Msini(k, per, search.mstar, e)
+                        a = radvel.utils.semi_major_axis(per, search.mstar)
+                        planets_x.append(a)
+                        planets_y.append(msini)
+
+                        ax.plot(a, msini, 'ko', ms=10)
 
         else:
             warnings.warn('Overplotting detections not implemented for the current axis selection: x={}, y={}'.format(self.comp.xcol, self.comp.ycol))

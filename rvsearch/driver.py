@@ -26,11 +26,14 @@ def run_search(args):
     conf_base = os.path.basename(config_file).split('.')[0]
 
     P, post = radvel.utils.initialize_posterior(config_file)
+
     if args.mstar is None:
         try:
-            args.mstar = P.stellar['mstar']
+            args.mstar = (P.stellar['mstar'], P.stellar['mstar_err'])
         except (AttributeError, KeyError):
             pass
+    else:
+        args.mstar = [float(x) for x in args.mstar]
 
     starname = P.starname + '_' + conf_base
     data = P.data
@@ -133,7 +136,7 @@ def plots(args):
 
                 saveto = os.path.join(run_name+'_recoveries.{}'.format(args.fmt))
 
-                fig.savefig(saveto)
+                fig.savefig(saveto, dpi=200)
                 print("Recovery plot saved to {}".format(
                       os.path.abspath(saveto)))
 

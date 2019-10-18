@@ -73,8 +73,8 @@ def main():
                           help="Run MCMC after search [default=False]"
                           )
     psr_search.add_argument('--mstar',
-                         type=float, action='store', default=None,
-                         help="Stellar mass [msun]. Value set in the 'stellar' dictionary in the setup file will be used first."
+                         type=float, action='store', default=None, nargs=2,
+                         help="Stellar mass and uncertainty [msun]. Will use values defined in setup file if not provided on the command line."
                          )
 
 
