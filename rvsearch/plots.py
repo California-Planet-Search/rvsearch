@@ -507,11 +507,8 @@ class CompletenessPlots(object):
                         per = synthparams['per{:d}'.format(p)].value
                         k = synthparams['k{:d}'.format(p)].value
                         e = synthparams['e{:d}'.format(p)].value
-                        print(k, per, search.mstar, e)
                         msini = radvel.utils.Msini(k, per, search.mstar, e)
                         a = radvel.utils.semi_major_axis(per, search.mstar)
-                        planets_x.append(a)
-                        planets_y.append(msini)
 
                         ax.plot(a, msini, 'ko', ms=10)
 
