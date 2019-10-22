@@ -176,7 +176,8 @@ class Completeness(object):
         recoveries (DataFrame): DataFrame with injection/recovery tests from Injections.save
     """
 
-    def __init__(self, recoveries, xcol='inj_au', ycol='inj_msini', mstar=None):
+    def __init__(self, recoveries, xcol='inj_au', ycol='inj_msini',
+                 mstar=None, searches=None):
         """Object to handle a suite of injection/recovery tests
 
         Args:
@@ -189,6 +190,7 @@ class Completeness(object):
 
         """
         self.recoveries = recoveries
+        self.searches = searches
 
         if mstar is not None:
             self.mstar = np.zeros_like(self.recoveries['inj_period']) + mstar

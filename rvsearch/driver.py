@@ -4,6 +4,7 @@ These functions are meant to be used only with\
 the `cli.py` command line interface.
 """
 from __future__ import print_function
+import warnings
 import os
 import copy
 import pandas as pd
@@ -26,6 +27,14 @@ def run_search(args):
 
     P, post = radvel.utils.initialize_posterior(config_file)
 
+    if args.mstar is None:
+        try:
+            args.mstar = (P.stellar['mstar'], P.stellar['mstar_err'])
+        except (AttributeError, KeyError):
+            pass
+    else:
+        args.mstar = [float(x) for x in args.mstar]
+
     starname = P.starname + '_' + conf_base
     data = P.data
 
@@ -42,7 +51,8 @@ def run_search(args):
                                       post=post,
                                       trend=args.trend,
                                       verbose=args.verbose,
-                                      mcmc=args.mcmc)
+                                      mcmc=args.mcmc,
+                                      mstar=args.mstar)
     searcher.run_search(outdir=args.output_dir)
 
 
@@ -66,7 +76,7 @@ def injections(args):
             print("No search file found in {}".format(sdir))
             os._exit(1)
 
-        if not os.path.exists('recoveries.csv'):
+        if not os.path.exists('recoveries.csv') or args.overwrite:
             try:
                 inj = rvsearch.inject.Injections(sfile, plim, klim, elim,
                                                  num_sim=args.num_inject,
@@ -114,11 +124,11 @@ def plots(args):
                 ylabel = r'M$\sin{i_p}$ [M$_\oplus$]'
                 print("Plotting {} vs. {}".format(ycol, xcol))
 
-                mstar = args.mstar
+                mstar = searcher.mstar
 
                 comp = rvsearch.Completeness.from_csv(rfile, xcol=xcol,
                                                       ycol=ycol, mstar=mstar)
-                cplt = rvsearch.plots.CompletenessPlots(comp)
+                cplt = rvsearch.plots.CompletenessPlots(comp, searches=[searcher])
 
                 fig = cplt.completeness_plot(title=run_name,
                                              xlabel=xlabel,
@@ -126,7 +136,7 @@ def plots(args):
 
                 saveto = os.path.join(run_name+'_recoveries.{}'.format(args.fmt))
 
-                fig.savefig(saveto)
+                fig.savefig(saveto, dpi=200)
                 print("Recovery plot saved to {}".format(
                       os.path.abspath(saveto)))
 
