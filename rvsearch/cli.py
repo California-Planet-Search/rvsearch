@@ -72,6 +72,10 @@ def main():
     psr_search.add_argument('--mcmc', action='store_true',
                           help="Run MCMC after search [default=False]"
                           )
+    psr_search.add_argument('--mstar',
+                         type=float, action='store', default=None, nargs=2,
+                         help="Stellar mass and uncertainty [msun]. Will use values defined in setup file if not provided on the command line."
+                         )
 
 
     # Injections
@@ -97,8 +101,8 @@ def main():
                           help="Minimum injection eccentricity [default=0.0]"
                           )
     psr_inj.add_argument('--maxE',
-                          type=float, action='store', default=0.0,
-                          help="Maximum injection eccentricity [default=0.0]"
+                          type=float, action='store', default=0.9,
+                          help="Maximum injection eccentricity [default=0.9]"
                           )
 
     psr_inj.add_argument('--num_inject',
@@ -109,6 +113,11 @@ def main():
                           action='store_true',
                           help="Run search over full period grid [default=False]"
                           )
+    psr_inj.add_argument('--overwrite',
+                          action='store_true',
+                          help="Force overwrite [default=False]"
+                          )
+
 
 
     psr_search.set_defaults(func=rvsearch.driver.run_search)
@@ -121,10 +130,6 @@ def main():
                           choices=['recovery', 'summary'],
                           help="type of plot(s) to generate"
                           )
-    psr_plot.add_argument('--mstar',
-                         type=float, action='store', default=1.0,
-                         help="Stellar mass [msun]"
-                         )
     psr_plot.add_argument('--fmt',
                          type=str, action='store', default='pdf',
                          help="format to save plot [pdf]"
