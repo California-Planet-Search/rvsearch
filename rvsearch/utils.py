@@ -1,7 +1,7 @@
 """Utilities for loading data, checking for known planets, etc."""
 
 import numpy as np
-import scipy
+from astropy import constants as c
 import pandas as pd
 import radvel
 try:
@@ -364,3 +364,85 @@ class Beta(Prior):
 
         return s
 '''
+
+
+def derive(post, synthchains, mstar, mstar_err=0.0):
+    """Derive physical parameters from posterior samples
+
+    Args:
+        post (radvel.Posterior): RadVel posterior object
+        synthchains (DataFrame): MCMC chains in the RadVel synth basis
+        mstar (float): stellar mass in solar units
+        mstar_err (float): (optional) uncertainty on stellar mass
+    """
+
+    try:
+        mstar = np.random.normal(
+            loc=mstar, scale=mstar_err,
+            size=len(synthchains)
+        )
+    except AttributeError:
+        print("Unable to calculate derived parameters, stellar parameters not defined the config file.")
+        return
+
+    if (mstar <= 0.0).any():
+        num_nan = np.sum(mstar <= 0.0)
+        nan_perc = float(num_nan) / len(synthchains)
+        mstar[mstar <= 0] = np.abs(mstar[mstar <= 0])
+        print("WARNING: {} ({:.2f} %) of Msini samples are NaN. The stellar mass posterior may contain negative \
+values. Interpret posterior with caution.".format(num_nan, nan_perc))
+
+    outcols = []
+    for i in np.arange(1, post.params.num_planets + 1, 1):
+        # Grab parameters from the chain
+        def _has_col(key):
+            cols = list(synthchains.columns)
+            return cols.count('{}{}'.format(key, i)) == 1
+
+        def _get_param(key):
+            if _has_col(key):
+                return synthchains['{}{}'.format(key, i)]
+            else:
+                return post.params['{}{}'.format(key, i)].value
+
+        def _set_param(key, value):
+            synthchains['{}{}'.format(key, i)] = value
+
+        def _get_colname(key):
+            return '{}{}'.format(key, i)
+
+        per = _get_param('per')
+        k = _get_param('k')
+        e = _get_param('e')
+
+        mpsini = radvel.utils.Msini(k, per, mstar, e, Msini_units='earth')
+        _set_param('mpsini', mpsini)
+        outcols.append(_get_colname('mpsini'))
+        low, med, high = np.quantile(mpsini, [0.159, 0.5, 0.841])
+        post.medparams[_get_colname('mpsini')] = med
+        post.uparams[_get_colname('mpsini')+'_err1'] = low-med
+        post.uparams[_get_colname('mpsini')+'_err2'] = high-med
+
+        mtotal = mstar + (mpsini * c.M_earth.value) / c.M_sun.value  # get total star plus planet mass
+        a = radvel.utils.semi_major_axis(per, mtotal)  # changed from mstar to mtotal
+
+        _set_param('a', a)
+        outcols.append(_get_colname('a'))
+        low, med, high = np.quantile(a, [0.159, 0.5, 0.841])
+        post.medparams[_get_colname('a')] = med
+        post.uparams[_get_colname('a')+'_err1'] = low-med
+        post.uparams[_get_colname('a')+'_err2'] = high-med
+
+
+        musini = (mpsini * c.M_earth) / (mstar * c.M_sun)
+        _set_param('musini', musini)
+        outcols.append(_get_colname('musini'))
+        med, low, high = np.quantile(musini, [0.159, 0.5, 0.841])
+        post.medparams[_get_colname('musini')] = med
+        post.uparams[_get_colname('musini')+'_err1'] = low-med
+        post.uparams[_get_colname('musini')+'_err2'] = high-med
+
+
+    print("Derived parameters:", outcols)
+
+    return post

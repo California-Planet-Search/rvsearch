@@ -1,15 +1,13 @@
 
 import numpy as np
 import pylab as pl
-import matplotlib
+import warnings
 from matplotlib import pyplot as pl
 from matplotlib import rcParams, gridspec
 from matplotlib.ticker import MaxNLocator, LogFormatterSciNotation, FuncFormatter
-from astropy.time import Time
 
 import radvel
 from radvel import plot
-from radvel.utils import t_to_phase, fastbin, sigfig
 
 import rvsearch.utils as utils
 
@@ -443,11 +441,16 @@ class CompletenessPlots(object):
     Args:
         completeness (inject.Completeness): completeness object
         planets (numpy array): masses and semi-major axes for planets
+        searches (list): list of rvsearch.Search objects. If present, overplot planets detected in
+            all Search objects.
 
     """
-    def __init__(self, completeness, planets=None):
+    def __init__(self, completeness, searches=None):
         self.comp = completeness
-        self.planets = planets
+        if isinstance(searches, list):
+            self.searches = searches
+        else:
+            self.searches = [searches]
 
         self.xlim = (min(completeness.recoveries[completeness.xcol]),
                      max(completeness.recoveries[completeness.xcol]))
@@ -457,7 +460,8 @@ class CompletenessPlots(object):
 
         self.xgrid, self.ygrid, self.comp_array = completeness.completeness_grid(self.xlim, self.ylim)
 
-    def completeness_plot(self, title='', xlabel='', ylabel='', colorbar=True, hide_points=False):
+    def completeness_plot(self, title='', xlabel='', ylabel='',
+                          colorbar=True, hide_points=False):
         """Plot completeness contours
 
         Args:
@@ -481,10 +485,35 @@ class CompletenessPlots(object):
         ax.set_xscale('log')
         ax.set_yscale('log')
 
-        # If there are known planets, overplot them in mass/semi-major axis space.
-        if self.planets is not None:
-            ax.scatter(self.planets[:, 0], self.planets[:, 1], c='g',
-                       alpha=0.9, label='known')
+        if self.comp.xcol == 'inj_au' and self.comp.ycol == 'inj_msini':
+            for search in self.searches:
+                post = search.post
+                synthparams = post.params.basis.to_synth(post.params)
+                for i in range(search.num_planets):
+                    p = i + 1
+                    if search.mcmc:
+                        msini = post.medparams['mpsini{:d}'.format(p)]
+                        msini_err1 = -post.uparams['mpsini{:d}_err1'.format(p)]
+                        msini_err2 = post.uparams['mpsini{:d}_err2'.format(p)]
+                        a = post.medparams['a{:d}'.format(p)]
+                        a_err1 = -post.uparams['a{:d}_err1'.format(p)]
+                        a_err2 = post.uparams['a{:d}_err2'.format(p)]
+
+                        a_err = np.array([[a_err1, a_err2]]).transpose()
+                        msini_err = np.array([[msini_err1, msini_err2]]).transpose()
+
+                        ax.errorbar([a], [msini], xerr=a_err, yerr=msini_err, fmt='ko', ms=10)
+                    else:
+                        per = synthparams['per{:d}'.format(p)].value
+                        k = synthparams['k{:d}'.format(p)].value
+                        e = synthparams['e{:d}'.format(p)].value
+                        msini = radvel.utils.Msini(k, per, search.mstar, e)
+                        a = radvel.utils.semi_major_axis(per, search.mstar)
+
+                        ax.plot(a, msini, 'ko', ms=10)
+
+        else:
+            warnings.warn('Overplotting detections not implemented for the current axis selection: x={}, y={}'.format(self.comp.xcol, self.comp.ycol))
 
         xticks = pl.xticks()[0]
         pl.xticks(xticks, xticks)
