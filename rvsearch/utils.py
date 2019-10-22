@@ -134,7 +134,7 @@ def initialize_post(data, params=None, priors=[], linear=True, decorrs=None):
                 OffsetPrior = radvel.prior.UserDefinedPrior(['gamma_j', 'gamma_k'],
                                                             GaussianDiffFunc,
                                                             TexStr)
-            priors.append(OffsetPrior)
+                priors.append(OffsetPrior)
         #for inst in telgrps.keys():
         #    priors.append(radvel.prior.Jeffrey('jit_'+inst, 0.05, 20.0))
     post.priors = priors
