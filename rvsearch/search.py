@@ -56,8 +56,12 @@ class Search(object):
 
         self.starname = starname
         self.linear   = linear
-        self.mstar = mstar[0]
-        self.mstar_err = mstar[1]
+        if mstar is not None:
+            self.mstar     = mstar[0]
+            self.mstar_err = mstar[1]
+        else:
+            self.mstar     = None
+            self.mstar_err = None
 
         if post == None:
             self.priors = priors
@@ -558,9 +562,10 @@ class Search(object):
                     self.post.medparams[par] = med
                     self.post.maxparams[par] = max
 
-            # Add uncertainties on derived parameters
-            self.post = utils.derive(self.post, synthchains, self.mstar, self.mstar_err)
-
+            # Add uncertainties on derived parameters, if mass is provided.
+            if self.mstar is not None:
+                self.post = utils.derive(self.post, synthchains,
+                                         self.mstar, self.mstar_err)
 
             if self.save_outputs:
                 # Generate a corner plot, sans nuisance parameters.
