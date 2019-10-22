@@ -35,7 +35,8 @@ def run_search(args):
     else:
         args.mstar = [float(x) for x in args.mstar]
 
-    starname = P.starname + '_' + conf_base
+    #starname = P.starname + '_' + conf_base
+    starname = conf_base
     data = P.data
 
     if args.known and P.nplanets > 0:
