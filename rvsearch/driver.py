@@ -41,8 +41,10 @@ def run_search(args):
 
     if args.known and P.nplanets > 0:
         ipost = copy.deepcopy(post)
-        post = radvel.fitting.maxlike_fitting(post, verbose=True)
         post.params['dvdt'].vary = args.trend
+        if not args.trend:
+            post.params['dvdt'].value = 0.0
+        post = radvel.fitting.maxlike_fitting(post, verbose=True)
     else:
         post = None
 
