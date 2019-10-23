@@ -65,9 +65,8 @@ def main():
                           help="Number of test frequencies"
                           )
     psr_search.add_argument('--trend',
-                          action='store',
+                          action='store_true',
                           help="Trend free during periodogram calculation [default=False]",
-                          default=0, type=int
                           )
     psr_search.add_argument('--mcmc', action='store_true',
                           help="Run MCMC after search [default=False]"
@@ -140,14 +139,6 @@ def main():
 
 
     args = psr.parse_args()
-
-    try:
-        if args.trend not in [0, 1]:
-            raise Exception("Trend flag must be 0 or 1")
-        else:
-            args.trend = bool(args.trend)
-    except AttributeError:
-        pass
 
     args.func(args)
 
