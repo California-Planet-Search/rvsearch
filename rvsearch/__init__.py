@@ -7,6 +7,6 @@ from .search import *
 from .plots import *
 from .inject import *
 
-__version__ = '0.3.0'
+__version__ = '0.3.1'
 
 DATADIR = os.path.join(sys.prefix, 'rvsearch_example_data')
