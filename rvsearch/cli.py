@@ -141,10 +141,13 @@ def main():
 
     args = psr.parse_args()
 
-    if args.trend not in [0, 1]:
-        raise Exception("Trend flag must be 0 or 1")
-    else:
-        args.trend = bool(args.trend)
+    try:
+        if args.trend not in [0, 1]:
+            raise Exception("Trend flag must be 0 or 1")
+        else:
+            args.trend = bool(args.trend)
+    except AttributeError:
+        pass
 
     args.func(args)
 
