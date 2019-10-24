@@ -370,6 +370,49 @@ class Search(object):
         """
         self.post.writeto(filename)
 
+    def running_per(self):
+        runpost = copy.deepcopy(self.post)
+        runbic = runpost.likelihood.bic()
+        nobs = len(runpost.likelihood.x)
+
+        # Sort times, RVs, and RV errors chronologically.
+        indices = np.argsort(runpost.likelihood.x)
+        runpost.likelihood.x      = runpost.likelihood.x[indices]
+        runpost.likelihood.y      = runpost.likelihood.y[indices]
+        runpost.likelihood.yerr   = runpost.likelihood.yerr[indices]
+        runpost.likelihood.telvec = runpost.likelihood.telvec[indices]
+
+        for n in np.arange(1, self.num_planets+1):
+            runpost.params['k{}'.format(n)].vary      = False
+            runpost.params['tc{}'.format(n)].vary     = False
+            runpost.params['per{}'.format(n)].vary    = False
+            runpost.params['sesinw{}'.format(n)].vary = False
+            runpost.params['secosw{}'.format(n)].vary = False
+        for tel in tels:
+            runpost.params['jit_{}'.format(tel)].vary     = False
+            runpost.params['gamma_{}'.format(tel)].vary   = False
+            runpost.params['gamma_{}'.format(tel)].linear = False
+        # Instantiate a list to populate with running periodograms.
+        runners = []
+        # Iterate over the planets/signals.
+        for n in np.arange(1, self.num_planets+1):
+            runner = []
+
+            for i in np.arange(6, nobs+1):
+                runposty = copy.deepcopy(runpost)
+                runposty.params['k{}'.format(n)].vary  = True
+                runposty.params['tc{}'.format(n)].vary = True
+
+                runposty.likelihood.x      = runpost.likelihood.x[:i]
+                runposty.likelihood.y      = runpost.likelihood.y[:i]
+                runposty.likelihood.yerr   = runpost.likelihood.yerr[:i]
+                runposty.likelihood.telvec = runpost.likelihood.telvec[:i]
+
+                runposty = radvel.fitting.maxlike_fitting(runposty, verbose=False)
+                runner.append(runposty.likelihood.bic())
+            runners.append(runner - runner[0])
+        self.runners = runners
+
     def run_search(self, fixed_threshold=None, outdir=None, mkoutdir=True):
         """Run an iterative search for planets not given in posterior.
 
