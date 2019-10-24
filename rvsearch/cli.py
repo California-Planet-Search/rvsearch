@@ -80,7 +80,7 @@ def main():
     # Injections
     psr_inj = subpsr.add_parser('inject', parents=[psr_parent], )
     psr_inj.add_argument('--minP',
-                          type=float, action='store', default=1.2,
+                          type=float, action='store', default=3.1,
                           help="Minimum injection period [default=1.2]"
                           )
     psr_inj.add_argument('--maxP',
@@ -105,8 +105,8 @@ def main():
                           )
 
     psr_inj.add_argument('--num_inject',
-                          type=int, action='store', default=100,
-                          help="Number of injections [default=100]"
+                          type=int, action='store', default=3000,
+                          help="Number of injections [default=3000]"
                           )
     psr_inj.add_argument('--full_grid',
                           action='store_true',
