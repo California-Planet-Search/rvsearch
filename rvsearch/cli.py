@@ -75,6 +75,10 @@ def main():
                          type=float, action='store', default=None, nargs=2,
                          help="Stellar mass and uncertainty [msun]. Will use values defined in setup file if not provided on the command line."
                          )
+    psr_search.add_argument('--maxplanets',
+                         type=int, action='store', default=8,
+                         help="Maximum number of planets to search for (including pre-defined planets) [default=8]"
+                         )
 
 
     # Injections
