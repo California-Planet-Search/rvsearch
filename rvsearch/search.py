@@ -8,6 +8,9 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as pl
 import corner
+#from astroML.time_series import \
+#    lomb_scargle, lomb_scargle_BIC, lomb_scargle_bootstrap
+from astropy.timeseries import LombScargle
 import radvel
 import radvel.fitting
 from radvel.plot import orbit_plots
@@ -132,12 +135,11 @@ class Search(object):
         """Perform zero-planet baseline fit, test for significant trend.
 
         """
-
         post1 = copy.deepcopy(self.post)
         # Fix all Keplerian parameters. K is zero, equivalent to no planet.
-        post1.params['per1'].vary = False
-        post1.params['tc1'].vary  = False
-        post1.params['k1'].vary   = False
+        post1.params['k1'].vary      = False
+        post1.params['tc1'].vary     = False
+        post1.params['per1'].vary    = False
         post1.params['secosw1'].vary = False
         post1.params['sesinw1'].vary = False
         post1 = radvel.fitting.maxlike_fitting(post1, verbose=False)
@@ -348,22 +350,6 @@ class Search(object):
                 self.post.params['secosw{}'.format(n)].vary = False
                 self.post.params['sesinw{}'.format(n)].vary = False
 
-    def add_gp(self, inst=None):
-        """Add a gaussian process to the posterior (NOT IN USE).
-
-        """
-        pass
-
-    def sub_gp(self, num_gps=1):
-        """Remove a gaussian process from the posterior (NOT IN USE).
-
-        """
-        try:
-            pass
-        except:
-            raise RuntimeError('Model contains fewer than {} Gaussian \
-                                processes.'.format(num_gps))
-
     def save(self, filename='post_final.pkl'):
         """Pickle current posterior.
 
@@ -371,46 +357,48 @@ class Search(object):
         self.post.writeto(filename)
 
     def running_per(self):
-        runpost = copy.deepcopy(self.post)
-        runbic = runpost.likelihood.bic()
-        nobs = len(runpost.likelihood.x)
+        """Generate running BIC periodograms for each planet/signal.
 
+        """
+        nobs = len(self.post.likelihood.x)
         # Sort times, RVs, and RV errors chronologically.
-        indices = np.argsort(runpost.likelihood.x)
-        runpost.likelihood.x      = runpost.likelihood.x[indices]
-        runpost.likelihood.y      = runpost.likelihood.y[indices]
-        runpost.likelihood.yerr   = runpost.likelihood.yerr[indices]
-        runpost.likelihood.telvec = runpost.likelihood.telvec[indices]
+        indices = np.argsort(self.post.likelihood.x)
+        x    = self.post.likelihood.x[indices]
+        y    = self.post.likelihood.y[indices]
+        yerr = self.post.likelihood.yerr[indices]
+        tels = self.post.likelihood.telvec[indices]
 
-        for n in np.arange(1, self.num_planets+1):
-            runpost.params['k{}'.format(n)].vary      = False
-            runpost.params['tc{}'.format(n)].vary     = False
-            runpost.params['per{}'.format(n)].vary    = False
-            runpost.params['sesinw{}'.format(n)].vary = False
-            runpost.params['secosw{}'.format(n)].vary = False
-        for tel in tels:
-            runpost.params['jit_{}'.format(tel)].vary     = False
-            runpost.params['gamma_{}'.format(tel)].vary   = False
-            runpost.params['gamma_{}'.format(tel)].linear = False
+        # Subtract off gammas and trend terms.
+        for tel in self.tels:
+            y[np.where(tels == tel)] -= self.post.params['gamma_{}'.format(tel)].value
+
+        if self.post.params['dvdt'].vary == True:
+            y -= self.post.params['dvdt'].value * (x - self.post.likelihood.model.time_base)
+
+        if self.post.params['curv'].vary == True:
+            y -= self.post.params['curv'].value * (x - self.post.likelihood.model.time_base)**2
+
         # Instantiate a list to populate with running periodograms.
         runners = []
         # Iterate over the planets/signals.
         for n in np.arange(1, self.num_planets+1):
             runner = []
+            planets = np.arange(1, self.num_planets+1)
+            yres = y
+            for p in planets[planets != n]:
+                orbel = [self.post.params['per{}'.format(p)].value,
+                         self.post.params['tp{}'.format(p)].value,
+                         self.post.params['e{}'.format(p)].value,
+                         self.post.params['w{}'.format(p)].value,
+                         self.post.params['k{}'.format(p)].value]
+                yres -= radvel.kepler.rv_drive(x, orbel)
 
-            for i in np.arange(6, nobs+1):
-                runposty = copy.deepcopy(runpost)
-                runposty.params['k{}'.format(n)].vary  = True
-                runposty.params['tc{}'.format(n)].vary = True
+            for i in np.arange(12, nobs+1):
+                freq  = 1. / self.post.params['per{}'.format(n)].value
+                runner.append(LombScargle(x[:i], yres[:i], yerr[:i],
+                              normalization='psd').power(freq))
 
-                runposty.likelihood.x      = runpost.likelihood.x[:i]
-                runposty.likelihood.y      = runpost.likelihood.y[:i]
-                runposty.likelihood.yerr   = runpost.likelihood.yerr[:i]
-                runposty.likelihood.telvec = runpost.likelihood.telvec[:i]
-
-                runposty = radvel.fitting.maxlike_fitting(runposty, verbose=False)
-                runner.append(runposty.likelihood.bic())
-            runners.append(runner - runner[0])
+            runners.append(runner)
         self.runners = runners
 
     def run_search(self, fixed_threshold=None, outdir=None, mkoutdir=True):
@@ -473,7 +461,7 @@ class Search(object):
                 for k in self.post.params.keys():
                     self.post.params[k].value = perioder.bestfit_params[k]
 
-                # 8/23/19: Generalizing tc reset to each new find.
+                # Generalize tc reset to each new discovery.
                 tckey = 'tc{}'.format(self.num_planets)
                 if self.post.params[tckey].value < np.amin(self.data.time):
                     self.post.params[tckey].value = np.median(self.data.time)
@@ -520,6 +508,9 @@ class Search(object):
                 multiplot_fig, ax_list = rvplot.plot_multipanel()
                 multiplot_fig.savefig(outdir+'/orbit_plot{}.pdf'.format(
                                                         self.num_planets))
+
+        # Generate running periodograms.
+        self.running_per()
 
         # Run MCMC on final posterior, save new parameters and uncertainties.
         if self.mcmc == True and (self.num_planets != 0 or
