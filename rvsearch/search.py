@@ -548,7 +548,7 @@ class Search(object):
 
             # Compress, thin, and save chain, in fitting basis.
             csvfn = outdir + '/chains.csv.tar.bz2'
-            chains.to_csv(csvfn, compression='bz2')
+            synthchains.to_csv(csvfn, compression='bz2')
 
             # Retrieve e and w medians & uncertainties from synthetic chains.
             for n in np.arange(1, self.num_planets+1):
