@@ -48,6 +48,8 @@ def run_search(args):
     else:
         post = None
 
+    max_planets = args.maxplanets
+
     searcher = rvsearch.search.Search(data, starname=starname,
                                       min_per=args.minP,
                                       workers=args.num_cpus,
@@ -55,7 +57,8 @@ def run_search(args):
                                       trend=args.trend,
                                       verbose=args.verbose,
                                       mcmc=args.mcmc,
-                                      mstar=args.mstar)
+                                      mstar=args.mstar,
+                                      max_planets=max_planets)
     searcher.run_search(outdir=args.output_dir)
 
 

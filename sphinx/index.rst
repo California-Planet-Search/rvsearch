@@ -44,6 +44,26 @@ Check out the features available in the command-line-interface:
     subcommands:
       {find,inject,plot}
 
+Basic command-line-interface order of operations:
+
+.. code-block:: bash
+
+    # Run a search from scratch
+    # add the --known flag to skip searching for planets defined in the setup file
+    $ rvsearch find -s path-to-setup-file
+
+    # plot the results of the search
+    $ rvsearch plot -t summary -d path-to-output-directory-from-search
+
+    # plot the results of the search
+    $ rvsearch plot -t summary -d path-to-output-directory-from-search
+
+    # run injection-recovery tests to measure your sensitivity to additional planets
+    $ rvsearch inject -d path-to-output-directory-from-search
+
+    # plot the results of the injection-recovery tests
+    $ rvsearch plot -t recovery -d path-to-output-directory-from-search
+
 
 Contents:
 

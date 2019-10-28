@@ -485,7 +485,7 @@ class CompletenessPlots(object):
         ax.set_xscale('log')
         ax.set_yscale('log')
 
-        if self.comp.xcol == 'inj_au' and self.comp.ycol == 'inj_msini':
+        if self.comp.xcol == 'inj_au' and self.comp.ycol == 'inj_msini' and self.searches[0] is not None:
             for search in self.searches:
                 post = search.post
                 synthparams = post.params.basis.to_synth(post.params)

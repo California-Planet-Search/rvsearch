@@ -21,7 +21,8 @@ setup(
         (
             'rvsearch_example_data',
             [
-                'example_data/HD128311.csv'
+                'example_data/HD128311.csv',
+                'example_data/recoveries.csv'
             ]
         )
     ],
