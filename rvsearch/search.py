@@ -40,7 +40,6 @@ class Search(object):
         mstar (tuple): (optional) stellar mass and uncertainty in solar units
 
     """
-
     def __init__(self, data, post=None, starname='star', max_planets=8,
                 priors=[], crit='bic', fap=0.001, min_per=3, max_per=10000,
                 manual_grid=None, oversampling=1., trend=False, linear=True,
@@ -367,50 +366,6 @@ class Search(object):
         y    = self.post.likelihood.y[indices]
         yerr = self.post.likelihood.yerr[indices]
         tels = self.post.likelihood.telvec[indices]
-
-        # Full DBIC option.
-        runpost   = copy.deepcopy(self.post)
-        runpost.likelihood.x      = x
-        runpost.likelihood.y      = y
-        runpost.likelihood.yerr   = yerr
-        runpost.likelihood.telvec = tels
-
-        runparams = copy.deepcopy(runpost.params)
-        #runbic    = self.post.likelihood.bic()
-
-        for n in np.arange(1, self.num_planets+1):
-            runner = []
-
-            runposty = copy.deepcopy(runpost)
-            runbase =
-            # Subtract off models of other planets.
-            yres = y
-            planets = np.arange(1, self.num_planets+1)
-            for p in planets[planets != n]:
-                '''
-                orbel = [self.post.params['per{}'.format(p)].value,
-                         self.post.params['tp{}'.format(p)].value,
-                         self.post.params['e{}'.format(p)].value,
-                         self.post.params['w{}'.format(p)].value,
-                         self.post.params['k{}'.format(p)].value]
-                runposty.likelihood.y -= radvel.kepler.rv_drive(x, orbel)
-                '''
-                runposty.params['per{}'.format(n)].vary    = False
-                runposty.params['k{}'.format(n)].vary      = False
-                runposty.params['tc{}'.format(n)].vary     = False
-                runposty.params['secosw{}'.format(n)].vary = False
-                runposty.params['sesinw{}'.format(n)].vary = False
-
-            for i in np.arange(20, nobs+1):
-                runposty.likelihood.x      = x[:i]
-                runposty.likelihood.y      = y[:i]
-                runposty.likelihood.yerr   = yerr[:i]
-                runposty.likelihood.telvec = tels[:i]
-
-                # Reset parameter values and locks.
-                runposty.params = runparams
-
-        '''
         # Generalized Lomb-Scargle version; functional, but seems iffy.
         # Subtract off gammas and trend terms.
         for tel in self.tels:
@@ -428,7 +383,7 @@ class Search(object):
         for n in np.arange(1, self.num_planets+1):
             runner = []
             planets = np.arange(1, self.num_planets+1)
-            yres = y
+            yres = copy.deepcopy(y)
             for p in planets[planets != n]:
                 orbel = [self.post.params['per{}'.format(p)].value,
                          self.post.params['tp{}'.format(p)].value,
@@ -444,7 +399,6 @@ class Search(object):
 
             runners.append(runner)
         self.runners = runners
-        '''
 
     def run_search(self, fixed_threshold=None, outdir=None, mkoutdir=True):
         """Run an iterative search for planets not given in posterior.
@@ -555,7 +509,7 @@ class Search(object):
                                                         self.num_planets))
 
         # Generate running periodograms.
-        # self.running_per()
+        self.running_per()
 
         # Run MCMC on final posterior, save new parameters and uncertainties.
         if self.mcmc == True and (self.num_planets != 0 or
