@@ -555,7 +555,7 @@ class Search(object):
                                                         self.num_planets))
 
         # Generate running periodograms.
-        self.running_per()
+        # self.running_per()
 
         # Run MCMC on final posterior, save new parameters and uncertainties.
         if self.mcmc == True and (self.num_planets != 0 or
