@@ -368,6 +368,50 @@ class Search(object):
         yerr = self.post.likelihood.yerr[indices]
         tels = self.post.likelihood.telvec[indices]
 
+        # Full DBIC option.
+        runpost   = copy.deepcopy(self.post)
+        runpost.likelihood.x      = x
+        runpost.likelihood.y      = y
+        runpost.likelihood.yerr   = yerr
+        runpost.likelihood.telvec = tels
+
+        runparams = copy.deepcopy(runpost.params)
+        #runbic    = self.post.likelihood.bic()
+
+        for n in np.arange(1, self.num_planets+1):
+            runner = []
+
+            runposty = copy.deepcopy(runpost)
+            runbase =
+            # Subtract off models of other planets.
+            yres = y
+            planets = np.arange(1, self.num_planets+1)
+            for p in planets[planets != n]:
+                '''
+                orbel = [self.post.params['per{}'.format(p)].value,
+                         self.post.params['tp{}'.format(p)].value,
+                         self.post.params['e{}'.format(p)].value,
+                         self.post.params['w{}'.format(p)].value,
+                         self.post.params['k{}'.format(p)].value]
+                runposty.likelihood.y -= radvel.kepler.rv_drive(x, orbel)
+                '''
+                runposty.params['per{}'.format(n)].vary    = False
+                runposty.params['k{}'.format(n)].vary      = False
+                runposty.params['tc{}'.format(n)].vary     = False
+                runposty.params['secosw{}'.format(n)].vary = False
+                runposty.params['sesinw{}'.format(n)].vary = False
+
+            for i in np.arange(20, nobs+1):
+                runposty.likelihood.x      = x[:i]
+                runposty.likelihood.y      = y[:i]
+                runposty.likelihood.yerr   = yerr[:i]
+                runposty.likelihood.telvec = tels[:i]
+
+                # Reset parameter values and locks.
+                runposty.params = runparams
+
+        '''
+        # Generalized Lomb-Scargle version; functional, but seems iffy.
         # Subtract off gammas and trend terms.
         for tel in self.tels:
             y[np.where(tels == tel)] -= self.post.params['gamma_{}'.format(tel)].value
@@ -400,6 +444,7 @@ class Search(object):
 
             runners.append(runner)
         self.runners = runners
+        '''
 
     def run_search(self, fixed_threshold=None, outdir=None, mkoutdir=True):
         """Run an iterative search for planets not given in posterior.
