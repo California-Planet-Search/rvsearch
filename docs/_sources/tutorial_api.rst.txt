@@ -10,3 +10,4 @@ and methods of the `rvsearch` package.
    :maxdepth: 2
 
    tutorials/128311_Search.ipynb
+   tutorials/Completeness_Contours.ipynb

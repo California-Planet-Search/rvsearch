@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rvsearch.plots &mdash; rvsearch 0.1.2 documentation</title>
+  <title>rvsearch.plots &mdash; rvsearch 0.3.2 documentation</title>
   
 
   
@@ -58,7 +58,7 @@
             
             
               <div class="version">
-                0.1
+                0.3
               </div>
             
           
@@ -151,15 +151,13 @@
 <span></span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">pl</span>
-<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="k">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">pl</span>
 <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="k">import</span> <span class="n">rcParams</span><span class="p">,</span> <span class="n">gridspec</span>
 <span class="kn">from</span> <span class="nn">matplotlib.ticker</span> <span class="k">import</span> <span class="n">MaxNLocator</span><span class="p">,</span> <span class="n">LogFormatterSciNotation</span><span class="p">,</span> <span class="n">FuncFormatter</span>
-<span class="kn">from</span> <span class="nn">astropy.time</span> <span class="k">import</span> <span class="n">Time</span>
 
 <span class="kn">import</span> <span class="nn">radvel</span>
 <span class="kn">from</span> <span class="nn">radvel</span> <span class="k">import</span> <span class="n">plot</span>
-<span class="kn">from</span> <span class="nn">radvel.utils</span> <span class="k">import</span> <span class="n">t_to_phase</span><span class="p">,</span> <span class="n">fastbin</span><span class="p">,</span> <span class="n">sigfig</span>
 
 <span class="kn">import</span> <span class="nn">rvsearch.utils</span> <span class="k">as</span> <span class="nn">utils</span>
 
@@ -592,10 +590,17 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        completeness (inject.Completeness): completeness object</span>
+<span class="sd">        planets (numpy array): masses and semi-major axes for planets</span>
+<span class="sd">        searches (list): list of rvsearch.Search objects. If present, overplot planets detected in</span>
+<span class="sd">            all Search objects.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="CompletenessPlots.__init__"><a class="viewcode-back" href="../../plots.html#rvsearch.plots.CompletenessPlots.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">completeness</span><span class="p">):</span>
+<div class="viewcode-block" id="CompletenessPlots.__init__"><a class="viewcode-back" href="../../plots.html#rvsearch.plots.CompletenessPlots.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">completeness</span><span class="p">,</span> <span class="n">searches</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">comp</span> <span class="o">=</span> <span class="n">completeness</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">searches</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">searches</span> <span class="o">=</span> <span class="n">searches</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">searches</span> <span class="o">=</span> <span class="p">[</span><span class="n">searches</span><span class="p">]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">xlim</span> <span class="o">=</span> <span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">completeness</span><span class="o">.</span><span class="n">recoveries</span><span class="p">[</span><span class="n">completeness</span><span class="o">.</span><span class="n">xcol</span><span class="p">]),</span>
                      <span class="nb">max</span><span class="p">(</span><span class="n">completeness</span><span class="o">.</span><span class="n">recoveries</span><span class="p">[</span><span class="n">completeness</span><span class="o">.</span><span class="n">xcol</span><span class="p">]))</span>
@@ -605,7 +610,8 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">xgrid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ygrid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_array</span> <span class="o">=</span> <span class="n">completeness</span><span class="o">.</span><span class="n">completeness_grid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xlim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ylim</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CompletenessPlots.completeness_plot"><a class="viewcode-back" href="../../plots.html#rvsearch.plots.CompletenessPlots.completeness_plot">[docs]</a>    <span class="k">def</span> <span class="nf">completeness_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">colorbar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">hide_points</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="CompletenessPlots.completeness_plot"><a class="viewcode-back" href="../../plots.html#rvsearch.plots.CompletenessPlots.completeness_plot">[docs]</a>    <span class="k">def</span> <span class="nf">completeness_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                          <span class="n">colorbar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">hide_points</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Plot completeness contours</span>
 
 <span class="sd">        Args:</span>
@@ -628,6 +634,36 @@
         <span class="n">ax</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp</span><span class="o">.</span><span class="n">xcol</span> <span class="o">==</span> <span class="s1">&#39;inj_au&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp</span><span class="o">.</span><span class="n">ycol</span> <span class="o">==</span> <span class="s1">&#39;inj_msini&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">searches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">search</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">searches</span><span class="p">:</span>
+                <span class="n">post</span> <span class="o">=</span> <span class="n">search</span><span class="o">.</span><span class="n">post</span>
+                <span class="n">synthparams</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">basis</span><span class="o">.</span><span class="n">to_synth</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">search</span><span class="o">.</span><span class="n">num_planets</span><span class="p">):</span>
+                    <span class="n">p</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+                    <span class="k">if</span> <span class="n">search</span><span class="o">.</span><span class="n">mcmc</span><span class="p">:</span>
+                        <span class="n">msini</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">medparams</span><span class="p">[</span><span class="s1">&#39;mpsini</span><span class="si">{:d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">p</span><span class="p">)]</span>
+                        <span class="n">msini_err1</span> <span class="o">=</span> <span class="o">-</span><span class="n">post</span><span class="o">.</span><span class="n">uparams</span><span class="p">[</span><span class="s1">&#39;mpsini</span><span class="si">{:d}</span><span class="s1">_err1&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">p</span><span class="p">)]</span>
+                        <span class="n">msini_err2</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">uparams</span><span class="p">[</span><span class="s1">&#39;mpsini</span><span class="si">{:d}</span><span class="s1">_err2&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">p</span><span class="p">)]</span>
+                        <span class="n">a</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">medparams</span><span class="p">[</span><span class="s1">&#39;a</span><span class="si">{:d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">p</span><span class="p">)]</span>
+                        <span class="n">a_err1</span> <span class="o">=</span> <span class="o">-</span><span class="n">post</span><span class="o">.</span><span class="n">uparams</span><span class="p">[</span><span class="s1">&#39;a</span><span class="si">{:d}</span><span class="s1">_err1&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">p</span><span class="p">)]</span>
+                        <span class="n">a_err2</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">uparams</span><span class="p">[</span><span class="s1">&#39;a</span><span class="si">{:d}</span><span class="s1">_err2&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">p</span><span class="p">)]</span>
+
+                        <span class="n">a_err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">a_err1</span><span class="p">,</span> <span class="n">a_err2</span><span class="p">]])</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+                        <span class="n">msini_err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">msini_err1</span><span class="p">,</span> <span class="n">msini_err2</span><span class="p">]])</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+
+                        <span class="n">ax</span><span class="o">.</span><span class="n">errorbar</span><span class="p">([</span><span class="n">a</span><span class="p">],</span> <span class="p">[</span><span class="n">msini</span><span class="p">],</span> <span class="n">xerr</span><span class="o">=</span><span class="n">a_err</span><span class="p">,</span> <span class="n">yerr</span><span class="o">=</span><span class="n">msini_err</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;ko&#39;</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">per</span> <span class="o">=</span> <span class="n">synthparams</span><span class="p">[</span><span class="s1">&#39;per</span><span class="si">{:d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">p</span><span class="p">)]</span><span class="o">.</span><span class="n">value</span>
+                        <span class="n">k</span> <span class="o">=</span> <span class="n">synthparams</span><span class="p">[</span><span class="s1">&#39;k</span><span class="si">{:d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">p</span><span class="p">)]</span><span class="o">.</span><span class="n">value</span>
+                        <span class="n">e</span> <span class="o">=</span> <span class="n">synthparams</span><span class="p">[</span><span class="s1">&#39;e</span><span class="si">{:d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">p</span><span class="p">)]</span><span class="o">.</span><span class="n">value</span>
+                        <span class="n">msini</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">Msini</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">per</span><span class="p">,</span> <span class="n">search</span><span class="o">.</span><span class="n">mstar</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                        <span class="n">a</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">semi_major_axis</span><span class="p">(</span><span class="n">per</span><span class="p">,</span> <span class="n">search</span><span class="o">.</span><span class="n">mstar</span><span class="p">)</span>
+
+                        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">msini</span><span class="p">,</span> <span class="s1">&#39;ko&#39;</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Overplotting detections not implemented for the current axis selection: x=</span><span class="si">{}</span><span class="s1">, y=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp</span><span class="o">.</span><span class="n">xcol</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp</span><span class="o">.</span><span class="n">ycol</span><span class="p">))</span>
 
         <span class="n">xticks</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">xticks</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">pl</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">xticks</span><span class="p">,</span> <span class="n">xticks</span><span class="p">)</span>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Blind Search &mdash; rvsearch 0.1.2 documentation</title>
+  <title>Blind Search &mdash; rvsearch 0.3.2 documentation</title>
   
 
   
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                0.1
+                0.3
               </div>
             
           
@@ -189,31 +189,36 @@
 <span class="target" id="module-rvsearch.search"></span><p>Search class</p>
 <dl class="class">
 <dt id="rvsearch.search.Search">
-<em class="property">class </em><code class="descclassname">rvsearch.search.</code><code class="descname">Search</code><span class="sig-paren">(</span><em>data</em>, <em>post=None</em>, <em>starname='star'</em>, <em>max_planets=8</em>, <em>priors=[]</em>, <em>crit='bic'</em>, <em>fap=0.001</em>, <em>min_per=3</em>, <em>manual_grid=None</em>, <em>oversampling=1.0</em>, <em>trend=False</em>, <em>fix=False</em>, <em>polish=True</em>, <em>mcmc=True</em>, <em>workers=1</em>, <em>verbose=True</em>, <em>save_outputs=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">rvsearch.search.</code><code class="descname">Search</code><span class="sig-paren">(</span><em>data</em>, <em>post=None</em>, <em>starname='star'</em>, <em>max_planets=8</em>, <em>priors=[]</em>, <em>crit='bic'</em>, <em>fap=0.001</em>, <em>min_per=3</em>, <em>max_per=10000</em>, <em>manual_grid=None</em>, <em>oversampling=1.0</em>, <em>trend=False</em>, <em>linear=False</em>, <em>eccentric=False</em>, <em>fix=False</em>, <em>polish=True</em>, <em>baseline=True</em>, <em>mcmc=True</em>, <em>workers=1</em>, <em>verbose=True</em>, <em>save_outputs=True</em>, <em>mstar=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class to initialize and modify posteriors as planet search runs.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>DataFrame</em>) – pandas dataframe containing times, vel, err, and insts.</p></li>
-<li><p><strong>post</strong> (<em>radvel.Posterior</em>) – Optional posterior with known planet params.</p></li>
-<li><p><strong>starname</strong> (<em>str</em>) – String, used to name the output directory.</p></li>
-<li><p><strong>max_planets</strong> (<em>int</em>) – Integer, limit on iterative planet search.</p></li>
-<li><p><strong>priors</strong> (<em>list</em>) – List of radvel prior objects to use.</p></li>
-<li><p><strong>crit</strong> (<em>str</em>) – Either ‘bic’ or ‘aic’, depending on which criterion to use.</p></li>
-<li><p><strong>fap</strong> (<em>float</em>) – False-alarm-probability to pass to the periodogram object.</p></li>
-<li><p><strong>min_per</strong> (<em>float</em>) – Minimum search period, to pass to the periodogram object.</p></li>
-<li><p><strong>dvdt</strong> (<em>bool</em>) – Whether to include a linear trend in the search.</p></li>
-<li><p><strong>curv</strong> (<em>bool</em>) – Whether to include a quadratic trend in the search.</p></li>
-<li><p><strong>fix</strong> (<em>bool</em>) – Whether to fix known planet parameters during search.</p></li>
-<li><p><strong>polish</strong> (<em>bool</em>) – Whether to create finer period grid after planet is found.</p></li>
-<li><p><strong>verbose</strong> (<em>bool</em>) – </p></li>
-<li><p><strong>save_outputs</strong> (<em>bool</em>) – Save output plots and files? [default = True]</p></li>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>data</strong> (<em>DataFrame</em>) – pandas dataframe containing times, vel, err, and insts.</li>
+<li><strong>post</strong> (<em>radvel.Posterior</em>) – Optional posterior with known planet params.</li>
+<li><strong>starname</strong> (<em>str</em>) – String, used to name the output directory.</li>
+<li><strong>max_planets</strong> (<em>int</em>) – Integer, limit on iterative planet search.</li>
+<li><strong>priors</strong> (<em>list</em>) – List of radvel prior objects to use.</li>
+<li><strong>crit</strong> (<em>str</em>) – Either ‘bic’ or ‘aic’, depending on which criterion to use.</li>
+<li><strong>fap</strong> (<em>float</em>) – False-alarm-probability to pass to the periodogram object.</li>
+<li><strong>min_per</strong> (<em>float</em>) – Minimum search period, to pass to the periodogram object.</li>
+<li><strong>trend</strong> (<em>bool</em>) – Whether to perform a DBIC test to select a trend model.</li>
+<li><strong>linear</strong> (<em>bool</em>) – Wether to linearly optimize gamma offsets.</li>
+<li><strong>fix</strong> (<em>bool</em>) – Whether to fix known planet parameters during search.</li>
+<li><strong>polish</strong> (<em>bool</em>) – Whether to create finer period grid after planet is found.</li>
+<li><strong>verbose</strong> (<em>bool</em>) – </li>
+<li><strong>save_outputs</strong> (<em>bool</em>) – Save output plots and files? [default = True]</li>
+<li><strong>mstar</strong> (<em>tuple</em>) – (optional) stellar mass and uncertainty in solar units</li>
 </ul>
-</dd>
-</dl>
+</td>
+</tr>
+</tbody>
+</table>
 <dl class="method">
 <dt id="rvsearch.search.Search.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>data</em>, <em>post=None</em>, <em>starname='star'</em>, <em>max_planets=8</em>, <em>priors=[]</em>, <em>crit='bic'</em>, <em>fap=0.001</em>, <em>min_per=3</em>, <em>manual_grid=None</em>, <em>oversampling=1.0</em>, <em>trend=False</em>, <em>fix=False</em>, <em>polish=True</em>, <em>mcmc=True</em>, <em>workers=1</em>, <em>verbose=True</em>, <em>save_outputs=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>data</em>, <em>post=None</em>, <em>starname='star'</em>, <em>max_planets=8</em>, <em>priors=[]</em>, <em>crit='bic'</em>, <em>fap=0.001</em>, <em>min_per=3</em>, <em>max_per=10000</em>, <em>manual_grid=None</em>, <em>oversampling=1.0</em>, <em>trend=False</em>, <em>linear=False</em>, <em>eccentric=False</em>, <em>fix=False</em>, <em>polish=True</em>, <em>baseline=True</em>, <em>mcmc=True</em>, <em>workers=1</em>, <em>verbose=True</em>, <em>save_outputs=True</em>, <em>mstar=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
@@ -238,23 +243,32 @@
 <dl class="attribute">
 <dt id="rvsearch.search.Search.basebic">
 <code class="descname">basebic</code><em class="property"> = None</em><a class="headerlink" href="#rvsearch.search.Search.basebic" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>if post == None:</dt><dd><p>self.basebic = None</p>
-</dd>
-<dt>else:</dt><dd><p>self.basebic = post.likelihood.bic()</p>
-</dd>
-</dl>
+<dd><p>self.basebic = None
+else:</p>
+<blockquote>
+<div>self.basebic = post.likelihood.bic()</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">if post == None</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="rvsearch.search.Search.continue_search">
 <code class="descname">continue_search</code><span class="sig-paren">(</span><em>fixed_threshold=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.continue_search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.continue_search" title="Permalink to this definition">¶</a></dt>
 <dd><p>Continue a search by trying to add one more planet</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>fixed_threshold</strong> (<em>bool</em>) – fix the BIC threshold at the last threshold, or re-derive for each periodogram</p>
-</dd>
-</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fixed_threshold</strong> (<em>bool</em>) – fix the BIC threshold at the last threshold, or re-derive for each periodogram</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -274,30 +288,35 @@ Inject and attempt to recover a synthetic planet signal
 :type num_cpus: int
 :param full_grid: if True calculate periodogram on full grid, if False only calculate</p>
 <blockquote>
-<div><p>at single period</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>(recovered? (T/F), recovered_orbel)</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>tuple</p>
-</dd>
-</dl>
+<div>at single period</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(recovered? (T/F), recovered_orbel)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="rvsearch.search.Search.run_search">
 <code class="descname">run_search</code><span class="sig-paren">(</span><em>fixed_threshold=None</em>, <em>outdir=None</em>, <em>mkoutdir=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.run_search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.run_search" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run an iterative search for planets not given in posterior.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>fixed_threshold</strong> (<em>float</em>) – (optional) use a fixed delta BIC threshold</p></li>
-<li><p><strong>mkoutdir</strong> (<em>bool</em>) – create the output directory?</p></li>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>fixed_threshold</strong> (<em>float</em>) – (optional) use a fixed delta BIC threshold</li>
+<li><strong>mkoutdir</strong> (<em>bool</em>) – create the output directory?</li>
 </ul>
-</dd>
-</dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>RVsearch: For All Your Planet-Hunting Needs &mdash; rvsearch 0.1.2 documentation</title>
+  <title>RVsearch: For All Your Planet-Hunting Needs &mdash; rvsearch 0.3.2 documentation</title>
   
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                0.1
+                0.3
               </div>
             
           
@@ -178,14 +178,14 @@
 <h1>RVsearch: <br /> For All Your Planet-Hunting Needs<a class="headerlink" href="#rvsearch-br-for-all-your-planet-hunting-needs" title="Permalink to this headline">¶</a></h1>
 <p>Blind RV planet search pipeline based on <a class="reference external" href="http://radvel.readthedocs.org">RadVel</a>.</p>
 <ul class="simple">
-<li><p>Use RadVel setup files to load:</p></li>
+<li>Use RadVel setup files to load:</li>
 </ul>
 <blockquote>
 <div><ul class="simple">
-<li><p>parameters for “known” planets</p></li>
-<li><p>data and instruments</p></li>
-<li><p>fix/vary within search</p></li>
-<li><p>fitting (search) basis</p></li>
+<li>parameters for “known” planets</li>
+<li>data and instruments</li>
+<li>fix/vary within search</li>
+<li>fitting (search) basis</li>
 </ul>
 </div></blockquote>
 <div class="section" id="installation">
@@ -212,11 +212,30 @@ subcommands:
   <span class="o">{</span>find,inject,plot<span class="o">}</span>
 </pre></div>
 </div>
+<p>Basic command-line-interface order of operations:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Run a search from scratch</span>
+<span class="c1"># add the --known flag to skip searching for planets defined in the setup file</span>
+$ rvsearch find -s path-to-setup-file
+
+<span class="c1"># plot the results of the search</span>
+$ rvsearch plot -t summary -d path-to-output-directory-from-search
+
+<span class="c1"># plot the results of the search</span>
+$ rvsearch plot -t summary -d path-to-output-directory-from-search
+
+<span class="c1"># run injection-recovery tests to measure your sensitivity to additional planets</span>
+$ rvsearch inject -d path-to-output-directory-from-search
+
+<span class="c1"># plot the results of the injection-recovery tests</span>
+$ rvsearch plot -t recovery -d path-to-output-directory-from-search
+</pre></div>
+</div>
 <p>Contents:</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="tutorial_api.html">API Tutorials</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/128311_Search.html">128311 Blind search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/Completeness_Contours.html">Completeness Contours</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a><ul>
@@ -234,9 +253,9 @@ subcommands:
 <div class="section" id="indices-and-tables">
 <h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
-<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
-<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
-<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
 </ul>
 </div>
 
