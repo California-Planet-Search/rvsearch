@@ -25,6 +25,7 @@
         <script type="text/javascript" src="_static/underscore.js"></script>
         <script type="text/javascript" src="_static/doctools.js"></script>
         <script type="text/javascript" src="_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -188,63 +189,55 @@
 <span id="plotting"></span><span id="plots"></span><h1>Plotting<a class="headerlink" href="#module-rvsearch" title="Permalink to this headline">¶</a></h1>
 <span class="target" id="module-rvsearch.plots"></span><dl class="class">
 <dt id="rvsearch.plots.CompletenessPlots">
-<em class="property">class </em><code class="descclassname">rvsearch.plots.</code><code class="descname">CompletenessPlots</code><span class="sig-paren">(</span><em>completeness</em>, <em>searches=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#CompletenessPlots"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.CompletenessPlots" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">rvsearch.plots.</code><code class="sig-name descname">CompletenessPlots</code><span class="sig-paren">(</span><em class="sig-param">completeness</em>, <em class="sig-param">searches=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#CompletenessPlots"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.CompletenessPlots" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class to plot results of injection/recovery tests</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>completeness</strong> (<a class="reference internal" href="inject.html#rvsearch.inject.Completeness" title="rvsearch.inject.Completeness"><em>inject.Completeness</em></a>) – completeness object</li>
-<li><strong>planets</strong> (<em>numpy array</em>) – masses and semi-major axes for planets</li>
-<li><strong>searches</strong> (<em>list</em>) – list of rvsearch.Search objects. If present, overplot planets detected in
-all Search objects.</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>completeness</strong> (<a class="reference internal" href="inject.html#rvsearch.inject.Completeness" title="rvsearch.inject.Completeness"><em>inject.Completeness</em></a>) – completeness object</p></li>
+<li><p><strong>planets</strong> (<em>numpy array</em>) – masses and semi-major axes for planets</p></li>
+<li><p><strong>searches</strong> (<em>list</em>) – list of rvsearch.Search objects. If present, overplot planets detected in
+all Search objects.</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 <dl class="method">
 <dt id="rvsearch.plots.CompletenessPlots.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>completeness</em>, <em>searches=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#CompletenessPlots.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.CompletenessPlots.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">completeness</em>, <em class="sig-param">searches=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#CompletenessPlots.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.CompletenessPlots.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="rvsearch.plots.CompletenessPlots.__weakref__">
-<code class="descname">__weakref__</code><a class="headerlink" href="#rvsearch.plots.CompletenessPlots.__weakref__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#rvsearch.plots.CompletenessPlots.__weakref__" title="Permalink to this definition">¶</a></dt>
 <dd><p>list of weak references to the object (if defined)</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="rvsearch.plots.CompletenessPlots.completeness_plot">
-<code class="descname">completeness_plot</code><span class="sig-paren">(</span><em>title=''</em>, <em>xlabel=''</em>, <em>ylabel=''</em>, <em>colorbar=True</em>, <em>hide_points=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#CompletenessPlots.completeness_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.CompletenessPlots.completeness_plot" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">completeness_plot</code><span class="sig-paren">(</span><em class="sig-param">title=''</em>, <em class="sig-param">xlabel=''</em>, <em class="sig-param">ylabel=''</em>, <em class="sig-param">colorbar=True</em>, <em class="sig-param">hide_points=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#CompletenessPlots.completeness_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.CompletenessPlots.completeness_plot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot completeness contours</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>title</strong> (<em>string</em>) – (optional) plot title</li>
-<li><strong>xlabel</strong> (<em>string</em>) – (optional) x-axis label</li>
-<li><strong>ylabel</strong> (<em>string</em>) – (optional) y-axis label</li>
-<li><strong>colorbar</strong> (<em>bool</em>) – (optional) plot colorbar</li>
-<li><strong>hide_points</strong> (<em>bool</em>) – (optional) if true hide individual injection/recovery points</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>title</strong> (<em>string</em>) – (optional) plot title</p></li>
+<li><p><strong>xlabel</strong> (<em>string</em>) – (optional) x-axis label</p></li>
+<li><p><strong>ylabel</strong> (<em>string</em>) – (optional) y-axis label</p></li>
+<li><p><strong>colorbar</strong> (<em>bool</em>) – (optional) plot colorbar</p></li>
+<li><p><strong>hide_points</strong> (<em>bool</em>) – (optional) if true hide individual injection/recovery points</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="rvsearch.plots.CustomTicker">
-<em class="property">class </em><code class="descclassname">rvsearch.plots.</code><code class="descname">CustomTicker</code><span class="sig-paren">(</span><em>base=10.0</em>, <em>labelOnlyBase=False</em>, <em>minor_thresholds=None</em>, <em>linthresh=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#CustomTicker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.CustomTicker" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">rvsearch.plots.</code><code class="sig-name descname">CustomTicker</code><span class="sig-paren">(</span><em class="sig-param">base=10.0</em>, <em class="sig-param">labelOnlyBase=False</em>, <em class="sig-param">minor_thresholds=None</em>, <em class="sig-param">linthresh=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#CustomTicker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.CustomTicker" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="method">
 <dt id="rvsearch.plots.CustomTicker.__call__">
-<code class="descname">__call__</code><span class="sig-paren">(</span><em>x</em>, <em>pos=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#CustomTicker.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.CustomTicker.__call__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">pos=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#CustomTicker.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.CustomTicker.__call__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the format for tick value <em>x</em>.</p>
 <p>The position <em>pos</em> is ignored.</p>
 </dd></dl>
@@ -253,106 +246,101 @@ all Search objects.</li>
 
 <dl class="class">
 <dt id="rvsearch.plots.PeriodModelPlot">
-<em class="property">class </em><code class="descclassname">rvsearch.plots.</code><code class="descname">PeriodModelPlot</code><span class="sig-paren">(</span><em>search</em>, <em>saveplot=None</em>, <em>epoch=2450000</em>, <em>yscale_auto=False</em>, <em>yscale_sigma=3.0</em>, <em>phase_nrows=None</em>, <em>phase_ncols=None</em>, <em>summary_ncols=2</em>, <em>uparams=None</em>, <em>telfmts={'APF': {'color': 'g'</em>, <em>'fmt': 'd'</em>, <em>'label': 'APF'}</em>, <em>'HARPS': {'color': 'firebrick'</em>, <em>'fmt': 's'</em>, <em>'label': 'HARPS'}</em>, <em>'HARPS-N': {'color': 'firebrick'</em>, <em>'fmt': '^'</em>, <em>'label': 'HARPS-N'}</em>, <em>'HIRES': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'HIRES_RJ': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'HIRES_RK': {'color': 'k'</em>, <em>'fmt': 's'</em>, <em>'label': 'HIRES pre 2004'</em>, <em>'mew': 1</em>, <em>'mfc': 'none'}</em>, <em>'LICK': {'color': 'g'</em>, <em>'fmt': '*'</em>, <em>'label': 'LICK'}</em>, <em>'PFS': {'color': 'magenta'</em>, <em>'fmt': 'p'</em>, <em>'label': 'PFS'}</em>, <em>'a': {'color': 'g'</em>, <em>'fmt': 'd'</em>, <em>'label': 'APF'}</em>, <em>'apf': {'color': 'g'</em>, <em>'fmt': 'd'</em>, <em>'label': 'APF'}</em>, <em>'h': {'color': 'firebrick'</em>, <em>'fmt': 's'</em>, <em>'label': 'HARPS'}</em>, <em>'harps': {'color': 'firebrick'</em>, <em>'fmt': 's'</em>, <em>'label': 'HARPS'}</em>, <em>'harps-n': {'color': 'firebrick'</em>, <em>'fmt': '^'</em>, <em>'label': 'HARPS-N'}</em>, <em>'hires': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'hires_rj': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'hires_rk': {'color': 'k'</em>, <em>'fmt': 's'</em>, <em>'label': 'HIRES pre 2004'</em>, <em>'mew': 1</em>, <em>'mfc': 'none'}</em>, <em>'j': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'k': {'color': 'k'</em>, <em>'fmt': 's'</em>, <em>'label': 'HIRES pre 2004'</em>, <em>'mew': 1</em>, <em>'mfc': 'none'}</em>, <em>'l': {'color': 'g'</em>, <em>'fmt': '*'</em>, <em>'label': 'LICK'}</em>, <em>'lick': {'color': 'g'</em>, <em>'fmt': '*'</em>, <em>'label': 'LICK'}</em>, <em>'pfs': {'color': 'magenta'</em>, <em>'fmt': 'p'</em>, <em>'label': 'PFS'}}</em>, <em>legend=True</em>, <em>phase_limits=[]</em>, <em>nobin=False</em>, <em>phasetext_size='small'</em>, <em>rv_phase_space=0.06</em>, <em>figwidth=9.5</em>, <em>fit_linewidth=2.0</em>, <em>show_rms=False</em>, <em>highlight_last=False</em>, <em>set_xlim=None</em>, <em>text_size=9</em>, <em>legend_kwargs={'loc': 'best'}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>Class to jointly plot the periodograms, best model phaseplots, and</dt>
-<dd>window function for each search iteration.</dd>
+<em class="property">class </em><code class="sig-prename descclassname">rvsearch.plots.</code><code class="sig-name descname">PeriodModelPlot</code><span class="sig-paren">(</span><em class="sig-param">search</em>, <em class="sig-param">saveplot=None</em>, <em class="sig-param">epoch=2450000</em>, <em class="sig-param">yscale_auto=False</em>, <em class="sig-param">yscale_sigma=3.0</em>, <em class="sig-param">phase_nrows=None</em>, <em class="sig-param">phase_ncols=None</em>, <em class="sig-param">summary_ncols=2</em>, <em class="sig-param">uparams=None</em>, <em class="sig-param">telfmts={'APF': {'color': 'g'</em>, <em class="sig-param">'fmt': 'd'</em>, <em class="sig-param">'label': 'APF'}</em>, <em class="sig-param">'HARPS': {'color': 'firebrick'</em>, <em class="sig-param">'fmt': 's'</em>, <em class="sig-param">'label': 'HARPS'}</em>, <em class="sig-param">'HARPS-N': {'color': 'firebrick'</em>, <em class="sig-param">'fmt': '^'</em>, <em class="sig-param">'label': 'HARPS-N'}</em>, <em class="sig-param">'HIRES': {'color': 'k'</em>, <em class="sig-param">'label': 'HIRES'</em>, <em class="sig-param">'marker': 'o'</em>, <em class="sig-param">'mew': 1}</em>, <em class="sig-param">'HIRES_RJ': {'color': 'k'</em>, <em class="sig-param">'label': 'HIRES'</em>, <em class="sig-param">'marker': 'o'</em>, <em class="sig-param">'mew': 1}</em>, <em class="sig-param">'HIRES_RK': {'color': 'k'</em>, <em class="sig-param">'fmt': 's'</em>, <em class="sig-param">'label': 'HIRES pre 2004'</em>, <em class="sig-param">'mew': 1</em>, <em class="sig-param">'mfc': 'none'}</em>, <em class="sig-param">'LICK': {'color': 'g'</em>, <em class="sig-param">'fmt': '*'</em>, <em class="sig-param">'label': 'LICK'}</em>, <em class="sig-param">'PFS': {'color': 'magenta'</em>, <em class="sig-param">'fmt': 'p'</em>, <em class="sig-param">'label': 'PFS'}</em>, <em class="sig-param">'a': {'color': 'g'</em>, <em class="sig-param">'fmt': 'd'</em>, <em class="sig-param">'label': 'APF'}</em>, <em class="sig-param">'apf': {'color': 'g'</em>, <em class="sig-param">'fmt': 'd'</em>, <em class="sig-param">'label': 'APF'}</em>, <em class="sig-param">'h': {'color': 'firebrick'</em>, <em class="sig-param">'fmt': 's'</em>, <em class="sig-param">'label': 'HARPS'}</em>, <em class="sig-param">'harps': {'color': 'firebrick'</em>, <em class="sig-param">'fmt': 's'</em>, <em class="sig-param">'label': 'HARPS'}</em>, <em class="sig-param">'harps-n': {'color': 'firebrick'</em>, <em class="sig-param">'fmt': '^'</em>, <em class="sig-param">'label': 'HARPS-N'}</em>, <em class="sig-param">'hires': {'color': 'k'</em>, <em class="sig-param">'label': 'HIRES'</em>, <em class="sig-param">'marker': 'o'</em>, <em class="sig-param">'mew': 1}</em>, <em class="sig-param">'hires_rj': {'color': 'k'</em>, <em class="sig-param">'label': 'HIRES'</em>, <em class="sig-param">'marker': 'o'</em>, <em class="sig-param">'mew': 1}</em>, <em class="sig-param">'hires_rk': {'color': 'k'</em>, <em class="sig-param">'fmt': 's'</em>, <em class="sig-param">'label': 'HIRES pre 2004'</em>, <em class="sig-param">'mew': 1</em>, <em class="sig-param">'mfc': 'none'}</em>, <em class="sig-param">'j': {'color': 'k'</em>, <em class="sig-param">'label': 'HIRES'</em>, <em class="sig-param">'marker': 'o'</em>, <em class="sig-param">'mew': 1}</em>, <em class="sig-param">'k': {'color': 'k'</em>, <em class="sig-param">'fmt': 's'</em>, <em class="sig-param">'label': 'HIRES pre 2004'</em>, <em class="sig-param">'mew': 1</em>, <em class="sig-param">'mfc': 'none'}</em>, <em class="sig-param">'l': {'color': 'g'</em>, <em class="sig-param">'fmt': '*'</em>, <em class="sig-param">'label': 'LICK'}</em>, <em class="sig-param">'lick': {'color': 'g'</em>, <em class="sig-param">'fmt': '*'</em>, <em class="sig-param">'label': 'LICK'}</em>, <em class="sig-param">'pfs': {'color': 'magenta'</em>, <em class="sig-param">'fmt': 'p'</em>, <em class="sig-param">'label': 'PFS'}}</em>, <em class="sig-param">legend=True</em>, <em class="sig-param">phase_limits=[]</em>, <em class="sig-param">nobin=False</em>, <em class="sig-param">phasetext_size='small'</em>, <em class="sig-param">rv_phase_space=0.06</em>, <em class="sig-param">figwidth=9.5</em>, <em class="sig-param">fit_linewidth=2.0</em>, <em class="sig-param">show_rms=False</em>, <em class="sig-param">highlight_last=False</em>, <em class="sig-param">set_xlim=None</em>, <em class="sig-param">text_size=9</em>, <em class="sig-param">legend_kwargs={'loc': 'best'}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Class to jointly plot the periodograms, best model phaseplots, and</dt><dd><p>window function for each search iteration.</p>
+</dd>
 </dl>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>search</strong> (<em>rvsearch.Search</em>) – rvsearch.Search object.
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>search</strong> (<em>rvsearch.Search</em>) – rvsearch.Search object.
 This includes the periodograms and best-fit RadVel
-posteriors for each added planet.</li>
-<li><strong>saveplot</strong> (<em>string</em>) – path to save plot</li>
-<li><strong>epoch</strong> (<em>int</em><em>, </em><em>optional</em>) – epoch to subtract off of all time measurements</li>
-<li><strong>yscale_auto</strong> (<em>bool</em><em>, </em><em>optional</em>) – Use matplotlib auto y-axis
-scaling (default: False)</li>
-<li><strong>yscale_sigma</strong> (<em>float</em><em>, </em><em>optional</em>) – Scale y-axis limits for all panels to be +/-
-yscale_sigma*(RMS of data plotted) if yscale_auto==False</li>
-<li><strong>phase_nrows</strong> (<em>int</em><em>, </em><em>optional</em>) – number of columns in the phase
-folded plots. Default is nplanets.</li>
-<li><strong>phase_ncols</strong> (<em>int</em><em>, </em><em>optional</em>) – number of columns in the phase
-folded plots. Default is 1.</li>
-<li><strong>uparams</strong> (<em>dict</em><em>, </em><em>optional</em>) – parameter uncertainties, must
-contain ‘per’, ‘k’, and ‘e’ keys.</li>
-<li><strong>telfmts</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>dictionary of dictionaries mapping
+posteriors for each added planet.</p></li>
+<li><p><strong>saveplot</strong> (<em>string</em>) – path to save plot</p></li>
+<li><p><strong>epoch</strong> (<em>int</em><em>, </em><em>optional</em>) – epoch to subtract off of all time measurements</p></li>
+<li><p><strong>yscale_auto</strong> (<em>bool</em><em>, </em><em>optional</em>) – Use matplotlib auto y-axis
+scaling (default: False)</p></li>
+<li><p><strong>yscale_sigma</strong> (<em>float</em><em>, </em><em>optional</em>) – Scale y-axis limits for all panels to be +/-
+yscale_sigma*(RMS of data plotted) if yscale_auto==False</p></li>
+<li><p><strong>phase_nrows</strong> (<em>int</em><em>, </em><em>optional</em>) – number of columns in the phase
+folded plots. Default is nplanets.</p></li>
+<li><p><strong>phase_ncols</strong> (<em>int</em><em>, </em><em>optional</em>) – number of columns in the phase
+folded plots. Default is 1.</p></li>
+<li><p><strong>uparams</strong> (<em>dict</em><em>, </em><em>optional</em>) – parameter uncertainties, must
+contain ‘per’, ‘k’, and ‘e’ keys.</p></li>
+<li><p><strong>telfmts</strong> (<em>dict</em><em>, </em><em>optional</em>) – <p>dictionary of dictionaries mapping
 instrument suffix to plotting format code. Example:</p>
 <blockquote>
-<div><dl class="docutils">
-<dt>telfmts = {</dt>
-<dd>‘hires’: dict(fmt=’o’,label=’HIRES’),
-‘harps-n’ dict(fmt=’s’)</dd>
+<div><dl class="simple">
+<dt>telfmts = {</dt><dd><p>‘hires’: dict(fmt=’o’,label=’HIRES’),
+‘harps-n’ dict(fmt=’s’)</p>
+</dd>
 </dl>
 <p>}</p>
 </div></blockquote>
-</li>
-<li><strong>legend</strong> (<em>bool</em><em>, </em><em>optional</em>) – include legend on plot? Default: True.</li>
-<li><strong>phase_limits</strong> (<em>list</em><em>, </em><em>optional</em>) – two element list specifying
+</p></li>
+<li><p><strong>legend</strong> (<em>bool</em><em>, </em><em>optional</em>) – include legend on plot? Default: True.</p></li>
+<li><p><strong>phase_limits</strong> (<em>list</em><em>, </em><em>optional</em>) – two element list specifying
 pyplot.xlim bounds for phase-folded plots. Useful for
-partial orbits.</li>
-<li><strong>nobin</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True do not show binned data on
+partial orbits.</p></li>
+<li><p><strong>nobin</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True do not show binned data on
 phase plots. Will default to True if total number of
-measurements is less then 20.</li>
-<li><strong>phasetext_size</strong> (<em>string</em><em>, </em><em>optional</em>) – fontsize for text in phase plots.
+measurements is less then 20.</p></li>
+<li><p><strong>phasetext_size</strong> (<em>string</em><em>, </em><em>optional</em>) – fontsize for text in phase plots.
 Choice of {‘xx-small’, ‘x-small’, ‘small’, ‘medium’, ‘large’,
-‘x-large’, ‘xx-large’}. Default: ‘x-small’.</li>
-<li><strong>rv_phase_space</strong> (<em>float</em><em>, </em><em>optional</em>) – amount of space to leave between orbit/residual plot
-and phase plots.</li>
-<li><strong>figwidth</strong> (<em>float</em><em>, </em><em>optional</em>) – width of the figures to be produced.
-Default: 7.5 (spans a page with 0.5 in margins)</li>
-<li><strong>fit_linewidth</strong> (<em>float</em><em>, </em><em>optional</em>) – linewidth to use for orbit model lines in phase-folded
-plots and residuals plots.</li>
-<li><strong>set_xlim</strong> (<em>list of float</em>) – limits to use for x-axes of the timeseries and residuals plots, in
-JD - <cite>epoch</cite>. Ex: [7000., 70005.]</li>
-<li><strong>text_size</strong> (<em>int</em>) – set matplotlib.rcParams[‘font.size’] (default: 9)</li>
-<li><strong>legend_kwargs</strong> (<em>dict</em>) – dict of options to pass to legend (plotted in top panel)</li>
+‘x-large’, ‘xx-large’}. Default: ‘x-small’.</p></li>
+<li><p><strong>rv_phase_space</strong> (<em>float</em><em>, </em><em>optional</em>) – amount of space to leave between orbit/residual plot
+and phase plots.</p></li>
+<li><p><strong>figwidth</strong> (<em>float</em><em>, </em><em>optional</em>) – width of the figures to be produced.
+Default: 7.5 (spans a page with 0.5 in margins)</p></li>
+<li><p><strong>fit_linewidth</strong> (<em>float</em><em>, </em><em>optional</em>) – linewidth to use for orbit model lines in phase-folded
+plots and residuals plots.</p></li>
+<li><p><strong>set_xlim</strong> (<em>list of float</em>) – limits to use for x-axes of the timeseries and residuals plots, in
+JD - <cite>epoch</cite>. Ex: [7000., 70005.]</p></li>
+<li><p><strong>text_size</strong> (<em>int</em>) – set matplotlib.rcParams[‘font.size’] (default: 9)</p></li>
+<li><p><strong>legend_kwargs</strong> (<em>dict</em>) – dict of options to pass to legend (plotted in top panel)</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 <dl class="method">
 <dt id="rvsearch.plots.PeriodModelPlot.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>search</em>, <em>saveplot=None</em>, <em>epoch=2450000</em>, <em>yscale_auto=False</em>, <em>yscale_sigma=3.0</em>, <em>phase_nrows=None</em>, <em>phase_ncols=None</em>, <em>summary_ncols=2</em>, <em>uparams=None</em>, <em>telfmts={'APF': {'color': 'g'</em>, <em>'fmt': 'd'</em>, <em>'label': 'APF'}</em>, <em>'HARPS': {'color': 'firebrick'</em>, <em>'fmt': 's'</em>, <em>'label': 'HARPS'}</em>, <em>'HARPS-N': {'color': 'firebrick'</em>, <em>'fmt': '^'</em>, <em>'label': 'HARPS-N'}</em>, <em>'HIRES': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'HIRES_RJ': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'HIRES_RK': {'color': 'k'</em>, <em>'fmt': 's'</em>, <em>'label': 'HIRES pre 2004'</em>, <em>'mew': 1</em>, <em>'mfc': 'none'}</em>, <em>'LICK': {'color': 'g'</em>, <em>'fmt': '*'</em>, <em>'label': 'LICK'}</em>, <em>'PFS': {'color': 'magenta'</em>, <em>'fmt': 'p'</em>, <em>'label': 'PFS'}</em>, <em>'a': {'color': 'g'</em>, <em>'fmt': 'd'</em>, <em>'label': 'APF'}</em>, <em>'apf': {'color': 'g'</em>, <em>'fmt': 'd'</em>, <em>'label': 'APF'}</em>, <em>'h': {'color': 'firebrick'</em>, <em>'fmt': 's'</em>, <em>'label': 'HARPS'}</em>, <em>'harps': {'color': 'firebrick'</em>, <em>'fmt': 's'</em>, <em>'label': 'HARPS'}</em>, <em>'harps-n': {'color': 'firebrick'</em>, <em>'fmt': '^'</em>, <em>'label': 'HARPS-N'}</em>, <em>'hires': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'hires_rj': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'hires_rk': {'color': 'k'</em>, <em>'fmt': 's'</em>, <em>'label': 'HIRES pre 2004'</em>, <em>'mew': 1</em>, <em>'mfc': 'none'}</em>, <em>'j': {'color': 'k'</em>, <em>'label': 'HIRES'</em>, <em>'marker': 'o'</em>, <em>'mew': 1}</em>, <em>'k': {'color': 'k'</em>, <em>'fmt': 's'</em>, <em>'label': 'HIRES pre 2004'</em>, <em>'mew': 1</em>, <em>'mfc': 'none'}</em>, <em>'l': {'color': 'g'</em>, <em>'fmt': '*'</em>, <em>'label': 'LICK'}</em>, <em>'lick': {'color': 'g'</em>, <em>'fmt': '*'</em>, <em>'label': 'LICK'}</em>, <em>'pfs': {'color': 'magenta'</em>, <em>'fmt': 'p'</em>, <em>'label': 'PFS'}}</em>, <em>legend=True</em>, <em>phase_limits=[]</em>, <em>nobin=False</em>, <em>phasetext_size='small'</em>, <em>rv_phase_space=0.06</em>, <em>figwidth=9.5</em>, <em>fit_linewidth=2.0</em>, <em>show_rms=False</em>, <em>highlight_last=False</em>, <em>set_xlim=None</em>, <em>text_size=9</em>, <em>legend_kwargs={'loc': 'best'}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">search</em>, <em class="sig-param">saveplot=None</em>, <em class="sig-param">epoch=2450000</em>, <em class="sig-param">yscale_auto=False</em>, <em class="sig-param">yscale_sigma=3.0</em>, <em class="sig-param">phase_nrows=None</em>, <em class="sig-param">phase_ncols=None</em>, <em class="sig-param">summary_ncols=2</em>, <em class="sig-param">uparams=None</em>, <em class="sig-param">telfmts={'APF': {'color': 'g'</em>, <em class="sig-param">'fmt': 'd'</em>, <em class="sig-param">'label': 'APF'}</em>, <em class="sig-param">'HARPS': {'color': 'firebrick'</em>, <em class="sig-param">'fmt': 's'</em>, <em class="sig-param">'label': 'HARPS'}</em>, <em class="sig-param">'HARPS-N': {'color': 'firebrick'</em>, <em class="sig-param">'fmt': '^'</em>, <em class="sig-param">'label': 'HARPS-N'}</em>, <em class="sig-param">'HIRES': {'color': 'k'</em>, <em class="sig-param">'label': 'HIRES'</em>, <em class="sig-param">'marker': 'o'</em>, <em class="sig-param">'mew': 1}</em>, <em class="sig-param">'HIRES_RJ': {'color': 'k'</em>, <em class="sig-param">'label': 'HIRES'</em>, <em class="sig-param">'marker': 'o'</em>, <em class="sig-param">'mew': 1}</em>, <em class="sig-param">'HIRES_RK': {'color': 'k'</em>, <em class="sig-param">'fmt': 's'</em>, <em class="sig-param">'label': 'HIRES pre 2004'</em>, <em class="sig-param">'mew': 1</em>, <em class="sig-param">'mfc': 'none'}</em>, <em class="sig-param">'LICK': {'color': 'g'</em>, <em class="sig-param">'fmt': '*'</em>, <em class="sig-param">'label': 'LICK'}</em>, <em class="sig-param">'PFS': {'color': 'magenta'</em>, <em class="sig-param">'fmt': 'p'</em>, <em class="sig-param">'label': 'PFS'}</em>, <em class="sig-param">'a': {'color': 'g'</em>, <em class="sig-param">'fmt': 'd'</em>, <em class="sig-param">'label': 'APF'}</em>, <em class="sig-param">'apf': {'color': 'g'</em>, <em class="sig-param">'fmt': 'd'</em>, <em class="sig-param">'label': 'APF'}</em>, <em class="sig-param">'h': {'color': 'firebrick'</em>, <em class="sig-param">'fmt': 's'</em>, <em class="sig-param">'label': 'HARPS'}</em>, <em class="sig-param">'harps': {'color': 'firebrick'</em>, <em class="sig-param">'fmt': 's'</em>, <em class="sig-param">'label': 'HARPS'}</em>, <em class="sig-param">'harps-n': {'color': 'firebrick'</em>, <em class="sig-param">'fmt': '^'</em>, <em class="sig-param">'label': 'HARPS-N'}</em>, <em class="sig-param">'hires': {'color': 'k'</em>, <em class="sig-param">'label': 'HIRES'</em>, <em class="sig-param">'marker': 'o'</em>, <em class="sig-param">'mew': 1}</em>, <em class="sig-param">'hires_rj': {'color': 'k'</em>, <em class="sig-param">'label': 'HIRES'</em>, <em class="sig-param">'marker': 'o'</em>, <em class="sig-param">'mew': 1}</em>, <em class="sig-param">'hires_rk': {'color': 'k'</em>, <em class="sig-param">'fmt': 's'</em>, <em class="sig-param">'label': 'HIRES pre 2004'</em>, <em class="sig-param">'mew': 1</em>, <em class="sig-param">'mfc': 'none'}</em>, <em class="sig-param">'j': {'color': 'k'</em>, <em class="sig-param">'label': 'HIRES'</em>, <em class="sig-param">'marker': 'o'</em>, <em class="sig-param">'mew': 1}</em>, <em class="sig-param">'k': {'color': 'k'</em>, <em class="sig-param">'fmt': 's'</em>, <em class="sig-param">'label': 'HIRES pre 2004'</em>, <em class="sig-param">'mew': 1</em>, <em class="sig-param">'mfc': 'none'}</em>, <em class="sig-param">'l': {'color': 'g'</em>, <em class="sig-param">'fmt': '*'</em>, <em class="sig-param">'label': 'LICK'}</em>, <em class="sig-param">'lick': {'color': 'g'</em>, <em class="sig-param">'fmt': '*'</em>, <em class="sig-param">'label': 'LICK'}</em>, <em class="sig-param">'pfs': {'color': 'magenta'</em>, <em class="sig-param">'fmt': 'p'</em>, <em class="sig-param">'label': 'PFS'}}</em>, <em class="sig-param">legend=True</em>, <em class="sig-param">phase_limits=[]</em>, <em class="sig-param">nobin=False</em>, <em class="sig-param">phasetext_size='small'</em>, <em class="sig-param">rv_phase_space=0.06</em>, <em class="sig-param">figwidth=9.5</em>, <em class="sig-param">fit_linewidth=2.0</em>, <em class="sig-param">show_rms=False</em>, <em class="sig-param">highlight_last=False</em>, <em class="sig-param">set_xlim=None</em>, <em class="sig-param">text_size=9</em>, <em class="sig-param">legend_kwargs={'loc': 'best'}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="rvsearch.plots.PeriodModelPlot.plot_periodogram">
-<code class="descname">plot_periodogram</code><span class="sig-paren">(</span><em>pltletter</em>, <em>pnum=0</em>, <em>alias=True</em>, <em>floor=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot.plot_periodogram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.plot_periodogram" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">plot_periodogram</code><span class="sig-paren">(</span><em class="sig-param">pltletter</em>, <em class="sig-param">pnum=0</em>, <em class="sig-param">alias=True</em>, <em class="sig-param">floor=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot.plot_periodogram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.plot_periodogram" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot periodogram for a given search iteration.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="rvsearch.plots.PeriodModelPlot.plot_summary">
-<code class="descname">plot_summary</code><span class="sig-paren">(</span><em>letter_labels=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot.plot_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.plot_summary" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">plot_summary</code><span class="sig-paren">(</span><em class="sig-param">letter_labels=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot.plot_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.plot_summary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Provision and plot a search summary plot</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>letter_labels</strong> (<em>bool</em><em>, </em><em>optional</em>) – if True, include
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>letter_labels</strong> (<em>bool</em><em>, </em><em>optional</em>) – if True, include
 letter labels on orbit and residual plots.
-Default: True.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
-<li>current matplotlib Figure object</li>
-<li>list of Axes objects</li>
+Default: True.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>current matplotlib Figure object</p></li>
+<li><p>list of Axes objects</p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">tuple containing</td>
-</tr>
-</tbody>
-</table>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple containing</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="rvsearch.plots.PeriodModelPlot.plot_window">
-<code class="descname">plot_window</code><span class="sig-paren">(</span><em>pltletter</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot.plot_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.plot_window" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">plot_window</code><span class="sig-paren">(</span><em class="sig-param">pltletter</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/plots.html#PeriodModelPlot.plot_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.plots.PeriodModelPlot.plot_window" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot the window function of the data, for each instrument.</p>
 </dd></dl>
 
