@@ -83,6 +83,7 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
         self.periodograms = self.search.periodograms
         self.bic_threshes = self.search.bic_threshes
         self.fap = self.search.fap
+        self.runners = self.search.runners
 
         self.saveplot = saveplot
         self.epoch = epoch
@@ -273,6 +274,7 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
 
     def plot_window(self, pltletter):
         """Plot the window function of the data, for each instrument.
+
         """
         ax = pl.gca()
 
@@ -311,8 +313,27 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
             ax.plot(pers_safe, window_safe, alpha=0.75, label=tel)
         ax.xaxis.set_major_formatter(CustomTicker())
         ax.legend()
-        #ax.axvspan(np.amin(self.pers), min, alpha=0.25, color='purple')
-        #ax.axvspan(max, np.amax(self.pers), alpha=0.25, color='purple')
+
+    def plot_runners(self, pltletter):
+        """Plot running periodograms for each detected signal.
+
+        """
+        ax = pl.gca()
+        ax.set_xlabel('Time [MJD]', fontweight='bold')
+        ax.set_ylabel('Running power', fontweight='bold')
+        ax.set_yscale('log')
+        ax.set_xlim([np.amin(self.rvtimes), np.amax(self.rvtimes)])
+        plot.labelfig(pltletter)
+
+        #nobs = len(self.runners[0])
+        runtimes = np.sort(self.rvtimes)[12:] - 2450000.
+        if self.num_known_planets > 0:
+            for i in np.arange(self.num_known_planets):
+                ax.plot(runtimes, self.runners[i], label='Signal {}'.format(i+1))
+            ax.legend()
+        else:
+
+
 
     def plot_summary(self, letter_labels=True):
         """Provision and plot a search summary plot
@@ -414,10 +435,16 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
                         top=divide - self.rv_phase_space * 0.2,
                         bottom=0.07, hspace=0.003, wspace=0.05)
         '''
+        '''
         ax_window = pl.subplot(gs_phase[self.num_planets, 0])
         self.ax_list += [ax_window]
         pl.sca(ax_window)
         self.plot_window(pltletter)
+        '''
+        ax_runners = pl.subplot(gs_phase[self.num_planets, 0])
+        self.ax_list += [ax_runners]
+        pl.sca(ax_runners)
+        self.plot_runners(pltletter)
         pltletter += 1
 
         ax_non = pl.subplot(gs_phase[self.num_planets, 1])
