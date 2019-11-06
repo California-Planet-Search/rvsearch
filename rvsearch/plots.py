@@ -332,7 +332,9 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
                 ax.plot(runtimes, self.runners[i], label='Signal {}'.format(i+1))
             ax.legend()
         else:
-
+            ax.annotate('No Signals', xy=(0.5, 0.5),
+                        xycoords='axes fraction', horizontalalignment='center',
+                        verticalalignment='center', fontsize=self.text_size+8)
 
 
     def plot_summary(self, letter_labels=True):
