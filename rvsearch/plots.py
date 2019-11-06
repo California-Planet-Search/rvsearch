@@ -318,18 +318,24 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
         """Plot running periodograms for each detected signal.
 
         """
+        coldict = {0:'black', 1:'blue', 2:'purple', 3:'pink', 4:'red',
+                   5:'green', 6:'brown', 7:'grey'}
+
         ax = pl.gca()
-        ax.set_xlabel('Time [MJD]', fontweight='bold')
+        ax.set_xlabel('JD - 2450000', fontweight='bold')
         ax.set_ylabel('Running power', fontweight='bold')
         ax.set_yscale('log')
-        ax.set_xlim([np.amin(self.rvtimes), np.amax(self.rvtimes)])
         plot.labelfig(pltletter)
 
-        #nobs = len(self.runners[0])
-        runtimes = np.sort(self.rvtimes)[12:] - 2450000.
+        nobs = len(self.runners[0])
+        runtimes = np.sort(self.rvtimes) - 2450000.
+        runtimes = runtimes[(len(runtimes) - len(self.runners[0])):]
+        ax.set_xlim([np.amin(runtimes), np.amax(runtimes)])
+
         if self.num_known_planets > 0:
             for i in np.arange(self.num_known_planets):
-                ax.plot(runtimes, self.runners[i], label='Signal {}'.format(i+1))
+                ax.plot(runtimes, self.runners[i], color=coldict[i], s=20,
+                        alpha=0.8, label='Signal {}'.format(i+1))
             ax.legend()
         else:
             ax.annotate('No Signals', xy=(0.5, 0.5),
@@ -443,6 +449,7 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
         pl.sca(ax_window)
         self.plot_window(pltletter)
         '''
+
         ax_runners = pl.subplot(gs_phase[self.num_planets, 0])
         self.ax_list += [ax_runners]
         pl.sca(ax_runners)
