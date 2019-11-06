@@ -334,8 +334,8 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
 
         if self.num_known_planets > 0:
             for i in np.arange(self.num_known_planets):
-                ax.plot(runtimes, self.runners[i], color=coldict[i], s=20,
-                        alpha=0.8, label='Signal {}'.format(i+1))
+                ax.plot(runtimes, self.runners[i], color=coldict[i], alpha=0.75,
+                linewidth=3, label='Signal {}'.format(i+1))
             ax.legend()
         else:
             ax.annotate('No Signals', xy=(0.5, 0.5),
