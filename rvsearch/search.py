@@ -527,11 +527,14 @@ class Search(object):
                 self.post.params['sesinw{}'.format(n)].mcmcscale = 0.005
 
             # Sample in log-period space.
-            self.post.params = self.post.params.basis.to_any_basis(
-                               self.post.params, 'logper tc secosw sesinw k')
+            logparams = self.post.params.basis.to_any_basis(
+                        self.post.params, 'logper tc secosw sesinw k')
+
+            logpost = copy.deepcopy(self.post)
+            logpost.params = logparams
 
             # Run MCMC.
-            chains = radvel.mcmc(self.post, nwalkers=50, nrun=25000,
+            chains = radvel.mcmc(logpost, nwalkers=50, nrun=25000,
                                  burnGR=1.03, maxGR=1.0075, minTz=2000,
                                  minsteps=10000, minpercent=33,
                                  thin=5, ensembles=nensembles)
@@ -540,7 +543,7 @@ class Search(object):
             for par in self.post.params.keys():
                 if not self.post.params[par].vary:
                     chains[par] = self.post.params[par].value
-            synthchains = self.post.params.basis.to_synth(chains)
+            synthchains = logpost.params.basis.to_synth(chains)
 
             quants = chains.quantile([0.159, 0.5, 0.841])
             synthquants = synthchains.quantile([0.159, 0.5, 0.841])
