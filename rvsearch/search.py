@@ -527,14 +527,14 @@ class Search(object):
                 self.post.params['sesinw{}'.format(n)].mcmcscale = 0.005
 
             # Sample in log-period space.
+            '''
             logparams = self.post.params.basis.to_any_basis(
                         self.post.params, 'logper tc secosw sesinw k')
-
             logpost = copy.deepcopy(self.post)
             logpost.params = logparams
-
+            '''
             # Run MCMC.
-            chains = radvel.mcmc(logpost, nwalkers=50, nrun=25000,
+            chains = radvel.mcmc(self.post, nwalkers=50, nrun=25000,
                                  burnGR=1.03, maxGR=1.0075, minTz=2000,
                                  minsteps=10000, minpercent=33,
                                  thin=5, ensembles=nensembles)
@@ -543,7 +543,7 @@ class Search(object):
             for par in self.post.params.keys():
                 if not self.post.params[par].vary:
                     chains[par] = self.post.params[par].value
-            synthchains = logpost.params.basis.to_synth(chains)
+            synthchains = self.post.params.basis.to_synth(chains)
 
             quants = chains.quantile([0.159, 0.5, 0.841])
             synthquants = synthchains.quantile([0.159, 0.5, 0.841])
@@ -557,6 +557,7 @@ class Search(object):
                 e_key = 'e{}'.format(n)
                 w_key = 'w{}'.format(n)
                 # Add period if it's a synthetic parameter.
+                '''
                 per_key = 'per{}'.format(n)
                 logper_key = 'logper{}'.format(n)
 
@@ -569,6 +570,7 @@ class Search(object):
                                                                     err_per)
                 max_per, err_per, errhigh_per = radvel.utils.sigfig(
                                np.exp(self.post.params[logper_key].value), err_per)
+                '''
 
                 med_e  = synthquants[e_key][0.5]
                 high_e = synthquants[e_key][0.841] - med_e
@@ -587,11 +589,11 @@ class Search(object):
                 med_w, err_w, errhigh_w = radvel.utils.sigfig(med_w, err_w)
                 max_w, err_w, errhigh_w = radvel.utils.sigfig(
                                           self.post.params[w_key].value, err_w)
-
+                '''
                 self.post.uparams[per_key]   = err_per
                 self.post.medparams[per_key] = med_per
                 self.post.maxparams[per_key] = max_per
-
+                '''
                 self.post.uparams[e_key]   = err_e
                 self.post.uparams[w_key]   = err_w
                 self.post.medparams[e_key] = med_e
