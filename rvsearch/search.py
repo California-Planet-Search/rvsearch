@@ -565,7 +565,7 @@ class Search(object):
                 med_per, err_per, errhigh_per = radvel.utils.sigfig(med_per,
                                                                     err_per)
                 max_per, err_per, errhigh_per = radvel.utils.sigfig(
-                               10**self.post.params[logper_key].value, err_per)
+                               np.exp(self.post.params[logper_key].value), err_per)
 
                 med_e  = synthquants[e_key][0.5]
                 high_e = synthquants[e_key][0.841] - med_e
