@@ -526,17 +526,17 @@ class Search(object):
                 self.post.params['secosw{}'.format(n)].mcmcscale = 0.005
                 self.post.params['sesinw{}'.format(n)].mcmcscale = 0.005
 
+            # Sample in log-period space.
+            self.post.params = self.post.params.basis.to_any_basis(
+                               self.post.params, 'logper tc secosw sesinw k')
+
             # Run MCMC.
             chains = radvel.mcmc(self.post, nwalkers=50, nrun=25000,
                                  burnGR=1.03, maxGR=1.0075, minTz=2000,
                                  minsteps=10000, minpercent=33,
                                  thin=5, ensembles=nensembles)
-            # chains = radvel.mcmc(self.post, nwalkers=50, nrun=2500,
-            #                      burnGR=1.1, maxGR=1.03, minTz=1000,
-            #                      minsteps=250, minpercent=33,
-            #                      thin=5, ensembles=nensembles)
 
-            # Convert chains to e, w basis.
+            # Convert chains to per, e, w basis.
             for par in self.post.params.keys():
                 if not self.post.params[par].vary:
                     chains[par] = self.post.params[par].value
@@ -553,12 +553,24 @@ class Search(object):
             for n in np.arange(1, self.num_planets+1):
                 e_key = 'e{}'.format(n)
                 w_key = 'w{}'.format(n)
+                # Add period if it's a synthetic parameter.
+                per_key = 'per{}'.format(n)
 
-                med_e = synthquants[e_key][0.5]
+                med_per  = synthquants[per_key][0.5]
+                high_per = synthquants[per_key][0.841] - med_per
+                low_per  = med_per - synthquants[per_key][0.159]
+                err_per  = np.mean([high_per,low_per])
+                err_per  = radvel.utils.round_sig(err_per)
+                med_per, err_per, errhigh_per = radvel.utils.sigfig(med_per,
+                                                                    err_per)
+                max_per, err_per, errhigh_per = radvel.utils.sigfig(
+                                      self.post.params[per_key].value, err_per)
+
+                med_e  = synthquants[e_key][0.5]
                 high_e = synthquants[e_key][0.841] - med_e
-                low_e = med_e - synthquants[e_key][0.159]
-                err_e = np.mean([high_e,low_e])
-                err_e = radvel.utils.round_sig(err_e)
+                low_e  = med_e - synthquants[e_key][0.159]
+                err_e  = np.mean([high_e,low_e])
+                err_e  = radvel.utils.round_sig(err_e)
                 med_e, err_e, errhigh_e = radvel.utils.sigfig(med_e, err_e)
                 max_e, err_e, errhigh_e = radvel.utils.sigfig(
                                           self.post.params[e_key].value, err_e)
@@ -572,8 +584,12 @@ class Search(object):
                 max_w, err_w, errhigh_w = radvel.utils.sigfig(
                                           self.post.params[w_key].value, err_w)
 
-                self.post.uparams[e_key] = err_e
-                self.post.uparams[w_key] = err_w
+                self.post.uparams[per_key]   = err_per
+                self.post.medparams[per_key] = med_per
+                self.post.maxparams[per_key] = max_per
+
+                self.post.uparams[e_key]   = err_e
+                self.post.uparams[w_key]   = err_w
                 self.post.medparams[e_key] = med_e
                 self.post.medparams[w_key] = med_w
                 self.post.maxparams[e_key] = max_e
