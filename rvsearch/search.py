@@ -535,7 +535,7 @@ class Search(object):
             '''
             # Run MCMC.
             chains = radvel.mcmc(self.post, nwalkers=50, nrun=25000,
-                                 burnGR=1.03, maxGR=1.0075, minTz=2000,
+                                 burnGR=1.03, maxGR=1.0085, minTz=2000,
                                  minsteps=10000, minpercent=33,
                                  thin=5, ensembles=nensembles)
 
