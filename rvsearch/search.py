@@ -555,6 +555,7 @@ class Search(object):
                 w_key = 'w{}'.format(n)
                 # Add period if it's a synthetic parameter.
                 per_key = 'per{}'.format(n)
+                logper_key = 'logper{}'.format(n)
 
                 med_per  = synthquants[per_key][0.5]
                 high_per = synthquants[per_key][0.841] - med_per
@@ -564,7 +565,7 @@ class Search(object):
                 med_per, err_per, errhigh_per = radvel.utils.sigfig(med_per,
                                                                     err_per)
                 max_per, err_per, errhigh_per = radvel.utils.sigfig(
-                                      self.post.params[per_key].value, err_per)
+                               10**self.post.params[logper_key].value, err_per)
 
                 med_e  = synthquants[e_key][0.5]
                 high_e = synthquants[e_key][0.841] - med_e
