@@ -391,11 +391,20 @@ class Search(object):
                          self.post.params['w{}'.format(p)].value,
                          self.post.params['k{}'.format(p)].value]
                 yres -= radvel.kepler.rv_drive(x, orbel)
+            # Make small period grid. Figure out proper spacing.
+            per = self.post.params['per{}'.format(n)].value
+            subpers1 = np.linspace(0.95*per, per, num=99, endpoint=False)
+            subpers2 = np.linspace(per, 1.05*per, num=100)
+            subpers  = np.concatenate(subpers1, subpers2)
 
             for i in np.arange(12, nobs+1):
-                freq  = 1. / self.post.params['per{}'.format(n)].value
-                runner.append(LombScargle(x[:i], yres[:i], yerr[:i],
-                              normalization='psd').power(freq))
+                freqs = 1. / subpers
+                power = LombScargle(x[:i], yres[:i], yerr[:i],
+                                    normalization='psd').power(freqs)
+                runner.append(np.amax(power))
+                #freq = 1. / per
+                #runner.append(LombScargle(x[:i], yres[:i], yerr[:i],
+                #              normalization='psd').power(freq))
 
             runners.append(runner)
         self.runners = runners
