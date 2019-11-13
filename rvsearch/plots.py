@@ -322,7 +322,9 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
                    5:'green', 6:'brown', 7:'grey'}
 
         ax = pl.gca()
-        ax.set_xlabel('JD - 2450000', fontweight='bold')
+        #ax.set_xlabel('JD - 2450000', fontweight='bold')
+        ax.set_xlabel(r'N_{\textrm{obs}}')
+        ax.set_xscale('log')
         ax.set_ylabel('Running power', fontweight='bold')
         ax.set_yscale('log')
         plot.labelfig(pltletter)
@@ -331,10 +333,12 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
             nobs = len(self.runners[0])
             runtimes = np.sort(self.rvtimes) - 2450000.
             runtimes = runtimes[(len(runtimes) - len(self.runners[0])):]
-            ax.set_xlim([np.amin(runtimes), np.amax(runtimes)])
+            num_obs = np.arange(len(runtimes)) + 12
+            #ax.set_xlim([np.amin(runtimes), np.amax(runtimes)])
+            ax.set_xlim([num_obs[0], num_obs[-1]])
 
             for i in np.arange(self.num_known_planets):
-                ax.plot(runtimes, self.runners[i], color=coldict[i], alpha=0.75,
+                ax.plot(num_obs, self.runners[i], color=coldict[i], alpha=0.75,
                 linewidth=3, label='Signal {}'.format(i+1))
             ax.legend()
         else:

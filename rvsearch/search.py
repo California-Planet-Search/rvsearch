@@ -535,8 +535,8 @@ class Search(object):
             '''
             # Run MCMC.
             chains = radvel.mcmc(self.post, nwalkers=50, nrun=25000,
-                                 burnGR=1.03, maxGR=1.0085, minTz=2000,
-                                 minsteps=10000, minpercent=33,
+                                 burnGR=1.03, maxGR=1.0075, minTz=2000,
+                                 minsteps=12500, minpercent=50,
                                  thin=5, ensembles=nensembles)
 
             # Convert chains to per, e, w basis.
