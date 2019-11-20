@@ -137,7 +137,7 @@ def initialize_post(data, params=None, priors=[], linear=True, decorrs=None):
                                                             TexStr)
                 priors.append(OffsetPrior)
         #for inst in telgrps.keys():
-        #    priors.append(radvel.prior.Jeffrey('jit_'+inst, 0.05, 20.0))
+        #    priors.append(radvel.prior.Jeffrey('jit_'+inst, 0.01, 20.0))
     post.priors = priors
 
     return post

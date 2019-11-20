@@ -8,8 +8,7 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as pl
 import corner
-#from astroML.time_series import \
-#    lomb_scargle, lomb_scargle_BIC, lomb_scargle_bootstrap
+
 from astropy.timeseries import LombScargle
 import radvel
 import radvel.fitting
@@ -161,26 +160,8 @@ class Search(object):
         post3.params['curv'].vary  = False
 
         flat_bic = post3.likelihood.bic()
-        '''
-        if trend_curve_bic < trend_bic - 5:
-            # Quadratic
-            self.post.params['dvdt'].value = post1.params['dvdt'].value
-            self.post.params['curv'].value = post1.params['curv'].value
 
-        elif trend_bic < flat_bic - 5:
-            # Linear
-            self.post.params['curv'].value = 0
-            self.post.params['dvdt'].value = post2.params['dvdt'].value
-            self.post.params['curv'].vary  = False
-
-        else:
-            # Flat
-            self.post.params['dvdt'].value = 0
-            self.post.params['curv'].value = 0
-            self.post.params['dvdt'].vary  = False
-            self.post.params['curv'].vary  = False
-        '''
-        if trend_bic < flat_bic - 5:
+        if (trend_bic < flat_bic - 5) or (trend_curve_bic < flat_bic - 5):
             if trend_curve_bic < trend_bic - 5:
                 # Quadratic
                 self.post.params['dvdt'].value = post1.params['dvdt'].value
@@ -395,7 +376,7 @@ class Search(object):
             per = self.post.params['per{}'.format(n)].value
             subpers1 = np.linspace(0.95*per, per, num=99, endpoint=False)
             subpers2 = np.linspace(per, 1.05*per, num=100)
-            subpers  = np.concatenate(subpers1, subpers2)
+            subpers  = np.concatenate((subpers1, subpers2))
 
             for i in np.arange(12, nobs+1):
                 freqs = 1. / subpers
@@ -536,12 +517,10 @@ class Search(object):
                 self.post.params['sesinw{}'.format(n)].mcmcscale = 0.005
 
             # Sample in log-period space.
-            '''
-            logparams = self.post.params.basis.to_any_basis(
-                        self.post.params, 'logper tc secosw sesinw k')
-            logpost = copy.deepcopy(self.post)
-            logpost.params = logparams
-            '''
+            #logparams = self.post.params.basis.to_any_basis(
+            #            self.post.params, 'logper tc secosw sesinw k')
+            #logpost = utils.initialize_post(self.data, params=logparams)
+
             # Run MCMC.
             chains = radvel.mcmc(self.post, nwalkers=50, nrun=25000,
                                  burnGR=1.03, maxGR=1.0075, minTz=2000,
