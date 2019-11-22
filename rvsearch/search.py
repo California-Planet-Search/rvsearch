@@ -522,8 +522,9 @@ class Search(object):
             #logpost = utils.initialize_post(self.data, params=logparams)
 
             # Run MCMC.
-            chains = radvel.mcmc(self.post, nwalkers=50, nrun=25000,
-                                 burnGR=1.03, maxGR=1.0075, minTz=2000,
+            chains = radvel.mcmc(self.post, nwalkers=50, nrun=25000, burnGR=1.03,
+                                 maxGR=1.0075, minTz=2000, minAfactor=50,
+                                 maxArchange=0.07, burnAfactor=25,
                                  minsteps=12500, minpercent=50,
                                  thin=5, ensembles=nensembles)
 

@@ -5,7 +5,7 @@ pandas
 astropy
 astroML
 PyAstronomy
-radvel==1.2.12
+radvel
 pathos
 tqdm
 sphinx_rtd_theme

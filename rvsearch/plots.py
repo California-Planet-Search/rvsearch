@@ -323,7 +323,7 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
 
         ax = pl.gca()
         #ax.set_xlabel('JD - 2450000', fontweight='bold')
-        ax.set_xlabel(r'$N_{obs}$')
+        ax.set_xlabel(r'N$_\mathrm{obs}$')
         ax.set_xscale('log')
         ax.set_ylabel('Running power', fontweight='bold')
         ax.set_yscale('log')
