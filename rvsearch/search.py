@@ -517,27 +517,24 @@ class Search(object):
                 self.post.params['sesinw{}'.format(n)].mcmcscale = 0.005
 
             # Sample in log-period space.
-            #logparams = self.post.params.basis.to_any_basis(
-            #            self.post.params, 'logper tc secosw sesinw k')
-            #logpost = utils.initialize_post(self.data, params=logparams)
+            logpost = copy.deepcopy(self.post)
+            logparams = logpost.params.basis.to_any_basis(
+                        logpost.params, 'logper tc secosw sesinw k')
+            logpost = utils.initialize_post(self.data, params=logparams)
 
-            # Run MCMC.
-            chains = radvel.mcmc(self.post, nwalkers=50, nrun=25000, burnGR=1.03,
+            # Run MCMC. #self.post #logpost
+            chains = radvel.mcmc(logpost, nwalkers=50, nrun=25000, burnGR=1.03,
                                  maxGR=1.0075, minTz=2000, minAfactor=50,
                                  maxArchange=0.07, burnAfactor=25,
-                                 minsteps=12500, minpercent=50,
-                                 thin=5, ensembles=nensembles)
+                                 minsteps=12500, minpercent=50, thin=5,
+                                 save=False, ensembles=nensembles)
 
             # Convert chains to per, e, w basis.
-            for par in self.post.params.keys():
-                if not self.post.params[par].vary:
-                    chains[par] = self.post.params[par].value
-            synthchains = self.post.params.basis.to_synth(chains)
-
-            quants = chains.quantile([0.159, 0.5, 0.841])
+            synthchains = logpost.params.basis.to_synth(chains)
             synthquants = synthchains.quantile([0.159, 0.5, 0.841])
+            logpost = None
 
-            # Compress, thin, and save chain, in fitting basis.
+            # Compress, thin, and save chains, in fitting and synthetic bases.
             csvfn = outdir + '/chains.csv.tar.bz2'
             synthchains.to_csv(csvfn, compression='bz2')
 
@@ -546,20 +543,8 @@ class Search(object):
                 e_key = 'e{}'.format(n)
                 w_key = 'w{}'.format(n)
                 # Add period if it's a synthetic parameter.
-                '''
                 per_key = 'per{}'.format(n)
                 logper_key = 'logper{}'.format(n)
-
-                med_per  = synthquants[per_key][0.5]
-                high_per = synthquants[per_key][0.841] - med_per
-                low_per  = med_per - synthquants[per_key][0.159]
-                err_per  = np.mean([high_per,low_per])
-                err_per  = radvel.utils.round_sig(err_per)
-                med_per, err_per, errhigh_per = radvel.utils.sigfig(med_per,
-                                                                    err_per)
-                max_per, err_per, errhigh_per = radvel.utils.sigfig(
-                               np.exp(self.post.params[logper_key].value), err_per)
-                '''
 
                 med_e  = synthquants[e_key][0.5]
                 high_e = synthquants[e_key][0.841] - med_e
@@ -578,11 +563,7 @@ class Search(object):
                 med_w, err_w, errhigh_w = radvel.utils.sigfig(med_w, err_w)
                 max_w, err_w, errhigh_w = radvel.utils.sigfig(
                                           self.post.params[w_key].value, err_w)
-                '''
-                self.post.uparams[per_key]   = err_per
-                self.post.medparams[per_key] = med_per
-                self.post.maxparams[per_key] = max_per
-                '''
+
                 self.post.uparams[e_key]   = err_e
                 self.post.uparams[w_key]   = err_w
                 self.post.medparams[e_key] = med_e
@@ -593,9 +574,9 @@ class Search(object):
             # Retrieve medians & uncertainties for the fitting basis parameters.
             for par in self.post.params.keys():
                 if self.post.params[par].vary:
-                    med = quants[par][0.5]
-                    high = quants[par][0.841] - med
-                    low = med - quants[par][0.159]
+                    med = synthquants[par][0.5]
+                    high = synthquants[par][0.841] - med
+                    low = med - synthquants[par][0.159]
                     err = np.mean([high,low])
                     err = radvel.utils.round_sig(err)
                     med, err, errhigh = radvel.utils.sigfig(med, err)

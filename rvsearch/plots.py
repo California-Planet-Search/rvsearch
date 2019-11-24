@@ -323,9 +323,10 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
 
         ax = pl.gca()
         #ax.set_xlabel('JD - 2450000', fontweight='bold')
-        ax.set_xlabel(r'N$_\mathrm{obs}$')
+        ax.set_xlabel(r'\mathbf{N$_\mathrm{obs}}$')
         ax.set_xscale('log')
-        ax.set_ylabel('Running power', fontweight='bold')
+        #ax.set_ylabel('Running power', fontweight='bold')
+        ax.set_ylabel(r'$\mathbf{\mathcal{F}(RV_\mathrm{N})}$', fontweight='bold')
         ax.set_yscale('log')
         plot.labelfig(pltletter)
 
@@ -340,8 +341,8 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
 
             for i in np.arange(self.num_known_planets):
                 ax.plot(num_obs, self.runners[i], color=coldict[i], alpha=0.75,
-                linewidth=3, label='Signal {}'.format(i+1))
-            ax.legend()
+                linewidth=2, label='Signal {}'.format(i+1))
+            ax.legend(loc='lower right')
         else:
             ax.annotate('No Signals', xy=(0.5, 0.5),
                         xycoords='axes fraction', horizontalalignment='center',
