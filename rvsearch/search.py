@@ -8,6 +8,8 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as pl
 import corner
+
+from astropy.timeseries import LombScargle
 import radvel
 import radvel.fitting
 from radvel.plot import orbit_plots
@@ -37,10 +39,9 @@ class Search(object):
         mstar (tuple): (optional) stellar mass and uncertainty in solar units
 
     """
-
     def __init__(self, data, post=None, starname='star', max_planets=8,
                 priors=[], crit='bic', fap=0.001, min_per=3, max_per=10000,
-                manual_grid=None, oversampling=1., trend=False, linear=False,
+                manual_grid=None, oversampling=1., trend=False, linear=True,
                 eccentric=False, fix=False, polish=True, baseline=True,
                 mcmc=True, workers=1, verbose=True, save_outputs=True, mstar=None):
 
@@ -132,12 +133,11 @@ class Search(object):
         """Perform zero-planet baseline fit, test for significant trend.
 
         """
-
         post1 = copy.deepcopy(self.post)
         # Fix all Keplerian parameters. K is zero, equivalent to no planet.
-        post1.params['per1'].vary = False
-        post1.params['tc1'].vary  = False
-        post1.params['k1'].vary   = False
+        post1.params['k1'].vary      = False
+        post1.params['tc1'].vary     = False
+        post1.params['per1'].vary    = False
         post1.params['secosw1'].vary = False
         post1.params['sesinw1'].vary = False
         post1 = radvel.fitting.maxlike_fitting(post1, verbose=False)
@@ -160,26 +160,8 @@ class Search(object):
         post3.params['curv'].vary  = False
 
         flat_bic = post3.likelihood.bic()
-        '''
-        if trend_curve_bic < trend_bic - 5:
-            # Quadratic
-            self.post.params['dvdt'].value = post1.params['dvdt'].value
-            self.post.params['curv'].value = post1.params['curv'].value
 
-        elif trend_bic < flat_bic - 5:
-            # Linear
-            self.post.params['curv'].value = 0
-            self.post.params['dvdt'].value = post2.params['dvdt'].value
-            self.post.params['curv'].vary  = False
-
-        else:
-            # Flat
-            self.post.params['dvdt'].value = 0
-            self.post.params['curv'].value = 0
-            self.post.params['dvdt'].vary  = False
-            self.post.params['curv'].vary  = False
-        '''
-        if trend_bic < flat_bic - 5:
+        if (trend_bic < flat_bic - 5) or (trend_curve_bic < flat_bic - 5):
             if trend_curve_bic < trend_bic - 5:
                 # Quadratic
                 self.post.params['dvdt'].value = post1.params['dvdt'].value
@@ -348,27 +330,65 @@ class Search(object):
                 self.post.params['secosw{}'.format(n)].vary = False
                 self.post.params['sesinw{}'.format(n)].vary = False
 
-    def add_gp(self, inst=None):
-        """Add a gaussian process to the posterior (NOT IN USE).
-
-        """
-        pass
-
-    def sub_gp(self, num_gps=1):
-        """Remove a gaussian process from the posterior (NOT IN USE).
-
-        """
-        try:
-            pass
-        except:
-            raise RuntimeError('Model contains fewer than {} Gaussian \
-                                processes.'.format(num_gps))
-
     def save(self, filename='post_final.pkl'):
         """Pickle current posterior.
 
         """
         self.post.writeto(filename)
+
+    def running_per(self):
+        """Generate running BIC periodograms for each planet/signal.
+
+        """
+        nobs = len(self.post.likelihood.x)
+        # Sort times, RVs, and RV errors chronologically.
+        indices = np.argsort(self.post.likelihood.x)
+        x    = self.post.likelihood.x[indices]
+        y    = self.post.likelihood.y[indices]
+        yerr = self.post.likelihood.yerr[indices]
+        tels = self.post.likelihood.telvec[indices]
+        # Generalized Lomb-Scargle version; functional, but seems iffy.
+        # Subtract off gammas and trend terms.
+        for tel in self.tels:
+            y[np.where(tels == tel)] -= self.post.params['gamma_{}'.format(tel)].value
+
+        if self.post.params['dvdt'].vary == True:
+            y -= self.post.params['dvdt'].value * (x - self.post.likelihood.model.time_base)
+
+        if self.post.params['curv'].vary == True:
+            y -= self.post.params['curv'].value * (x - self.post.likelihood.model.time_base)**2
+
+        # Instantiate a list to populate with running periodograms.
+        runners = []
+        # Iterate over the planets/signals.
+        for n in np.arange(1, self.num_planets+1):
+            runner = []
+            planets = np.arange(1, self.num_planets+1)
+            yres = copy.deepcopy(y)
+            for p in planets[planets != n]:
+                orbel = [self.post.params['per{}'.format(p)].value,
+                         self.post.params['tp{}'.format(p)].value,
+                         self.post.params['e{}'.format(p)].value,
+                         self.post.params['w{}'.format(p)].value,
+                         self.post.params['k{}'.format(p)].value]
+                yres -= radvel.kepler.rv_drive(x, orbel)
+            # Make small period grid. Figure out proper spacing.
+            per = self.post.params['per{}'.format(n)].value
+            subpers1 = np.linspace(0.95*per, per, num=99, endpoint=False)
+            subpers2 = np.linspace(per, 1.05*per, num=100)
+            subpers  = np.concatenate((subpers1, subpers2))
+
+            for i in np.arange(12, nobs+1):
+                freqs = 1. / subpers
+                power = LombScargle(x[:i], yres[:i], yerr[:i],
+                                    normalization='psd').power(freqs)
+                runner.append(np.amax(power))
+                #freq = 1. / per
+                #runner.append(LombScargle(x[:i], yres[:i], yerr[:i],
+                #              normalization='psd').power(freq))
+
+            runners.append(runner)
+        self.runners = runners
 
     def run_search(self, fixed_threshold=None, outdir=None, mkoutdir=True):
         """Run an iterative search for planets not given in posterior.
@@ -430,7 +450,7 @@ class Search(object):
                 for k in self.post.params.keys():
                     self.post.params[k].value = perioder.bestfit_params[k]
 
-                # 8/23/19: Generalizing tc reset to each new find.
+                # Generalize tc reset to each new discovery.
                 tckey = 'tc{}'.format(self.num_planets)
                 if self.post.params[tckey].value < np.amin(self.data.time):
                     self.post.params[tckey].value = np.median(self.data.time)
@@ -478,6 +498,9 @@ class Search(object):
                 multiplot_fig.savefig(outdir+'/orbit_plot{}.pdf'.format(
                                                         self.num_planets))
 
+        # Generate running periodograms.
+        self.running_per()
+
         # Run MCMC on final posterior, save new parameters and uncertainties.
         if self.mcmc == True and (self.num_planets != 0 or
                                   self.post.params['dvdt'].vary == True):
@@ -493,39 +516,41 @@ class Search(object):
                 self.post.params['secosw{}'.format(n)].mcmcscale = 0.005
                 self.post.params['sesinw{}'.format(n)].mcmcscale = 0.005
 
-            # Run MCMC.
-            chains = radvel.mcmc(self.post, nwalkers=50, nrun=25000,
-                                 burnGR=1.03, maxGR=1.0075, minTz=2000,
-                                 minsteps=10000, minpercent=33,
-                                 thin=5, ensembles=nensembles)
-            # chains = radvel.mcmc(self.post, nwalkers=50, nrun=2500,
-            #                      burnGR=1.1, maxGR=1.03, minTz=1000,
-            #                      minsteps=250, minpercent=33,
-            #                      thin=5, ensembles=nensembles)
+            # Sample in log-period space.
+            logpost = copy.deepcopy(self.post)
+            logparams = logpost.params.basis.to_any_basis(
+                        logpost.params, 'logper tc secosw sesinw k')
+            logpost = utils.initialize_post(self.data, params=logparams)
 
-            # Convert chains to e, w basis.
-            for par in self.post.params.keys():
-                if not self.post.params[par].vary:
-                    chains[par] = self.post.params[par].value
-            synthchains = self.post.params.basis.to_synth(chains)
+            # Run MCMC. #self.post #logpost
+            chains = radvel.mcmc(logpost, nwalkers=50, nrun=25000, burnGR=1.03,
+                                 maxGR=1.0075, minTz=2000, minAfactor=50,
+                                 maxArchange=0.07, burnAfactor=25,
+                                 minsteps=12500, minpercent=50, thin=5,
+                                 save=False, ensembles=nensembles)
 
-            quants = chains.quantile([0.159, 0.5, 0.841])
+            # Convert chains to per, e, w basis.
+            synthchains = logpost.params.basis.to_synth(chains)
             synthquants = synthchains.quantile([0.159, 0.5, 0.841])
+            logpost = None
 
-            # Compress, thin, and save chain, in fitting basis.
+            # Compress, thin, and save chains, in fitting and synthetic bases.
             csvfn = outdir + '/chains.csv.tar.bz2'
-            chains.to_csv(csvfn, compression='bz2')
+            synthchains.to_csv(csvfn, compression='bz2')
 
             # Retrieve e and w medians & uncertainties from synthetic chains.
             for n in np.arange(1, self.num_planets+1):
                 e_key = 'e{}'.format(n)
                 w_key = 'w{}'.format(n)
+                # Add period if it's a synthetic parameter.
+                per_key = 'per{}'.format(n)
+                logper_key = 'logper{}'.format(n)
 
-                med_e = synthquants[e_key][0.5]
+                med_e  = synthquants[e_key][0.5]
                 high_e = synthquants[e_key][0.841] - med_e
-                low_e = med_e - synthquants[e_key][0.159]
-                err_e = np.mean([high_e,low_e])
-                err_e = radvel.utils.round_sig(err_e)
+                low_e  = med_e - synthquants[e_key][0.159]
+                err_e  = np.mean([high_e,low_e])
+                err_e  = radvel.utils.round_sig(err_e)
                 med_e, err_e, errhigh_e = radvel.utils.sigfig(med_e, err_e)
                 max_e, err_e, errhigh_e = radvel.utils.sigfig(
                                           self.post.params[e_key].value, err_e)
@@ -539,8 +564,8 @@ class Search(object):
                 max_w, err_w, errhigh_w = radvel.utils.sigfig(
                                           self.post.params[w_key].value, err_w)
 
-                self.post.uparams[e_key] = err_e
-                self.post.uparams[w_key] = err_w
+                self.post.uparams[e_key]   = err_e
+                self.post.uparams[w_key]   = err_w
                 self.post.medparams[e_key] = med_e
                 self.post.medparams[w_key] = med_w
                 self.post.maxparams[e_key] = max_e
@@ -549,9 +574,9 @@ class Search(object):
             # Retrieve medians & uncertainties for the fitting basis parameters.
             for par in self.post.params.keys():
                 if self.post.params[par].vary:
-                    med = quants[par][0.5]
-                    high = quants[par][0.841] - med
-                    low = med - quants[par][0.159]
+                    med = synthquants[par][0.5]
+                    high = synthquants[par][0.841] - med
+                    low = med - synthquants[par][0.159]
                     err = np.mean([high,low])
                     err = radvel.utils.round_sig(err)
                     med, err, errhigh = radvel.utils.sigfig(med, err)
