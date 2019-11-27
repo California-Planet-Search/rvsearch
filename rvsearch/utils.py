@@ -1,6 +1,7 @@
 """Utilities for loading data, checking for known planets, etc."""
 
 import numpy as np
+import scipy.special as spec
 from astropy import constants as c
 import pandas as pd
 import radvel
@@ -24,7 +25,7 @@ def GaussianDiffFunc(inp_list):
     """
     x     = inp_list[1] - inp_list[0]
     mu    = 0.#inp_list[2]
-    sigma = 1.#inp_list[3]
+    sigma = 2.#inp_list[3]
     return -0.5 * ((x - mu) / sigma)**2 - 0.5*np.log((sigma**2)*2.*np.pi)
 
 def reset_params(post, default_pdict):
@@ -136,7 +137,7 @@ def initialize_post(data, params=None, priors=[], linear=True, decorrs=None):
                                                             TexStr)
                 priors.append(OffsetPrior)
         #for inst in telgrps.keys():
-        #    priors.append(radvel.prior.Jeffrey('jit_'+inst, 0.05, 20.0))
+        #    priors.append(radvel.prior.Jeffrey('jit_'+inst, 0.01, 20.0))
     post.priors = priors
 
     return post
@@ -224,89 +225,6 @@ def read_from_vst(filename, verbose=True):
     return data
 
 
-# Function for collecting results of searches in current directory.
-def scrape(starlist, star_db_name=None, filename='system_props.csv'):
-    """Take data from completed searches and compile into one dataframe.
-
-    Args:
-        starlist (list): List of starnames to access in current directory
-        star_db_name (string [optional]): Filename of star properties dataframe
-        filename (string): Path to which to save dataframe
-
-    Note:
-        If specified, compute planet masses and semi-major axes.
-
-    """
-    all_params = []
-    nplanets = []
-
-    for star in starlist:
-        params = dict()
-        params['name'] = star
-        try:
-            post = radvel.posterior.load(star+'/post_final.pkl')
-        except (RuntimeError, FileNotFoundError):
-            print('Not done looking for planets around {} yet, \
-                                try again later.'.format(star))
-            continue
-
-        if post.params.num_planets == 1:
-            if post.params['k1'].value == 0.:
-                num_planets = 0
-            else:
-                num_planets = 1
-            nplanets.append(num_planets)
-        else:
-            num_planets = post.params.num_planets
-            nplanets.append(num_planets)
-        params['num_planets'] = num_planets
-
-        for k in post.params.keys():
-            params[k] = post.params[k].value
-        all_params.append(params)
-
-    # Save radvel parameters as a pandas dataframe.
-    props = pd.DataFrame(all_params)
-
-    if star_db_name is not None:
-        try:
-            star_db = pd.read_csv(star_db_name)
-        except (RuntimeError, FileNotFoundError):
-            print('That is not a readable table. Try again.')
-
-        # Add enough columns to account for system with the most signals.
-        max_num_planets = np.amax(nplanets)
-        for n in np.arange(1, max_num_planets+1):
-            props['Mstar'] = np.nan
-            props['M{}'.format(n)] = np.nan
-            props['a{}'.format(n)] = np.nan
-
-        # Save median star mass, uncertainties
-        for star in starlist:
-            try:
-                props_index = props.index[props['name'] == str(star)][0]
-                star_index = star_db.index[star_db['name'] == str(star)][0]
-            except IndexError:
-                continue
-            # Save stellar mass, to be used in mass and orbital calculations.
-            Mtot = star_db.loc[star_index, 'mstar']
-            props.loc[props_index, 'Mstar'] = Mtot
-
-            # For each found planet, compute mass and semi-major axis
-            if props.loc[props_index, 'num_planets'] != 0:
-                for n in np.arange(1, props.loc[props_index, 'num_planets']+1):
-                    K = props.loc[props_index, 'k{}'.format(n)]
-                    P = props.loc[props_index, 'per{}'.format(n)]
-                    e = props.loc[props_index, 'secosw{}'.format(n)]**2 + \
-                        props.loc[props_index, 'sesinw{}'.format(n)]**2
-                    props.loc[props_index, 'M{}'.format(n)] = \
-                        radvel.utils.Msini(K, P, Mtot, e, Msini_units='jupiter')
-                    props.loc[props_index, 'a{}'.format(n)] = \
-                        radvel.utils.semi_major_axis(P, Mtot)
-
-    props.to_csv('system_props.csv')
-    return props
-
 
 def cartesian_product(*arrays):
     """
@@ -329,6 +247,18 @@ def cartesian_product(*arrays):
 
 
 # Test search-specific priors
+def betafunc(x, a=0.867, b=3.03):#inp_list):
+    """Function to use in the HIRES gamma offset prior.
+    Args:
+        inp_list(list): pair of floats, the difference of which we want to
+                        constrain with a Gaussian prior. Hard-coded params,
+                        derived empirically from HIRES analysis.
+
+    """
+    #x = inp_list[0]
+    #a = inp_list[1]
+    #b = inp_list[2]
+    return spec.gamma(a+b)/(spec.gamma(a)*spec.gamma(b))*x**(a-1)*(1-x)**(b-1)
 '''
 class Beta(Prior):
     """Beta prior
@@ -364,7 +294,6 @@ class Beta(Prior):
 
         return s
 '''
-
 
 def derive(post, synthchains, mstar, mstar_err=0.0):
     """Derive physical parameters from posterior samples

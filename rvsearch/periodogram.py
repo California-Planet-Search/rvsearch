@@ -317,9 +317,9 @@ class Periodogram(object):
         loghist = np.log10(nhist)
 
         func = np.poly1d(np.polyfit(cent[np.isfinite(loghist)], \
-                                loghist[np.isfinite(loghist)], 1))
+                                 loghist[np.isfinite(loghist)], 1))
         xmod = np.linspace(np.min(sBIC[np.isfinite(sBIC)]), \
-                                    10.*np.max(sBIC), 10000)
+                                        10.*np.max(sBIC), 10000)
         lfit = 10.**func(xmod)
         fap_min = 10.**func(sBIC[-1])*self.num_pers
         thresh = xmod[np.where(np.abs(lfit-self.fap/self.num_pers) ==
