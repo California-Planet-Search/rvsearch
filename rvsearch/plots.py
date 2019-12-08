@@ -326,7 +326,7 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
 
         ax = pl.gca()
         #ax.set_xlabel('JD - 2450000', fontweight='bold')
-        ax.set_xlabel(r'$\mathbf{N$_\mathrm{obs}}$')
+        ax.set_xlabel(r'$\mathbf{\mathrm{N}_\mathrm{obs}}$')
         ax.set_xscale('log')
         #ax.set_ylabel('Running power', fontweight='bold')
         ax.set_ylabel(r'$\mathbf{\mathcal{F}(RV_\mathrm{N})}$', fontweight='bold')
