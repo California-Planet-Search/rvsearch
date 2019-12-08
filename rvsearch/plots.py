@@ -11,6 +11,9 @@ from radvel import plot
 
 import rvsearch.utils as utils
 
+label_dict = {0:'b', 1:'c', 2:'d', 3:'e', 4:'f', 5:'g',
+              6:'h',7:'i', 8:'j', 9:'k', 10:'l', 11:'m'}
+
 class CustomTicker(LogFormatterSciNotation):
     def __call__(self, x, pos=None):
         if x not in [0.1, 1, 10, 100, 1000, 10000]:
@@ -341,7 +344,7 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
 
             for i in np.arange(self.num_known_planets):
                 ax.plot(num_obs, self.runners[i], color=coldict[i], alpha=0.75,
-                linewidth=2, label='Signal {}'.format(i+1))
+                linewidth=2, label=label_dict{i})
             ax.legend(loc='lower right')
         else:
             ax.annotate('No Signals', xy=(0.5, 0.5),
