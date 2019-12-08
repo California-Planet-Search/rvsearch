@@ -344,7 +344,7 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
 
             for i in np.arange(self.num_known_planets):
                 ax.plot(num_obs, self.runners[i], color=coldict[i], alpha=0.75,
-                linewidth=2, label=label_dict{i})
+                linewidth=2, label=label_dict[i])
             ax.legend(loc='lower right')
         else:
             ax.annotate('No Signals', xy=(0.5, 0.5),
