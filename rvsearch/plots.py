@@ -12,7 +12,7 @@ from radvel import plot
 import rvsearch.utils as utils
 
 label_dict = {0:'b', 1:'c', 2:'d', 3:'e', 4:'f', 5:'g',
-              6:'h',7:'i', 8:'j', 9:'k', 10:'l', 11:'m'}
+              6:'h', 7:'i', 8:'j', 9:'k', 10:'l', 11:'m'}
 
 class CustomTicker(LogFormatterSciNotation):
     def __call__(self, x, pos=None):
