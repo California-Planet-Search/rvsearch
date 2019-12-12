@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Miscellaneous Utilities &mdash; rvsearch 0.1.2 documentation</title>
+  <title>Miscellaneous Utilities &mdash; rvsearch 0.3.2 documentation</title>
   
 
   
@@ -25,6 +25,7 @@
         <script type="text/javascript" src="_static/underscore.js"></script>
         <script type="text/javascript" src="_static/doctools.js"></script>
         <script type="text/javascript" src="_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -59,7 +60,7 @@
             
             
               <div class="version">
-                0.1
+                0.3
               </div>
             
           
@@ -187,8 +188,21 @@
 <span id="miscellaneous-utilities"></span><span id="utils"></span><h1>Miscellaneous Utilities<a class="headerlink" href="#module-rvsearch" title="Permalink to this headline">¶</a></h1>
 <span class="target" id="module-rvsearch.utils"></span><p>Utilities for loading data, checking for known planets, etc.</p>
 <dl class="function">
+<dt id="rvsearch.utils.GaussianDiffFunc">
+<code class="sig-prename descclassname">rvsearch.utils.</code><code class="sig-name descname">GaussianDiffFunc</code><span class="sig-paren">(</span><em class="sig-param">inp_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#GaussianDiffFunc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.GaussianDiffFunc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to use in the HIRES gamma offset prior.
+:param inp_list: pair of floats, the difference of which we want to</p>
+<blockquote>
+<div><p>constrain with a Gaussian prior. Hard-coded params,
+derived empirically from HIRES analysis.</p>
+</div></blockquote>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="function">
 <dt id="rvsearch.utils.cartesian_product">
-<code class="descclassname">rvsearch.utils.</code><code class="descname">cartesian_product</code><span class="sig-paren">(</span><em>*arrays</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#cartesian_product"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.cartesian_product" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">rvsearch.utils.</code><code class="sig-name descname">cartesian_product</code><span class="sig-paren">(</span><em class="sig-param">*arrays</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#cartesian_product"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.cartesian_product" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>
 <div><p>Generate a cartesian product of input arrays.</p>
 </div></blockquote>
@@ -206,8 +220,24 @@
 </dd></dl>
 
 <dl class="function">
+<dt id="rvsearch.utils.derive">
+<code class="sig-prename descclassname">rvsearch.utils.</code><code class="sig-name descname">derive</code><span class="sig-paren">(</span><em class="sig-param">post</em>, <em class="sig-param">synthchains</em>, <em class="sig-param">mstar</em>, <em class="sig-param">mstar_err=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#derive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.derive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derive physical parameters from posterior samples</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>post</strong> (<em>radvel.Posterior</em>) – RadVel posterior object</p></li>
+<li><p><strong>synthchains</strong> (<em>DataFrame</em>) – MCMC chains in the RadVel synth basis</p></li>
+<li><p><strong>mstar</strong> (<em>float</em>) – stellar mass in solar units</p></li>
+<li><p><strong>mstar_err</strong> (<em>float</em>) – (optional) uncertainty on stellar mass</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
 <dt id="rvsearch.utils.initialize_default_pars">
-<code class="descclassname">rvsearch.utils.</code><code class="descname">initialize_default_pars</code><span class="sig-paren">(</span><em>instnames=['inst'], times=None, fitting_basis='per tc secosw sesinw k'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#initialize_default_pars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.initialize_default_pars" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">rvsearch.utils.</code><code class="sig-name descname">initialize_default_pars</code><span class="sig-paren">(</span><em class="sig-param">instnames=['inst'], times=None, linear=True, fitting_basis='per tc secosw sesinw k'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#initialize_default_pars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.initialize_default_pars" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set up a default Parameters object.</p>
 <p>None of the basis values are free params, for the initial 0-planet fit.
 Remember to reset .vary to True for all relevant params.</p>
@@ -216,6 +246,7 @@ Remember to reset .vary to True for all relevant params.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>instnames</strong> (<em>list</em>) – codes of instruments used</p></li>
 <li><p><strong>times</strong> (<em>array</em>) – optional, timestamps of observations.</p></li>
+<li><p><strong>linear</strong> (<em>bool</em>) – Determine whether to optimize gammas linearly.</p></li>
 <li><p><strong>fitting_basis</strong> – optional</p></li>
 </ul>
 </dd>
@@ -227,11 +258,12 @@ Remember to reset .vary to True for all relevant params.</p>
 
 <dl class="function">
 <dt id="rvsearch.utils.initialize_post">
-<code class="descclassname">rvsearch.utils.</code><code class="descname">initialize_post</code><span class="sig-paren">(</span><em>data</em>, <em>params=None</em>, <em>priors=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#initialize_post"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.initialize_post" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">rvsearch.utils.</code><code class="sig-name descname">initialize_post</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">params=None</em>, <em class="sig-param">priors=[]</em>, <em class="sig-param">linear=True</em>, <em class="sig-param">decorrs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#initialize_post"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.initialize_post" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize a posterior object with data, params, and priors.
 :param data: a pandas dataframe.
 :param params: a list of radvel parameter objects.
-:param priors: a list of priors to place on the posterior object.</p>
+:param priors: a list of priors to place on the posterior object.
+:param decorrs: a list of decorrelation vectors.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>post (radvel Posterior object)</p>
@@ -241,7 +273,7 @@ Remember to reset .vary to True for all relevant params.</p>
 
 <dl class="function">
 <dt id="rvsearch.utils.read_from_csv">
-<code class="descclassname">rvsearch.utils.</code><code class="descname">read_from_csv</code><span class="sig-paren">(</span><em>filename</em>, <em>binsize=0.0</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#read_from_csv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.read_from_csv" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">rvsearch.utils.</code><code class="sig-name descname">read_from_csv</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">binsize=0.0</em>, <em class="sig-param">verbose=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#read_from_csv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.read_from_csv" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read radial velocity data from a csv file into a Pandas dataframe.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -256,7 +288,7 @@ Remember to reset .vary to True for all relevant params.</p>
 
 <dl class="function">
 <dt id="rvsearch.utils.read_from_vst">
-<code class="descclassname">rvsearch.utils.</code><code class="descname">read_from_vst</code><span class="sig-paren">(</span><em>filename</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#read_from_vst"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.read_from_vst" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">rvsearch.utils.</code><code class="sig-name descname">read_from_vst</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">verbose=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#read_from_vst"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.read_from_vst" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read radial velocity data from a vst file into a Pandas dataframe.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -274,7 +306,7 @@ Remember to reset .vary to True for all relevant params.</p>
 
 <dl class="function">
 <dt id="rvsearch.utils.scrape">
-<code class="descclassname">rvsearch.utils.</code><code class="descname">scrape</code><span class="sig-paren">(</span><em>starlist</em>, <em>star_db_name=None</em>, <em>filename='system_props.csv'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#scrape"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.scrape" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">rvsearch.utils.</code><code class="sig-name descname">scrape</code><span class="sig-paren">(</span><em class="sig-param">starlist</em>, <em class="sig-param">star_db_name=None</em>, <em class="sig-param">filename='system_props.csv'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#scrape"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.scrape" title="Permalink to this definition">¶</a></dt>
 <dd><p>Take data from completed searches and compile into one dataframe.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -293,7 +325,7 @@ Remember to reset .vary to True for all relevant params.</p>
 
 <dl class="function">
 <dt id="rvsearch.utils.window">
-<code class="descclassname">rvsearch.utils.</code><code class="descname">window</code><span class="sig-paren">(</span><em>times</em>, <em>freqs</em>, <em>plot=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.window" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">rvsearch.utils.</code><code class="sig-name descname">window</code><span class="sig-paren">(</span><em class="sig-param">times</em>, <em class="sig-param">freqs</em>, <em class="sig-param">plot=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/utils.html#window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.utils.window" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function to generate, and plot, the window function of observations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

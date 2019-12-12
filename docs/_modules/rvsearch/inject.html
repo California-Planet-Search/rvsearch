@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rvsearch.inject &mdash; rvsearch 0.1.2 documentation</title>
+  <title>rvsearch.inject &mdash; rvsearch 0.3.2 documentation</title>
   
 
   
@@ -25,6 +25,7 @@
         <script type="text/javascript" src="../../_static/underscore.js"></script>
         <script type="text/javascript" src="../../_static/doctools.js"></script>
         <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -58,7 +59,7 @@
             
             
               <div class="version">
-                0.1
+                0.3
               </div>
             
           
@@ -326,7 +327,8 @@
 <span class="sd">        recoveries (DataFrame): DataFrame with injection/recovery tests from Injections.save</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Completeness.__init__"><a class="viewcode-back" href="../../inject.html#rvsearch.inject.Completeness.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">recoveries</span><span class="p">,</span> <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;inj_au&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;inj_msini&#39;</span><span class="p">,</span> <span class="n">mstar</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Completeness.__init__"><a class="viewcode-back" href="../../inject.html#rvsearch.inject.Completeness.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">recoveries</span><span class="p">,</span> <span class="n">xcol</span><span class="o">=</span><span class="s1">&#39;inj_au&#39;</span><span class="p">,</span> <span class="n">ycol</span><span class="o">=</span><span class="s1">&#39;inj_msini&#39;</span><span class="p">,</span>
+                 <span class="n">mstar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">searches</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Object to handle a suite of injection/recovery tests</span>
 
 <span class="sd">        Args:</span>
@@ -339,6 +341,7 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">recoveries</span> <span class="o">=</span> <span class="n">recoveries</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">searches</span> <span class="o">=</span> <span class="n">searches</span>
 
         <span class="k">if</span> <span class="n">mstar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">mstar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">recoveries</span><span class="p">[</span><span class="s1">&#39;inj_period&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="n">mstar</span>

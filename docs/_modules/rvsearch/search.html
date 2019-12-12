@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rvsearch.search &mdash; rvsearch 0.1.2 documentation</title>
+  <title>rvsearch.search &mdash; rvsearch 0.3.2 documentation</title>
   
 
   
@@ -25,6 +25,7 @@
         <script type="text/javascript" src="../../_static/underscore.js"></script>
         <script type="text/javascript" src="../../_static/doctools.js"></script>
         <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -58,7 +59,7 @@
             
             
               <div class="version">
-                0.1
+                0.3
               </div>
             
           
@@ -178,19 +179,21 @@
 <span class="sd">        crit (str): Either &#39;bic&#39; or &#39;aic&#39;, depending on which criterion to use.</span>
 <span class="sd">        fap (float): False-alarm-probability to pass to the periodogram object.</span>
 <span class="sd">        min_per (float): Minimum search period, to pass to the periodogram object.</span>
-<span class="sd">        dvdt (bool): Whether to include a linear trend in the search.</span>
-<span class="sd">        curv (bool): Whether to include a quadratic trend in the search.</span>
+<span class="sd">        trend (bool): Whether to perform a DBIC test to select a trend model.</span>
+<span class="sd">        linear(bool): Wether to linearly optimize gamma offsets.</span>
 <span class="sd">        fix (bool): Whether to fix known planet parameters during search.</span>
 <span class="sd">        polish (bool): Whether to create finer period grid after planet is found.</span>
 <span class="sd">        verbose (bool):</span>
 <span class="sd">        save_outputs (bool): Save output plots and files? [default = True]</span>
+<span class="sd">        mstar (tuple): (optional) stellar mass and uncertainty in solar units</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="Search.__init__"><a class="viewcode-back" href="../../search_class.html#rvsearch.search.Search.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">post</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">starname</span><span class="o">=</span><span class="s1">&#39;star&#39;</span><span class="p">,</span> <span class="n">max_planets</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
-                <span class="n">priors</span><span class="o">=</span><span class="p">[],</span> <span class="n">crit</span><span class="o">=</span><span class="s1">&#39;bic&#39;</span><span class="p">,</span> <span class="n">fap</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">min_per</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">manual_grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                <span class="n">oversampling</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">trend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fix</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">polish</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">mcmc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_outputs</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                <span class="n">priors</span><span class="o">=</span><span class="p">[],</span> <span class="n">crit</span><span class="o">=</span><span class="s1">&#39;bic&#39;</span><span class="p">,</span> <span class="n">fap</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">min_per</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">max_per</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+                <span class="n">manual_grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">oversampling</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">trend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">eccentric</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fix</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">polish</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">baseline</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">mcmc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_outputs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">mstar</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
         <span class="k">if</span> <span class="p">{</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="s1">&#39;mnvel&#39;</span><span class="p">,</span> <span class="s1">&#39;errvel&#39;</span><span class="p">,</span> <span class="s1">&#39;tel&#39;</span><span class="p">}</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
@@ -203,16 +206,28 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Incorrect data input.&#39;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">starname</span> <span class="o">=</span> <span class="n">starname</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear</span>   <span class="o">=</span> <span class="n">linear</span>
+        <span class="k">if</span> <span class="n">mstar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mstar</span>     <span class="o">=</span> <span class="n">mstar</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mstar_err</span> <span class="o">=</span> <span class="n">mstar</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mstar</span>     <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mstar_err</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="n">post</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">priors</span> <span class="o">=</span> <span class="n">priors</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">initialize_default_pars</span><span class="p">(</span><span class="n">instnames</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tels</span><span class="p">,</span>
-                                                        <span class="n">times</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
+                                                        <span class="n">times</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">time</span><span class="p">,</span>
+                                                        <span class="n">linear</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">post</span>   <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">initialize_post</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">,</span>
-                                                <span class="n">priors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">priors</span><span class="p">)</span>
+                                                <span class="n">priors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">priors</span><span class="p">,</span>
+                                                <span class="n">linear</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setup</span>  <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setup_planets</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">post</span>   <span class="o">=</span> <span class="n">post</span>
-            <span class="c1"># self.priors = post.priors</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setup</span>  <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setup_planets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">num_planets</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">all_params</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -235,16 +250,19 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">fap</span> <span class="o">=</span> <span class="n">fap</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min_per</span> <span class="o">=</span> <span class="n">min_per</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_per</span> <span class="o">=</span> <span class="n">max_per</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">trend</span> <span class="o">=</span> <span class="n">trend</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fix</span> <span class="o">=</span> <span class="n">fix</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">polish</span> <span class="o">=</span> <span class="n">polish</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mcmc</span> <span class="o">=</span> <span class="n">mcmc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trend</span>     <span class="o">=</span> <span class="n">trend</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eccentric</span> <span class="o">=</span> <span class="n">eccentric</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fix</span>       <span class="o">=</span> <span class="n">fix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">polish</span>    <span class="o">=</span> <span class="n">polish</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span>  <span class="o">=</span> <span class="n">baseline</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mcmc</span>      <span class="o">=</span> <span class="n">mcmc</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">manual_grid</span> <span class="o">=</span> <span class="n">manual_grid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">manual_grid</span>  <span class="o">=</span> <span class="n">manual_grid</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">oversampling</span> <span class="o">=</span> <span class="n">oversampling</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">workers</span> <span class="o">=</span> <span class="n">workers</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">workers</span>      <span class="o">=</span> <span class="n">workers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span>      <span class="o">=</span> <span class="n">verbose</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">save_outputs</span> <span class="o">=</span> <span class="n">save_outputs</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">basebic</span> <span class="o">=</span> <span class="kc">None</span>
@@ -293,7 +311,25 @@
         <span class="n">post3</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;curv&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span>  <span class="o">=</span> <span class="kc">False</span>
 
         <span class="n">flat_bic</span> <span class="o">=</span> <span class="n">post3</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">bic</span><span class="p">()</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        if trend_curve_bic &lt; trend_bic - 5:</span>
+<span class="sd">            # Quadratic</span>
+<span class="sd">            self.post.params[&#39;dvdt&#39;].value = post1.params[&#39;dvdt&#39;].value</span>
+<span class="sd">            self.post.params[&#39;curv&#39;].value = post1.params[&#39;curv&#39;].value</span>
 
+<span class="sd">        elif trend_bic &lt; flat_bic - 5:</span>
+<span class="sd">            # Linear</span>
+<span class="sd">            self.post.params[&#39;curv&#39;].value = 0</span>
+<span class="sd">            self.post.params[&#39;dvdt&#39;].value = post2.params[&#39;dvdt&#39;].value</span>
+<span class="sd">            self.post.params[&#39;curv&#39;].vary  = False</span>
+
+<span class="sd">        else:</span>
+<span class="sd">            # Flat</span>
+<span class="sd">            self.post.params[&#39;dvdt&#39;].value = 0</span>
+<span class="sd">            self.post.params[&#39;curv&#39;].value = 0</span>
+<span class="sd">            self.post.params[&#39;dvdt&#39;].vary  = False</span>
+<span class="sd">            self.post.params[&#39;curv&#39;].vary  = False</span>
+<span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">if</span> <span class="n">trend_bic</span> <span class="o">&lt;</span> <span class="n">flat_bic</span> <span class="o">-</span> <span class="mi">5</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">trend_curve_bic</span> <span class="o">&lt;</span> <span class="n">trend_bic</span> <span class="o">-</span> <span class="mi">5</span><span class="p">:</span>
                 <span class="c1"># Quadratic</span>
@@ -351,8 +387,9 @@
             <span class="n">new_params</span><span class="p">[</span><span class="s1">&#39;curv&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
 
         <span class="n">new_params</span><span class="p">[</span><span class="s1">&#39;per</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">new_num_planets</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="n">new_params</span><span class="p">[</span><span class="s1">&#39;secosw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">new_num_planets</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="n">new_params</span><span class="p">[</span><span class="s1">&#39;sesinw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">new_num_planets</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">eccentric</span><span class="p">:</span>
+            <span class="n">new_params</span><span class="p">[</span><span class="s1">&#39;secosw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">new_num_planets</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">new_params</span><span class="p">[</span><span class="s1">&#39;sesinw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">new_num_planets</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
 
         <span class="n">new_params</span><span class="o">.</span><span class="n">num_planets</span> <span class="o">=</span> <span class="n">new_num_planets</span>
 
@@ -400,26 +437,6 @@
         <span class="n">new_post</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">initialize_post</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">new_params</span><span class="p">,</span> <span class="n">priors</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">post</span> <span class="o">=</span> <span class="n">new_post</span></div>
 
-    <span class="c1"># def trend_swap(self):</span>
-    <span class="c1">#     &quot;&quot;&quot;Perform a BIC test for trend versus long-period Keplerian fit.</span>
-    <span class="c1">#</span>
-    <span class="c1">#     &quot;&quot;&quot;</span>
-    <span class="c1">#     kpost = copy.deepcopy(self.post)</span>
-    <span class="c1">#</span>
-    <span class="c1">#     times    = self.post.likelihood.x</span>
-    <span class="c1">#     baseline = times[-1] - times[0]</span>
-    <span class="c1">#</span>
-    <span class="c1">#     # THIS CAN BE USED ONCE SUB_PLANET() GENERALIZED TO ANY N</span>
-    <span class="c1">#     #for n in np.arange(1, self.num_planets+1):</span>
-    <span class="c1">#     #    if self.post.params[&#39;per{}&#39;.format(n)].value &gt; 1.5*baseline:</span>
-    <span class="c1">#     #        self.sub_planet()</span>
-    <span class="c1">#</span>
-    <span class="c1">#     per = self.post.params[&#39;per{}&#39;.format(self.num_planets)].value</span>
-    <span class="c1">#     if per &gt; 1.5*baseline:</span>
-    <span class="c1">#         k = kpost.params[&#39;k{}&#39;.format(self.num_planets)].value</span>
-    <span class="c1">#         self.sub_planet()</span>
-    <span class="c1">#         self.post.params[&#39;dvdt&#39;] = True</span>
-    <span class="c1">#         self.post.params[&#39;dvdt&#39;].value = 2*np.pi*k/per</span>
 
 <div class="viewcode-block" id="Search.fit_orbit"><a class="viewcode-back" href="../../search_class.html#rvsearch.search.Search.fit_orbit">[docs]</a>    <span class="k">def</span> <span class="nf">fit_orbit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Perform a max-likelihood fit with all parameters free.</span>
@@ -527,17 +544,19 @@
         <span class="n">run</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">while</span> <span class="n">run</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_planets</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="c1"># if self.basebic is None:</span>
-                <span class="c1">#     self.basebic = self.post.likelihood.bic()</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">add_planet</span><span class="p">()</span>
 
             <span class="n">perioder</span> <span class="o">=</span> <span class="n">periodogram</span><span class="o">.</span><span class="n">Periodogram</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="p">,</span> <span class="n">basebic</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">basebic</span><span class="p">,</span>
-                                               <span class="n">minsearchp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_per</span><span class="p">,</span> <span class="n">fap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fap</span><span class="p">,</span>
+                                               <span class="n">minsearchp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_per</span><span class="p">,</span>
+                                               <span class="n">maxsearchp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_per</span><span class="p">,</span>
+                                               <span class="n">fap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fap</span><span class="p">,</span>
                                                <span class="n">manual_grid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">manual_grid</span><span class="p">,</span>
                                                <span class="n">oversampling</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">oversampling</span><span class="p">,</span>
+                                               <span class="n">baseline</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="p">,</span>
+                                               <span class="n">eccentric</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">eccentric</span><span class="p">,</span>
                                                <span class="n">workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="p">,</span>
                                                <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
-
+            <span class="c1"># Run the periodogram, store arrays and threshold (if computed).</span>
             <span class="n">perioder</span><span class="o">.</span><span class="n">per_bic</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">periodograms</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">num_planets</span><span class="p">]</span> <span class="o">=</span> <span class="n">perioder</span><span class="o">.</span><span class="n">power</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">crit</span><span class="p">]</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_planets</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">pers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -562,26 +581,35 @@
                 <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">perioder</span><span class="o">.</span><span class="n">bestfit_params</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
 
-                <span class="c1"># 7/12/19: Try re-fitting with re-set tc. Highly particular fix.</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_planets</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;tc1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;</span> \
-                                                     <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">time</span><span class="p">):</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;tc1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;k1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;per1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;secosw1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;secosw1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="c1"># 8/23/19: Generalizing tc reset to each new find.</span>
+                <span class="n">tckey</span> <span class="o">=</span> <span class="s1">&#39;tc</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_planets</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">tckey</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">time</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">tckey</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;k</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;per</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;secosw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;secosw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+                        <span class="k">if</span> <span class="n">n</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_planets</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;tc</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+
                     <span class="bp">self</span><span class="o">.</span><span class="n">post</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">fitting</span><span class="o">.</span><span class="n">maxlike_fitting</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="p">,</span>
                                                                <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;k1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">True</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;per1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">True</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;secosw1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">True</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;secosw1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">True</span>
+
+                    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;k</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;per</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;secosw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;secosw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;tc</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">True</span>
 
                 <span class="bp">self</span><span class="o">.</span><span class="n">fit_orbit</span><span class="p">()</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">all_params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">basebic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">bic</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">sub_planet</span><span class="p">()</span>
+                <span class="c1"># 8/3: Update the basebic anyway, for injections.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">basebic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">bic</span><span class="p">()</span>
                 <span class="n">run</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_planets</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_planets</span><span class="p">:</span>
                 <span class="n">run</span> <span class="o">=</span> <span class="kc">False</span>
@@ -608,21 +636,24 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">medparams</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">maxparams</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="c1"># Use recommended parameters for mcmc.</span>
-            <span class="n">nensembles</span> <span class="o">=</span> <span class="mi">16</span>
+            <span class="n">nensembles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">workers</span><span class="p">,</span> <span class="mi">16</span><span class="p">])</span>
             <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">nensembles</span><span class="p">:</span>
                 <span class="n">nensembles</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
             <span class="c1"># Set custom mcmc scales for e/w parameters.</span>
             <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
-                <span class="n">secoswscale</span> <span class="o">=</span> <span class="mf">0.005</span><span class="c1">#*np.abs(self.post.params[&#39;secosw{}&#39;.format(n)].value)</span>
-                <span class="n">sesinwscale</span> <span class="o">=</span> <span class="mf">0.005</span><span class="c1">#*np.abs(self.post.params[&#39;sesinw{}&#39;.format(n)].value)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;secosw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span><span class="o">.</span><span class="n">mcmcscale</span> <span class="o">=</span> <span class="n">secoswscale</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;sesinw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span><span class="o">.</span><span class="n">mcmcscale</span> <span class="o">=</span> <span class="n">sesinwscale</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;secosw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span><span class="o">.</span><span class="n">mcmcscale</span> <span class="o">=</span> <span class="mf">0.005</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;sesinw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span><span class="o">.</span><span class="n">mcmcscale</span> <span class="o">=</span> <span class="mf">0.005</span>
 
             <span class="c1"># Run MCMC.</span>
             <span class="n">chains</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">mcmc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="p">,</span> <span class="n">nwalkers</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">nrun</span><span class="o">=</span><span class="mi">25000</span><span class="p">,</span>
-                                 <span class="n">burnGR</span><span class="o">=</span><span class="mf">1.01</span><span class="p">,</span> <span class="n">maxGR</span><span class="o">=</span><span class="mf">1.0075</span><span class="p">,</span> <span class="n">minTz</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span>
-                                 <span class="n">minsteps</span><span class="o">=</span><span class="mi">8000</span><span class="p">,</span> <span class="n">minpercent</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>
+                                 <span class="n">burnGR</span><span class="o">=</span><span class="mf">1.03</span><span class="p">,</span> <span class="n">maxGR</span><span class="o">=</span><span class="mf">1.0075</span><span class="p">,</span> <span class="n">minTz</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span>
+                                 <span class="n">minsteps</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">minpercent</span><span class="o">=</span><span class="mi">33</span><span class="p">,</span>
                                  <span class="n">thin</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">ensembles</span><span class="o">=</span><span class="n">nensembles</span><span class="p">)</span>
+            <span class="c1"># chains = radvel.mcmc(self.post, nwalkers=50, nrun=2500,</span>
+            <span class="c1">#                      burnGR=1.1, maxGR=1.03, minTz=1000,</span>
+            <span class="c1">#                      minsteps=250, minpercent=33,</span>
+            <span class="c1">#                      thin=5, ensembles=nensembles)</span>
+
             <span class="c1"># Convert chains to e, w basis.</span>
             <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">par</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span><span class="p">:</span>
@@ -682,6 +713,11 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">medparams</span><span class="p">[</span><span class="n">par</span><span class="p">]</span> <span class="o">=</span> <span class="n">med</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">maxparams</span><span class="p">[</span><span class="n">par</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span>
 
+            <span class="c1"># Add uncertainties on derived parameters, if mass is provided.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mstar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">post</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">derive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="p">,</span> <span class="n">synthchains</span><span class="p">,</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">mstar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mstar_err</span><span class="p">)</span>
+
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_outputs</span><span class="p">:</span>
                 <span class="c1"># Generate a corner plot, sans nuisance parameters.</span>
                 <span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span>
@@ -720,7 +756,6 @@
             <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pickle_out</span><span class="p">)</span>
             <span class="n">pickle_out</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
-            <span class="c1"># if len(self.pers) == len(self.periodograms.values()):</span>
             <span class="n">periodograms_plus_pers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">pers</span><span class="p">],</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">periodograms</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
             <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">outdir</span><span class="o">+</span><span class="s1">&#39;/pers_periodograms.csv&#39;</span><span class="p">,</span> <span class="n">periodograms_plus_pers</span><span class="p">,</span>
                        <span class="n">header</span><span class="o">=</span><span class="s1">&#39;period  BIC_array&#39;</span><span class="p">)</span>
@@ -767,6 +802,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">mcmc</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">save_outputs</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="c1"># 8/2: Trying to fix injections, possibly basebic error.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">basebic</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">full_grid</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">manual_grid</span> <span class="o">=</span> <span class="p">[</span><span class="n">injected_orbel</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>

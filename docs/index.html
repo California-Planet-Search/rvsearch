@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>RVsearch: For All Your Planet-Hunting Needs &mdash; rvsearch 0.1.2 documentation</title>
+  <title>RVsearch: For All Your Planet-Hunting Needs &mdash; rvsearch 0.3.2 documentation</title>
   
 
   
@@ -25,6 +25,7 @@
         <script type="text/javascript" src="_static/underscore.js"></script>
         <script type="text/javascript" src="_static/doctools.js"></script>
         <script type="text/javascript" src="_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -59,7 +60,7 @@
             
             
               <div class="version">
-                0.1
+                0.3
               </div>
             
           
@@ -212,11 +213,30 @@ subcommands:
   <span class="o">{</span>find,inject,plot<span class="o">}</span>
 </pre></div>
 </div>
+<p>Basic command-line-interface order of operations:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Run a search from scratch</span>
+<span class="c1"># add the --known flag to skip searching for planets defined in the setup file</span>
+$ rvsearch find -s path-to-setup-file
+
+<span class="c1"># plot the results of the search</span>
+$ rvsearch plot -t summary -d path-to-output-directory-from-search
+
+<span class="c1"># plot the results of the search</span>
+$ rvsearch plot -t summary -d path-to-output-directory-from-search
+
+<span class="c1"># run injection-recovery tests to measure your sensitivity to additional planets</span>
+$ rvsearch inject -d path-to-output-directory-from-search
+
+<span class="c1"># plot the results of the injection-recovery tests</span>
+$ rvsearch plot -t recovery -d path-to-output-directory-from-search
+</pre></div>
+</div>
 <p>Contents:</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="tutorial_api.html">API Tutorials</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="tutorials/128311_Search.html">128311 Blind search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/Completeness_Contours.html">Completeness Contours</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a><ul>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rvsearch.periodogram &mdash; rvsearch 0.1.2 documentation</title>
+  <title>rvsearch.periodogram &mdash; rvsearch 0.3.2 documentation</title>
   
 
   
@@ -25,6 +25,7 @@
         <script type="text/javascript" src="../../_static/underscore.js"></script>
         <script type="text/javascript" src="../../_static/doctools.js"></script>
         <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -58,7 +59,7 @@
             
             
               <div class="version">
-                0.1
+                0.3
               </div>
             
           
@@ -221,10 +222,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">errvel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">yerr</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">timelen</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">times</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">times</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">tels</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">if</span> <span class="s1">&#39;gamma_&#39;</span> <span class="ow">in</span> <span class="n">val</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">tels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">telvec</span><span class="p">)</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        for val in self.post.params.keys():</span>
+<span class="sd">            if &#39;gamma_&#39; in val:</span>
+<span class="sd">                self.tels.append(val.split(&#39;_&#39;)[1])</span>
+<span class="sd">        &#39;&#39;&#39;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">minsearchP</span> <span class="o">=</span> <span class="n">minsearchp</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">maxsearchP</span> <span class="o">=</span> <span class="n">maxsearchp</span>
@@ -253,7 +256,10 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">bic_thresh</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="c1"># Pre-compute good-fit floor of the BIC periodogram.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">floor</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">times</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eccentric</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">floor</span> <span class="o">=</span> <span class="o">-</span><span class="mi">4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">times</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">floor</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">times</span><span class="p">))</span>
 
         <span class="c1"># Automatically generate a period grid upon initialization.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">make_per_grid</span><span class="p">()</span></div>
@@ -316,14 +322,19 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;per&#39;</span><span class="o">+</span><span class="n">plstr</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;tc&#39;</span><span class="o">+</span><span class="n">plstr</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;k&#39;</span><span class="o">+</span><span class="n">plstr</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;secosw&#39;</span><span class="o">+</span><span class="n">plstr</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;sesinw&#39;</span><span class="o">+</span><span class="n">plstr</span><span class="p">]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
                 <span class="c1"># Vary ONLY gamma, jitter, dvdt, curv. All else fixed, and k=0</span>
                 <span class="n">baseline_fit</span> <span class="o">=</span> <span class="n">radvel</span><span class="o">.</span><span class="n">fitting</span><span class="o">.</span><span class="n">maxlike_fitting</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                 <span class="n">baseline_bic</span> <span class="o">=</span> <span class="n">baseline_fit</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">bic</span><span class="p">()</span>
             <span class="c1"># Handle the case where there is at least one known planet.</span>
             <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;per</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;tc</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;k</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;secosw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;sesinw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
                 <span class="n">baseline_bic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">bic</span><span class="p">()</span>
-                <span class="c1">#baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)</span>
-                <span class="c1">#baseline_bic = baseline_fit.likelihood.bic()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">baseline_bic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">basebic</span>
 
@@ -332,7 +343,11 @@
 
         <span class="c1"># Allow amplitude and time offset to vary, fix period (and ecc. if asked.)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;per</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eccentric</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eccentric</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="c1"># If eccentric set to True, Free eccentricity.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;secosw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;sesinw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
             <span class="c1"># If eccentric set to False, fix eccentricity to zero.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;secosw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;sesinw</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_known_planets</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">vary</span> <span class="o">=</span> <span class="kc">False</span>
@@ -414,6 +429,9 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">bic</span> <span class="o">=</span> <span class="p">[</span><span class="n">y</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_bics</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">x</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fit_params</span> <span class="o">=</span> <span class="p">[</span><span class="n">y</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_params</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">x</span><span class="p">]</span>
 
+            <span class="c1"># Close the pool object.</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
         <span class="n">fit_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bic</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bestfit_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_params</span><span class="p">[</span><span class="n">fit_index</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">best_bic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bic</span><span class="p">[</span><span class="n">fit_index</span><span class="p">]</span>
@@ -429,7 +447,7 @@
         <span class="c1"># FOR TESTING</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Calculating Lomb-Scargle periodogram&quot;</span><span class="p">)</span>
         <span class="n">periodogram</span> <span class="o">=</span> <span class="n">astropy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">LombScargle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">times</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vel</span><span class="p">,</span>
-                                                        <span class="bp">self</span><span class="o">.</span><span class="n">errvel</span><span class="p">)</span>
+                                                <span class="bp">self</span><span class="o">.</span><span class="n">errvel</span><span class="p">)</span>
         <span class="n">power</span> <span class="o">=</span> <span class="n">periodogram</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">freqs</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">power</span><span class="p">[</span><span class="s1">&#39;ls&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">power</span></div>
 

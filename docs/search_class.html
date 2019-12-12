@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Blind Search &mdash; rvsearch 0.1.2 documentation</title>
+  <title>Blind Search &mdash; rvsearch 0.3.2 documentation</title>
   
 
   
@@ -25,6 +25,7 @@
         <script type="text/javascript" src="_static/underscore.js"></script>
         <script type="text/javascript" src="_static/doctools.js"></script>
         <script type="text/javascript" src="_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -60,7 +61,7 @@
             
             
               <div class="version">
-                0.1
+                0.3
               </div>
             
           
@@ -189,7 +190,7 @@
 <span class="target" id="module-rvsearch.search"></span><p>Search class</p>
 <dl class="class">
 <dt id="rvsearch.search.Search">
-<em class="property">class </em><code class="descclassname">rvsearch.search.</code><code class="descname">Search</code><span class="sig-paren">(</span><em>data</em>, <em>post=None</em>, <em>starname='star'</em>, <em>max_planets=8</em>, <em>priors=[]</em>, <em>crit='bic'</em>, <em>fap=0.001</em>, <em>min_per=3</em>, <em>manual_grid=None</em>, <em>oversampling=1.0</em>, <em>trend=False</em>, <em>fix=False</em>, <em>polish=True</em>, <em>mcmc=True</em>, <em>workers=1</em>, <em>verbose=True</em>, <em>save_outputs=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">rvsearch.search.</code><code class="sig-name descname">Search</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">post=None</em>, <em class="sig-param">starname='star'</em>, <em class="sig-param">max_planets=8</em>, <em class="sig-param">priors=[]</em>, <em class="sig-param">crit='bic'</em>, <em class="sig-param">fap=0.001</em>, <em class="sig-param">min_per=3</em>, <em class="sig-param">max_per=10000</em>, <em class="sig-param">manual_grid=None</em>, <em class="sig-param">oversampling=1.0</em>, <em class="sig-param">trend=False</em>, <em class="sig-param">linear=False</em>, <em class="sig-param">eccentric=False</em>, <em class="sig-param">fix=False</em>, <em class="sig-param">polish=True</em>, <em class="sig-param">baseline=True</em>, <em class="sig-param">mcmc=True</em>, <em class="sig-param">workers=1</em>, <em class="sig-param">verbose=True</em>, <em class="sig-param">save_outputs=True</em>, <em class="sig-param">mstar=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class to initialize and modify posteriors as planet search runs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -202,42 +203,43 @@
 <li><p><strong>crit</strong> (<em>str</em>) – Either ‘bic’ or ‘aic’, depending on which criterion to use.</p></li>
 <li><p><strong>fap</strong> (<em>float</em>) – False-alarm-probability to pass to the periodogram object.</p></li>
 <li><p><strong>min_per</strong> (<em>float</em>) – Minimum search period, to pass to the periodogram object.</p></li>
-<li><p><strong>dvdt</strong> (<em>bool</em>) – Whether to include a linear trend in the search.</p></li>
-<li><p><strong>curv</strong> (<em>bool</em>) – Whether to include a quadratic trend in the search.</p></li>
+<li><p><strong>trend</strong> (<em>bool</em>) – Whether to perform a DBIC test to select a trend model.</p></li>
+<li><p><strong>linear</strong> (<em>bool</em>) – Wether to linearly optimize gamma offsets.</p></li>
 <li><p><strong>fix</strong> (<em>bool</em>) – Whether to fix known planet parameters during search.</p></li>
 <li><p><strong>polish</strong> (<em>bool</em>) – Whether to create finer period grid after planet is found.</p></li>
 <li><p><strong>verbose</strong> (<em>bool</em>) – </p></li>
 <li><p><strong>save_outputs</strong> (<em>bool</em>) – Save output plots and files? [default = True]</p></li>
+<li><p><strong>mstar</strong> (<em>tuple</em>) – (optional) stellar mass and uncertainty in solar units</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="method">
 <dt id="rvsearch.search.Search.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>data</em>, <em>post=None</em>, <em>starname='star'</em>, <em>max_planets=8</em>, <em>priors=[]</em>, <em>crit='bic'</em>, <em>fap=0.001</em>, <em>min_per=3</em>, <em>manual_grid=None</em>, <em>oversampling=1.0</em>, <em>trend=False</em>, <em>fix=False</em>, <em>polish=True</em>, <em>mcmc=True</em>, <em>workers=1</em>, <em>verbose=True</em>, <em>save_outputs=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">post=None</em>, <em class="sig-param">starname='star'</em>, <em class="sig-param">max_planets=8</em>, <em class="sig-param">priors=[]</em>, <em class="sig-param">crit='bic'</em>, <em class="sig-param">fap=0.001</em>, <em class="sig-param">min_per=3</em>, <em class="sig-param">max_per=10000</em>, <em class="sig-param">manual_grid=None</em>, <em class="sig-param">oversampling=1.0</em>, <em class="sig-param">trend=False</em>, <em class="sig-param">linear=False</em>, <em class="sig-param">eccentric=False</em>, <em class="sig-param">fix=False</em>, <em class="sig-param">polish=True</em>, <em class="sig-param">baseline=True</em>, <em class="sig-param">mcmc=True</em>, <em class="sig-param">workers=1</em>, <em class="sig-param">verbose=True</em>, <em class="sig-param">save_outputs=True</em>, <em class="sig-param">mstar=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="rvsearch.search.Search.__weakref__">
-<code class="descname">__weakref__</code><a class="headerlink" href="#rvsearch.search.Search.__weakref__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#rvsearch.search.Search.__weakref__" title="Permalink to this definition">¶</a></dt>
 <dd><p>list of weak references to the object (if defined)</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="rvsearch.search.Search.add_gp">
-<code class="descname">add_gp</code><span class="sig-paren">(</span><em>inst=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.add_gp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.add_gp" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_gp</code><span class="sig-paren">(</span><em class="sig-param">inst=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.add_gp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.add_gp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a gaussian process to the posterior (NOT IN USE).</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="rvsearch.search.Search.add_planet">
-<code class="descname">add_planet</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.add_planet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.add_planet" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_planet</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.add_planet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.add_planet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add parameters for one more planet to posterior.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="rvsearch.search.Search.basebic">
-<code class="descname">basebic</code><em class="property"> = None</em><a class="headerlink" href="#rvsearch.search.Search.basebic" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">basebic</code><em class="property"> = None</em><a class="headerlink" href="#rvsearch.search.Search.basebic" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>if post == None:</dt><dd><p>self.basebic = None</p>
 </dd>
@@ -248,7 +250,7 @@
 
 <dl class="method">
 <dt id="rvsearch.search.Search.continue_search">
-<code class="descname">continue_search</code><span class="sig-paren">(</span><em>fixed_threshold=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.continue_search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.continue_search" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">continue_search</code><span class="sig-paren">(</span><em class="sig-param">fixed_threshold=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.continue_search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.continue_search" title="Permalink to this definition">¶</a></dt>
 <dd><p>Continue a search by trying to add one more planet</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -259,13 +261,13 @@
 
 <dl class="method">
 <dt id="rvsearch.search.Search.fit_orbit">
-<code class="descname">fit_orbit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.fit_orbit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.fit_orbit" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">fit_orbit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.fit_orbit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.fit_orbit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform a max-likelihood fit with all parameters free.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="rvsearch.search.Search.inject_recover">
-<code class="descname">inject_recover</code><span class="sig-paren">(</span><em>injected_orbel</em>, <em>num_cpus=None</em>, <em>full_grid=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.inject_recover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.inject_recover" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">inject_recover</code><span class="sig-paren">(</span><em class="sig-param">injected_orbel</em>, <em class="sig-param">num_cpus=None</em>, <em class="sig-param">full_grid=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.inject_recover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.inject_recover" title="Permalink to this definition">¶</a></dt>
 <dd><p>Inject and recover
 Inject and attempt to recover a synthetic planet signal
 :param injected_orbel: array of orbital elements sent to radvel.kepler.rv_drive
@@ -288,7 +290,7 @@ Inject and attempt to recover a synthetic planet signal
 
 <dl class="method">
 <dt id="rvsearch.search.Search.run_search">
-<code class="descname">run_search</code><span class="sig-paren">(</span><em>fixed_threshold=None</em>, <em>outdir=None</em>, <em>mkoutdir=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.run_search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.run_search" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run_search</code><span class="sig-paren">(</span><em class="sig-param">fixed_threshold=None</em>, <em class="sig-param">outdir=None</em>, <em class="sig-param">mkoutdir=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.run_search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.run_search" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run an iterative search for planets not given in posterior.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -302,25 +304,25 @@ Inject and attempt to recover a synthetic planet signal
 
 <dl class="method">
 <dt id="rvsearch.search.Search.save">
-<code class="descname">save</code><span class="sig-paren">(</span><em>filename='post_final.pkl'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.save" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">save</code><span class="sig-paren">(</span><em class="sig-param">filename='post_final.pkl'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Pickle current posterior.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="rvsearch.search.Search.sub_gp">
-<code class="descname">sub_gp</code><span class="sig-paren">(</span><em>num_gps=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.sub_gp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.sub_gp" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">sub_gp</code><span class="sig-paren">(</span><em class="sig-param">num_gps=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.sub_gp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.sub_gp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove a gaussian process from the posterior (NOT IN USE).</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="rvsearch.search.Search.sub_planet">
-<code class="descname">sub_planet</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.sub_planet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.sub_planet" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">sub_planet</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.sub_planet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.sub_planet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove parameters for one  planet from posterior.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="rvsearch.search.Search.trend_test">
-<code class="descname">trend_test</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.trend_test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.trend_test" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">trend_test</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/rvsearch/search.html#Search.trend_test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rvsearch.search.Search.trend_test" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform zero-planet baseline fit, test for significant trend.</p>
 </dd></dl>
 

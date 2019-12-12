@@ -65,9 +65,8 @@ def main():
                           help="Number of test frequencies"
                           )
     psr_search.add_argument('--trend',
-                          action='store',
+                          action='store_true',
                           help="Trend free during periodogram calculation [default=False]",
-                          default=False, type=bool
                           )
     psr_search.add_argument('--mcmc', action='store_true',
                           help="Run MCMC after search [default=False]"
@@ -76,12 +75,16 @@ def main():
                          type=float, action='store', default=None, nargs=2,
                          help="Stellar mass and uncertainty [msun]. Will use values defined in setup file if not provided on the command line."
                          )
+    psr_search.add_argument('--maxplanets',
+                         type=int, action='store', default=8,
+                         help="Maximum number of planets to search for (including pre-defined planets) [default=8]"
+                         )
 
 
     # Injections
     psr_inj = subpsr.add_parser('inject', parents=[psr_parent], )
     psr_inj.add_argument('--minP',
-                          type=float, action='store', default=1.2,
+                          type=float, action='store', default=3.1,
                           help="Minimum injection period [default=1.2]"
                           )
     psr_inj.add_argument('--maxP',
@@ -106,8 +109,8 @@ def main():
                           )
 
     psr_inj.add_argument('--num_inject',
-                          type=int, action='store', default=100,
-                          help="Number of injections [default=100]"
+                          type=int, action='store', default=3000,
+                          help="Number of injections [default=3000]"
                           )
     psr_inj.add_argument('--full_grid',
                           action='store_true',
@@ -142,7 +145,6 @@ def main():
     args = psr.parse_args()
 
     args.func(args)
-
 
 if __name__ == '__main__':
     main()
