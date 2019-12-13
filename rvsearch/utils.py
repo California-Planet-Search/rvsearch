@@ -34,6 +34,13 @@ def reset_params(post, default_pdict):
         post.params[k].value = default_pdict[k]
     return post
 
+def insolate(T, R, a):
+    # Calculate stellar insolation.
+    return (T/5778)**4 * R**2 * a**-2
+
+def tequil(S, alb=0.3):
+    # Calculate equilibrium temperature.
+    return S**-0.25 * ((1-alb)/4.)**0.25
 
 def initialize_default_pars(instnames=['inst'], times=None, linear=True,
                             fitting_basis='per tc secosw sesinw k'):
