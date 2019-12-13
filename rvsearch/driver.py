@@ -73,6 +73,9 @@ def injections(args):
     klim = (args.minK, args.maxK)
     elim = (args.minE, args.maxE)
 
+    rstar = args.rstar
+    teff  = args.teff
+
     sdir = args.search_dir
 
     with working_directory(sdir):

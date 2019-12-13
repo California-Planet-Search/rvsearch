@@ -177,7 +177,7 @@ class Completeness(object):
     """
 
     def __init__(self, recoveries, xcol='inj_au', ycol='inj_msini',
-                 mstar=None, searches=None):
+                 mstar=None, rstar=None, teff=None, searches=None):
         """Object to handle a suite of injection/recovery tests
 
         Args:
@@ -204,6 +204,13 @@ class Completeness(object):
 
             self.recoveries['inj_au'] = radvel.utils.semi_major_axis(self.recoveries['inj_period'], mstar)
             self.recoveries['rec_au'] = radvel.utils.semi_major_axis(self.recoveries['rec_period'], mstar)
+
+            if teff is not None and rstar is not None: 
+                self.recoveries['inj_sinc'] = rvsearch.utils.insolation(teff, rstar, self.recoveries['inj_au'])
+                self.recoveries['rec_sinc'] = rvsearch.utils.insolation(teff, rstar, self.recoveries['rec_au'])
+
+                self.recoveries['inj_teq'] = rvsearch.utils.tequil(teff, rstar, self.recoveries['inj_sinc'])
+                self.recoveries['rec_teq'] = rvsearch.utils.tequil(teff, rstar, self.recoveries['rec_sinc'])
 
         self.xcol = xcol
         self.ycol = ycol
