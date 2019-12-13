@@ -107,6 +107,14 @@ def main():
                           type=float, action='store', default=0.9,
                           help="Maximum injection eccentricity [default=0.9]"
                           )
+    psr_inj.add_argument('--rstar',
+                          type=float, action='store', default=None,
+                          help="Stellar radius [default=None]"
+                          )
+    psr_inj.add_argument('--teff',
+                          type=float, action='store', default=None,
+                          help="Stellar effective temperature [default=None]"
+                          )
 
     psr_inj.add_argument('--num_inject',
                           type=int, action='store', default=3000,
