@@ -26,7 +26,7 @@ class Injections(object):
         verbose (bool): show progress bar
     """
 
-    def __init__(self, searchpath, plim, klim, elim, num_sim=1, full_grid=True, verbose=True):
+    def __init__(self, searchpath, plim, klim, elim, num_sim=1, full_grid=True, verbose=True, beta_e=False):
         self.searchpath = searchpath
         self.plim = plim
         self.klim = klim
@@ -34,6 +34,7 @@ class Injections(object):
         self.num_sim = num_sim
         self.full_grid = full_grid
         self.verbose = verbose
+        self.beta_e = beta_e
 
         self.search = pickle.load(open(searchpath, 'rb'))
         self.search.verbose = False
@@ -61,6 +62,7 @@ class Injections(object):
         k1, k2 = self.klim
         e1, e2 = self.elim
         num_sim = self.num_sim
+        beta_e = self.beta_e
 
         np.random.seed(seed)
 
@@ -74,10 +76,15 @@ class Injections(object):
         else:
             sim_k = 10 ** np.random.uniform(np.log10(k1), np.log10(k2), size=num_sim)
 
-        if e1 == e2:
-            sim_e = np.zeros(num_sim) + e1
+        if beta_e:
+            a = 0.867
+            b = 3.03
+            sim_e = np.random.beta(a, b, size=num_sim)
         else:
-            sim_e = np.random.uniform(e1, e2, size=num_sim)
+            if e1 == e2:
+                sim_e = np.zeros(num_sim) + e1
+            else:
+                sim_e = np.random.uniform(e1, e2, size=num_sim)
 
         sim_tp = np.random.uniform(0, sim_p, size=num_sim)
         sim_om = np.random.uniform(0, 2 * np.pi, size=num_sim)
