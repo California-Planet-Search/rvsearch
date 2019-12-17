@@ -72,6 +72,7 @@ def injections(args):
     plim = (args.minP, args.maxP)
     klim = (args.minK, args.maxK)
     elim = (args.minE, args.maxE)
+    beta_e = args.betaE
 
     rstar = args.rstar
     teff  = args.teff
@@ -90,7 +91,8 @@ def injections(args):
                 inj = rvsearch.inject.Injections(sfile, plim, klim, elim,
                                                  num_sim=args.num_inject,
                                                  full_grid=args.full_grid,
-                                                 verbose=args.verbose)
+                                                 verbose=args.verbose,
+                                                 beta_e=beta_e)
                 recoveries = inj.run_injections(num_cpus=args.num_cpus)
                 inj.save()
             except IOError:

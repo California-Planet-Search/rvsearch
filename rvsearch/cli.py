@@ -128,7 +128,10 @@ def main():
                           action='store_true',
                           help="Force overwrite [default=False]"
                           )
-
+    psr_inj.add_argument('--beta_e',
+                         action='store_true',
+                         help="Inject using the Kipping 2013 beta distribution for ecc [default=False]"
+                         ) 
 
 
     psr_search.set_defaults(func=rvsearch.driver.run_search)
