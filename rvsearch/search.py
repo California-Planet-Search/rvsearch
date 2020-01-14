@@ -383,14 +383,12 @@ class Search(object):
                 power = LombScargle(x[:i], yres[:i], yerr[:i],
                                     normalization='psd').power(freqs)
                 runner.append(np.amax(power))
-                #freq = 1. / per
-                #runner.append(LombScargle(x[:i], yres[:i], yerr[:i],
-                #              normalization='psd').power(freq))
 
             runners.append(runner)
         self.runners = runners
 
-    def run_search(self, fixed_threshold=None, outdir=None, mkoutdir=True):
+    def run_search(self, fixed_threshold=None, outdir=None, mkoutdir=True,
+                   running=True):
         """Run an iterative search for planets not given in posterior.
 
         Args:
@@ -499,7 +497,8 @@ class Search(object):
                                                         self.num_planets))
 
         # Generate running periodograms.
-        self.running_per()
+        if running:
+            self.running_per()
 
         # Run MCMC on final posterior, save new parameters and uncertainties.
         if self.mcmc == True and (self.num_planets != 0 or
@@ -641,7 +640,7 @@ class Search(object):
             np.savetxt(outdir+'/thresholds_bics_faps.csv', threshs_bics_faps,
                        header='threshold  best_bic  fap')
 
-    def continue_search(self, fixed_threshold=True):
+    def continue_search(self, fixed_threshold=True, running=True):
         """Continue a search by trying to add one more planet
 
         Args:
@@ -655,7 +654,7 @@ class Search(object):
         else:
             thresh = None
 
-        self.run_search(fixed_threshold=thresh, mkoutdir=False)
+        self.run_search(fixed_threshold=thresh, mkoutdir=False, running=running)
 
     def inject_recover(self, injected_orbel, num_cpus=None, full_grid=False):
         """Inject and recover
@@ -689,7 +688,7 @@ class Search(object):
 
         self.data['mnvel'] += mod
 
-        self.continue_search(fixed_threshold)
+        self.continue_search(fixed_threshold, running=False)
 
         # Determine successful recovery
         last_planet = self.num_planets
