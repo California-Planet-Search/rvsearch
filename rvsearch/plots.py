@@ -523,7 +523,7 @@ class CompletenessPlots(object):
 
         CS = pl.contourf(self.xgrid, self.ygrid, self.comp_array, 10, cmap=pl.cm.Reds_r, vmax=0.9)
         # Plot 50th percentile.
-        fifty = pl.contourf(self.xgrid, self.ygrid, self.comp_array, [0.5], c='black')
+        fifty = pl.contour(self.xgrid, self.ygrid, self.comp_array, [0.5], c='black')
         if not hide_points:
             pl.plot(good[self.comp.xcol], good[self.comp.ycol], 'b.', alpha=0.3, label='recovered')
             pl.plot(bad[self.comp.xcol], bad[self.comp.ycol], 'r.', alpha=0.3, label='missed')
