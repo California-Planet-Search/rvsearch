@@ -577,7 +577,7 @@ class CompletenessPlots(object):
         pl.grid(True)
 
         if colorbar:
-            pl.colorbar(pad=0, label='probability of detection')
+            pl.colorbar(mappable=CS, pad=0, label='probability of detection')
 
         fig = pl.gcf()
 
