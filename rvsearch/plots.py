@@ -522,6 +522,8 @@ class CompletenessPlots(object):
         pl.subplots_adjust(bottom=0.18, left=0.22, right=0.95)
 
         CS = pl.contourf(self.xgrid, self.ygrid, self.comp_array, 10, cmap=pl.cm.Reds_r, vmax=0.9)
+        # Plot 50th percentile.
+        fifty = pl.contour(self.xgrid, self.ygrid, self.comp_array, [0.5], c='black')
         if not hide_points:
             pl.plot(good[self.comp.xcol], good[self.comp.ycol], 'b.', alpha=0.3, label='recovered')
             pl.plot(bad[self.comp.xcol], bad[self.comp.ycol], 'r.', alpha=0.3, label='missed')
@@ -575,7 +577,7 @@ class CompletenessPlots(object):
         pl.grid(True)
 
         if colorbar:
-            pl.colorbar(pad=0, label='probability of detection')
+            pl.colorbar(mappable=CS, pad=0, label='probability of detection')
 
         fig = pl.gcf()
 
