@@ -26,7 +26,7 @@ class Injections(object):
         verbose (bool): show progress bar
     """
 
-    def __init__(self, searchpath, plim, klim, elim, num_sim=1, full_grid=True, verbose=True):
+    def __init__(self, searchpath, plim, klim, elim, num_sim=1, full_grid=True, verbose=True, beta_e=False):
         self.searchpath = searchpath
         self.plim = plim
         self.klim = klim
@@ -34,6 +34,7 @@ class Injections(object):
         self.num_sim = num_sim
         self.full_grid = full_grid
         self.verbose = verbose
+        self.beta_e = beta_e
 
         self.search = pickle.load(open(searchpath, 'rb'))
         self.search.verbose = False
@@ -61,6 +62,7 @@ class Injections(object):
         k1, k2 = self.klim
         e1, e2 = self.elim
         num_sim = self.num_sim
+        beta_e = self.beta_e
 
         np.random.seed(seed)
 
@@ -74,10 +76,15 @@ class Injections(object):
         else:
             sim_k = 10 ** np.random.uniform(np.log10(k1), np.log10(k2), size=num_sim)
 
-        if e1 == e2:
-            sim_e = np.zeros(num_sim) + e1
+        if beta_e:
+            a = 0.867
+            b = 3.03
+            sim_e = np.random.beta(a, b, size=num_sim)
         else:
-            sim_e = np.random.uniform(e1, e2, size=num_sim)
+            if e1 == e2:
+                sim_e = np.zeros(num_sim) + e1
+            else:
+                sim_e = np.random.uniform(e1, e2, size=num_sim)
 
         sim_tp = np.random.uniform(0, sim_p, size=num_sim)
         sim_om = np.random.uniform(0, 2 * np.pi, size=num_sim)
@@ -177,7 +184,7 @@ class Completeness(object):
     """
 
     def __init__(self, recoveries, xcol='inj_au', ycol='inj_msini',
-                 mstar=None, searches=None):
+                 mstar=None, rstar=None, teff=None, searches=None):
         """Object to handle a suite of injection/recovery tests
 
         Args:
@@ -204,6 +211,13 @@ class Completeness(object):
 
             self.recoveries['inj_au'] = radvel.utils.semi_major_axis(self.recoveries['inj_period'], mstar)
             self.recoveries['rec_au'] = radvel.utils.semi_major_axis(self.recoveries['rec_period'], mstar)
+
+            if teff is not None and rstar is not None: 
+                self.recoveries['inj_sinc'] = rvsearch.utils.insolation(teff, rstar, self.recoveries['inj_au'])
+                self.recoveries['rec_sinc'] = rvsearch.utils.insolation(teff, rstar, self.recoveries['rec_au'])
+
+                self.recoveries['inj_teq'] = rvsearch.utils.tequil(teff, rstar, self.recoveries['inj_sinc'])
+                self.recoveries['rec_teq'] = rvsearch.utils.tequil(teff, rstar, self.recoveries['rec_sinc'])
 
         self.xcol = xcol
         self.ycol = ycol
