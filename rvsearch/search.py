@@ -140,8 +140,8 @@ class Search(object):
         post1.params['per1'].vary    = False
         post1.params['secosw1'].vary = False
         post1.params['sesinw1'].vary = False
-        post1.params['dvdt'].vary = True
-        post1.params['dvdt'].vary = True
+        post1.params['dvdt'].vary    = True
+        post1.params['curv'].vary    = True
         post1 = radvel.fitting.maxlike_fitting(post1, verbose=False)
 
         trend_curve_bic = post1.likelihood.bic()
