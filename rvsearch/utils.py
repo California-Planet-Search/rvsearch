@@ -87,6 +87,8 @@ def initialize_default_pars(instnames=['inst'], times=None, linear=True,
     params['secosw1'].vary = False
     params['sesinw1'].vary = False
     params['per1'].vary = False
+    params['dvdt'].vary = False
+    params['curv'].vary = False
 
     return params
 
