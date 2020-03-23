@@ -65,6 +65,11 @@ class Search(object):
             self.mstar_err = None
 
         if post == None:
+            self.basebic = None
+        else:
+            self.basebic = post.likelihood.bic()
+
+        if post == None:
             self.priors = priors
             self.params = utils.initialize_default_pars(instnames=self.tels,
                                                         times=data.time,
@@ -114,14 +119,6 @@ class Search(object):
         self.workers      = workers
         self.verbose      = verbose
         self.save_outputs = save_outputs
-
-        self.basebic = None
-        '''
-        if post == None:
-            self.basebic = None
-        else:
-            self.basebic = post.likelihood.bic()
-        '''
 
         self.pers = None
         self.periodograms = dict()
