@@ -166,7 +166,7 @@ class Search(object):
                 self.post.params['dvdt'].value = post1.params['dvdt'].value
                 self.post.params['curv'].value = post1.params['curv'].value
                 self.post.params['dvdt'].vary  = True
-                self.post.params['curv'].value = True
+                self.post.params['curv'].vary  = True
             else:
                 # Linear
                 self.post.params['dvdt'].value = post2.params['dvdt'].value
