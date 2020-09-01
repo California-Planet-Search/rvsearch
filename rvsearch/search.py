@@ -80,8 +80,10 @@ class Search(object):
             self.setup  = False
             self.setup_planets = -1
         else:
-            self.post   = post
-            self.setup  = True
+            self.post          = post
+            self.params_init   = post.params
+            self.priors        = post.priors
+            self.setup         = True
             self.setup_planets = self.post.params.num_planets
 
         self.all_params = []
@@ -93,15 +95,6 @@ class Search(object):
             self.num_planets = self.post.params.num_planets
 
         self.crit = crit
-
-        # # Play with calling __name__ of method
-        # if crit=='bic':
-        #     self.crit = radvel.posterior.bic()
-        # eif crit=='aic':
-        #     self.crit = radvel.posterior.aic()
-        # self.critname = self.crit.__string__
-        # else:
-        #     raise ValueError('Invalid information criterion.')
 
         self.fap = fap
         self.min_per = min_per
@@ -226,7 +219,11 @@ class Search(object):
 
         new_params.num_planets = new_num_planets
 
-        priors = []
+        # Respect setup file priors.
+        if self.setup:
+            priors = self.priors
+        else:
+            priors = []
         priors.append(radvel.prior.PositiveKPrior(new_num_planets))
         priors.append(radvel.prior.EccentricityPrior(new_num_planets))
         new_post = utils.initialize_post(self.data, new_params, priors)
@@ -276,11 +273,19 @@ class Search(object):
 
         """
         for n in np.arange(1, self.num_planets+1):
-            self.post.params['per{}'.format(n)].vary = True
-            self.post.params['k{}'.format(n)].vary = True
-            self.post.params['tc{}'.format(n)].vary = True
-            self.post.params['secosw{}'.format(n)].vary = True
-            self.post.params['sesinw{}'.format(n)].vary = True
+            # Respect setup planet fixed eccentricity and period.
+            if n <= self.setup_planets:
+                self.post.params['k{}'.format(n)].vary = self.params_init['k{}'.format(n)].vary
+                self.post.params['tc{}'.format(n)].vary = self.params_init['tc{}'.format(n)].vary
+                self.post.params['per{}'.format(n)].vary = self.params_init['per{}'.format(n)].vary
+                self.post.params['secosw{}'.format(n)].vary = self.params_init['secosw{}'.format(n)].vary
+                self.post.params['sesinw{}'.format(n)].vary = self.params_init['sesinw{}'.format(n)].vary
+            else:
+                self.post.params['k{}'.format(n)].vary = True
+                self.post.params['tc{}'.format(n)].vary = True
+                self.post.params['per{}'.format(n)].vary = True
+                self.post.params['secosw{}'.format(n)].vary = True
+                self.post.params['sesinw{}'.format(n)].vary = True
 
         if self.polish:
             # Make a finer, narrow period grid, and search with eccentricity.
