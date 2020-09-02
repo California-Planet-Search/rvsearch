@@ -133,6 +133,7 @@ class Search(object):
         post1.params['dvdt'].vary    = True
         post1.params['curv'].vary    = True
         post1 = radvel.fitting.maxlike_fitting(post1, verbose=False)
+        post1.vector.vector_to_dict()
 
         trend_curve_bic = post1.likelihood.bic()
 
@@ -140,7 +141,9 @@ class Search(object):
         post2 = copy.deepcopy(post1)
         post2.params['curv'].value = 0.0
         post2.params['curv'].vary  = False
+        post2.vector.dict_to_vector()
         post2 = radvel.fitting.maxlike_fitting(post2, verbose=False)
+        post2.vector.vector_to_dict()
 
         trend_bic = post2.likelihood.bic()
 
@@ -150,6 +153,7 @@ class Search(object):
         post3.params['dvdt'].vary  = False
         post3.params['curv'].value = 0.0
         post3.params['curv'].vary  = False
+        post3.vector.dict_to_vector()
 
         flat_bic = post3.likelihood.bic()
 
@@ -158,12 +162,14 @@ class Search(object):
                 # Quadratic
                 self.post.params['dvdt'].value = post1.params['dvdt'].value
                 self.post.params['curv'].value = post1.params['curv'].value
+                self.post.vector.dict_to_vector()
                 self.post.params['dvdt'].vary  = True
                 self.post.params['curv'].vary  = True
             else:
                 # Linear
                 self.post.params['dvdt'].value = post2.params['dvdt'].value
                 self.post.params['curv'].value = 0
+                self.post.vector.dict_to_vector()
                 self.post.params['dvdt'].vary  = True
                 self.post.params['curv'].vary  = False
         else:
@@ -172,6 +178,8 @@ class Search(object):
             self.post.params['curv'].value = 0
             self.post.params['dvdt'].vary  = False
             self.post.params['curv'].vary  = False
+
+        self.post.vector.dict_to_vector()
 
 
     def add_planet(self):
@@ -312,7 +320,8 @@ class Search(object):
                     self.post.params[k].value = default_pdict[k]
                 perkey = 'per{}'.format(self.num_planets)
                 self.post.params[perkey].value = per
-
+                self.post.vector.dict_to_vector()
+                # VECTOR BUG IS HERE
                 fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
                 power.append(-fit.likelihood.bic())
 
@@ -325,6 +334,7 @@ class Search(object):
             bestfit_params = fit_params[fit_index]
             for k in self.post.params.keys():
                 self.post.params[k].value = bestfit_params[k]
+            self.post.vector.dict_to_vector()
             self.post.params['per{}'.format(self.num_planets)].vary = True
 
         self.post = radvel.fitting.maxlike_fitting(self.post, verbose=False)
@@ -449,11 +459,13 @@ class Search(object):
                 self.num_planets += 1
                 for k in self.post.params.keys():
                     self.post.params[k].value = perioder.bestfit_params[k]
+                self.post.vector.dict_to_vector()
 
                 # Generalize tc reset to each new discovery.
                 tckey = 'tc{}'.format(self.num_planets)
                 if self.post.params[tckey].value < np.amin(self.data.time):
                     self.post.params[tckey].value = np.median(self.data.time)
+                    self.post.vector.dict_to_vector()
                     for n in np.arange(1, self.num_planets+1):
                         self.post.params['k{}'.format(n)].vary = False
                         self.post.params['per{}'.format(n)].vary = False
@@ -464,6 +476,7 @@ class Search(object):
 
                     self.post = radvel.fitting.maxlike_fitting(self.post,
                                                                verbose=False)
+                    self.post.vector.vector_to_dict()
 
                     for n in np.arange(1, self.num_planets+1):
                         self.post.params['k{}'.format(n)].vary = True

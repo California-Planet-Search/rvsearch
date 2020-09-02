@@ -204,6 +204,9 @@ class Periodogram(object):
         self.post.params['k{}'.format(self.num_known_planets+1)].vary  = True
         self.post.params['tc{}'.format(self.num_known_planets+1)].vary = True
 
+        # VECTOR FIX
+        self.post.vector.dict_to_vector()
+
         # Divide period grid into as many subgrids as there are parallel workers.
         self.sub_pers = np.array_split(self.pers, self.workers)
 
@@ -220,6 +223,7 @@ class Periodogram(object):
                     post.params[k].value = self.default_pdict[k]
                 perkey = 'per{}'.format(self.num_known_planets+1)
                 post.params[perkey].value = per
+                post.vector.dict_to_vector()
                 post = radvel.fitting.maxlike_fitting(post, verbose=False)
                 bic[i] = baseline_bic - post.likelihood.bic()
 
@@ -229,6 +233,7 @@ class Periodogram(object):
                         post.params[k].value = self.default_pdict[k]
                     post.params[perkey].value = per
                     post.params['k{}'.format(post.params.num_planets)].value = 0
+                    post.vector.dict_to_vector()
                     post = radvel.fitting.maxlike_fitting(post, verbose=False)
                     bic[i] = baseline_bic - post.likelihood.bic()
 
@@ -239,10 +244,12 @@ class Periodogram(object):
                     veldiff = np.absolute(post.likelihood.y - np.median(post.likelihood.y))
                     tc_new = self.times[np.argmin(veldiff)]
                     post.params['tc{}'.format(post.params.num_planets)].value = tc_new
+                    post.vector.dict_to_vector()
                     post = radvel.fitting.maxlike_fitting(post, verbose=False)
                     bic[i] = baseline_bic - post.likelihood.bic()
 
                 # Append the best-fit parameters to the period-iterated list.
+                post.vector.vector_to_dict()
                 best_params = {}
                 for k in post.params.keys():
                     best_params[k] = post.params[k].value

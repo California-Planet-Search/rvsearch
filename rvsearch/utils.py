@@ -117,13 +117,14 @@ def initialize_post(data, params=None, priors=[], linear=True, decorrs=None):
     # initialize RVModel
     time_base = np.mean([data['time'].max(), data['time'].min()])
     mod = radvel.RVModel(params, time_base=time_base)
+    mod.vector.dict_to_vector()
 
     # initialize Likelihood objects for each instrument
     telgrps = data.groupby('tel').groups
     likes = {}
 
     for inst in telgrps.keys():
-        # 10/8: ADD DECORRELATION VECTORS AND VARS, ONLY FOR SELECTED INST.
+        # TO-DO: ADD DECORRELATION VECTORS AND VARS, ONLY FOR SELECTED INST.
         likes[inst] = radvel.likelihood.RVLikelihood(
             mod, data.iloc[telgrps[inst]].time, data.iloc[telgrps[inst]].mnvel,
             data.iloc[telgrps[inst]].errvel, suffix='_'+inst)
