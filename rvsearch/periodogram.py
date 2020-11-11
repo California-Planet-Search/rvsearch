@@ -328,6 +328,19 @@ class Periodogram(object):
         # Save the empirical-FAP of the DBIC global maximum.
         self.fap_min = fap_min
 
+        fig, ax = plt.subplots(figsize = (10,8))
+        ax.hist(sBIC, density = True)
+        ax.set_yscale("log")
+        ax.plot(xmod, lfit, label = 'Linear Fit')
+        ax.plot((thresh, thresh), (np.amin(nhist), np.amax(nhist)), label = 'FAP Threshold')
+        ax.set_xlim([sBIC[0], sBIC[-1]])
+        ax.set_ylim([np.amin(nhist), np.amax(nhist)])
+        ax.set_ylabel('Density', size = 15)
+        ax.set_xlabel('dBIC', size = 15)
+        ax.tick_params(axis='both', which='major', labelsize=12)
+        plt.legend(shadow = True, prop={'size': 15})
+        fig.savefig('periodogram_plot{}.pdf'.format(self.num_known_planets+1))
+
     def save_per(self, filename, ls=False):
         df = pd.DataFrame([])
         df['period'] = self.pers
