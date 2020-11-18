@@ -339,7 +339,8 @@ class Periodogram(object):
         ax.set_xlabel('dBIC', size = 15)
         ax.tick_params(axis='both', which='major', labelsize=12)
         plt.legend(shadow = True, prop={'size': 15})
-        fig.savefig('periodogram_plot{}.pdf'.format(self.num_known_planets+1))
+        self.histfig = fig
+        #fig.savefig('periodogram_plot{}.pdf'.format(self.num_known_planets+1))
 
     def save_per(self, filename, ls=False):
         df = pd.DataFrame([])

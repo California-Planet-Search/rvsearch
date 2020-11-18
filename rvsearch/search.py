@@ -443,6 +443,9 @@ class Search(object):
                 perioder.plot_per()
                 perioder.fig.savefig(outdir+'/dbic{}.pdf'.format(
                                      self.num_planets+1))
+                if hasattr(perioder, 'histfig'):
+                    perioder.histfig.savefig(outdir+'/hist_plot{}.pdf'.format(
+                                             self.num_planets+1))
 
             # Check whether there is a detection. If so, fit free and proceed.
             if perioder.best_bic > perioder.bic_thresh:
