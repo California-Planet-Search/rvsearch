@@ -333,7 +333,7 @@ class Periodogram(object):
         ax.set_yscale("log")
         ax.plot(xmod, lfit, label = 'Linear Fit')
         ax.plot((thresh, thresh), (np.amin(nhist), np.amax(nhist)), label = 'FAP Threshold')
-        ax.set_xlim([sBIC[0], threshold+5])
+        ax.set_xlim([sBIC[0], thresh[0]+5])
         ax.set_ylim([np.amin(nhist), np.amax(nhist)])
         ax.set_ylabel('Density', size = 15)
         ax.set_xlabel('dBIC', size = 15)
