@@ -656,6 +656,15 @@ class Search(object):
         else:
             thresh = None
 
+        # Fix parameters of all known planets.
+        if self.num_planets != 0:
+            for n in np.arange(self.num_planets):
+                self.post.params['per{}'.format(n+1)].vary    = False
+                self.post.params['tc{}'.format(n+1)].vary     = False
+                self.post.params['k{}'.format(n+1)].vary      = False
+                self.post.params['secosw{}'.format(n+1)].vary = False
+                self.post.params['sesinw{}'.format(n+1)].vary = False
+
         self.run_search(fixed_threshold=thresh, mkoutdir=False, running=running)
 
     def inject_recover(self, injected_orbel, num_cpus=None, full_grid=False):
