@@ -41,7 +41,7 @@ class Search(object):
     """
     def __init__(self, data, post=None, starname='star', max_planets=8,
                 priors=[], crit='bic', fap=0.001, min_per=3, max_per=10000,
-                manual_grid=None, oversampling=1., trend=False, linear=True,
+                jity=2., manual_grid=None, oversampling=1., trend=False, linear=True,
                 eccentric=False, fix=False, polish=True, baseline=True,
                 mcmc=True, workers=1, verbose=True, save_outputs=True, mstar=None):
 
@@ -64,6 +64,11 @@ class Search(object):
             self.mstar     = None
             self.mstar_err = None
 
+        if jity is None:
+            self.jity = np.std(data.mnvel)
+        else:
+            self.jity = jity
+
         if post == None:
             self.basebic = None
         else:
@@ -73,7 +78,8 @@ class Search(object):
             self.priors = priors
             self.params = utils.initialize_default_pars(instnames=self.tels,
                                                         times=data.time,
-                                                        linear=self.linear)
+                                                        linear=self.linear,
+                                                        jitty=self.jity)
             self.post   = utils.initialize_post(data, params=self.params,
                                                 priors=self.priors,
                                                 linear=self.linear)
@@ -185,6 +191,7 @@ class Search(object):
         new_num_planets = current_num_planets + 1
 
         default_pars = utils.initialize_default_pars(instnames=self.tels,
+                                                     jitty=self.jity,
                                                      fitting_basis=fitting_basis)
         new_params = radvel.Parameters(new_num_planets, basis=fitting_basis)
 
@@ -198,6 +205,7 @@ class Search(object):
 
         # Set default parameters for n+1th planet
         default_params = utils.initialize_default_pars(self.tels,
+                                                       jitty=self.jity,
                                                        fitting_basis=fitting_basis)
         for par in param_list:
             parkey = par + str(new_num_planets)
@@ -240,7 +248,7 @@ class Search(object):
 
         new_num_planets = current_num_planets - 1
 
-        default_pars = utils.initialize_default_pars(instnames=self.tels)
+        default_pars = utils.initialize_default_pars(instnames=self.tels, jitty=self.jity)
         new_params = radvel.Parameters(new_num_planets, basis=fitting_basis)
 
         for planet in np.arange(1, new_num_planets+1):
