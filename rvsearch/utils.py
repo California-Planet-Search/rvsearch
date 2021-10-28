@@ -43,7 +43,7 @@ def tequil(S, alb=0.3):
     return S**-0.25 * ((1-alb)/4.)**0.25
 
 def initialize_default_pars(instnames=['inst'], times=None, linear=True,
-                            fitting_basis='per tc secosw sesinw k' jitty=2.):
+                            fitting_basis='per tc secosw sesinw k', jitty=2.):
     """Set up a default Parameters object.
 
     None of the basis values are free params, for the initial 0-planet fit.
