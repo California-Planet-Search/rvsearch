@@ -43,7 +43,7 @@ def tequil(S, alb=0.3):
     return S**-0.25 * ((1-alb)/4.)**0.25
 
 def initialize_default_pars(instnames=['inst'], times=None, linear=True,
-                            fitting_basis='per tc secosw sesinw k'):
+                            fitting_basis='per tc secosw sesinw k', jitty=2.):
     """Set up a default Parameters object.
 
     None of the basis values are free params, for the initial 0-planet fit.
@@ -80,7 +80,7 @@ def initialize_default_pars(instnames=['inst'], times=None, linear=True,
                                                               vary=False)
         else:
             anybasis_params['gamma_'+inst] = radvel.Parameter(value=0.0)
-        anybasis_params['jit_'+inst] = radvel.Parameter(value=2.0)
+        anybasis_params['jit_'+inst] = radvel.Parameter(value=jitty)
 
     params = anybasis_params.basis.to_any_basis(anybasis_params, fitting_basis)
 

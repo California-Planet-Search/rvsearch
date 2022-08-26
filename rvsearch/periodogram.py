@@ -151,8 +151,7 @@ class Periodogram(object):
             if self.num_pers is None:
                 self.pers = self.per_spacing()
             else:
-                self.pers = 1/np.linspace(1/self.maxsearchP, 1/self.minsearchP,
-                                          self.num_pers)
+                self.pers = (1/np.linspace(1/self.maxsearchP, 1/self.minsearchP,self.num_pers))[::-1]
 
         self.freqs = 1/self.pers
 
@@ -305,28 +304,23 @@ class Periodogram(object):
             false-alarm-probability algorithm, and estimate the
             false-alarm-probability of the DBIC global maximum.
 
+            Modified version by JB Ruffio (2022-02-17) based on the integral of an exponential decay.
+
         """
-        # select out intermediate values of BIC, median - 95%
         sBIC = np.sort(self.power['bic'])
-        crop_BIC = sBIC[int(0.5*len(sBIC)):int(0.95*len(sBIC))]
+        crop_BIC = sBIC[int(0.5 * len(sBIC)):int(0.95 * len(sBIC))]
+        med_BIC = crop_BIC[0]
 
-        hist, edge = np.histogram(crop_BIC, bins=10)
-        cent = (edge[1:]+edge[:-1])/2.
-        norm = float(np.sum(hist))
-        nhist = hist/norm
-        loghist = np.log10(nhist)
+        hist, edge = np.histogram(crop_BIC-med_BIC, bins=10)
+        cent = (edge[1:] + edge[:-1]) / 2.
 
-        func = np.poly1d(np.polyfit(cent[np.isfinite(loghist)], \
-                                 loghist[np.isfinite(loghist)], 1))
-        xmod = np.linspace(np.min(sBIC[np.isfinite(sBIC)]), \
-                                        10.*np.max(sBIC), 10000)
-        lfit = 10.**func(xmod)
-        fap_min = 10.**func(sBIC[-1])*self.num_pers
-        thresh = xmod[np.where(np.abs(lfit-self.fap/self.num_pers) ==
-                        np.min(np.abs(lfit-self.fap/self.num_pers)))]
-        self.bic_thresh = thresh[0]
-        # Save the empirical-FAP of the DBIC global maximum.
-        self.fap_min = fap_min
+        loghist = np.log10(hist)
+        a,b = np.polyfit(cent[np.isfinite(loghist)], loghist[np.isfinite(loghist)], 1)
+        B=10**b
+        A=-a*np.log(10)
+
+        self.bic_thresh = np.log(self.fap / self.num_pers) / (-A)+med_BIC
+        self.fap_min = np.exp(-A*(sBIC[-1]-med_BIC)) * self.num_pers
 
     def save_per(self, filename, ls=False):
         df = pd.DataFrame([])
