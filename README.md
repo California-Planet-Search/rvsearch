@@ -9,7 +9,7 @@ Use RadVel setup files to load:
 - fix/vary within search (not implemented)
 - fitting (search) basis (not implemented)
 
-See the [documentation](https://california-planet-search.github.io/rvsearch/) for installation instructions. Installing into a fresh anaconda environment is highly reccomended.
+See the [documentation](https://california-planet-search.github.io/rvsearch/) for installation instructions. Installing into a fresh anaconda environment is highly recommended.
 
 Example calling syntax:
 
