@@ -502,7 +502,10 @@ class Search(object):
                 rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir +
                                                     '/orbit_plot{}.pdf'.format(
                                                     self.num_planets))
-                multiplot_fig, ax_list = rvplot.plot_multipanel()
+                if self.num_planets == 0:
+                    multiplot_fig, ax_list = rvplot.plot_multipanel(nophase=True)
+                else:
+                    multiplot_fig, ax_list = rvplot.plot_multipanel()
                 multiplot_fig.savefig(outdir+'/orbit_plot{}.pdf'.format(
                                                         self.num_planets))
 
