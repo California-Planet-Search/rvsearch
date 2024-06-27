@@ -183,7 +183,7 @@ class Completeness(object):
         recoveries (DataFrame): DataFrame with injection/recovery tests from Injections.save
     """
 
-    def __init__(self, recoveries, xcol='inj_au', ycol='inj_msini',
+    def __init__(self, recoveries, xcol='inj_au', ycol='inj_msini',xcol_fr='rec_au',ycol_fr='rec_msini',
                  mstar=None, rstar=None, teff=None, searches=None):
         """Object to handle a suite of injection/recovery tests
 
@@ -254,6 +254,8 @@ class Completeness(object):
 
         xinj = self.recoveries[self.xcol]
         yinj = self.recoveries[self.ycol]
+        xrec = self.recoveries[self.xcol_fr]
+        yrec = self.recoveries[self.ycol_fr]
 
         good = self.recoveries['recovered']
 
@@ -276,10 +278,12 @@ class Completeness(object):
                 boxgood = np.where((xinj[good] <= xhigh) &
                                    (xinj[good] >= xlow) & (yinj[good] <= yhigh) &
                                    (yinj[good] >= ylow))[0]
+                boxfr= np.where((xrec <= xhigh) & (xrec >= xlow) &
+                                  (yrec <= yhigh) & (yrec >= ylow))[0]
                 # print(x, y, xlow, xhigh, ylow, yhigh, len(boxgood), len(boxall))
                 if len(boxall) > 10:
-                    z[j, i] = float(len(boxgood))/len(boxall)
-                    last = float(len(boxgood))/len(boxall)
+                    z[j, i] = float(len(boxgood)+len(boxfr))/len(boxall)
+                    last = z[j,i]
                 else:
                     z[j, i] = np.nan
 
