@@ -9,6 +9,7 @@ import pathos.multiprocessing as mp
 from multiprocessing import Value
 import radvel
 from .periodogram import TqdmUpTo
+import pdb
 
 import rvsearch.utils
 
@@ -221,7 +222,9 @@ class Completeness(object):
 
         self.xcol = xcol
         self.ycol = ycol
-
+        self.xcol_fr = xcol_fr
+        self.ycol_fr = ycol_fr
+        
         self.grid = None
         self.interpolator = None
 
@@ -263,6 +266,7 @@ class Completeness(object):
         last = 0
         for i,x in enumerate(xgrid):
             for j,y in enumerate(ygrid):
+                z[j, i] = np.nan
                 xlow = 10**(np.log10(x) - xlogwin/2)
                 xhigh = 10**(np.log10(x) + xlogwin/2)
                 ylow = 10**(np.log10(y) - ylogwin/2)
@@ -278,14 +282,26 @@ class Completeness(object):
                 boxgood = np.where((xinj[good] <= xhigh) &
                                    (xinj[good] >= xlow) & (yinj[good] <= yhigh) &
                                    (yinj[good] >= ylow))[0]
-                boxfr= np.where((xrec <= xhigh) & (xrec >= xlow) &
-                                  (yrec <= yhigh) & (yrec >= ylow))[0]
+                boxrec= np.where((xrec[good] <= xhigh) & (xrec[good] >= xlow) &
+                                  (yrec[good] <= yhigh) & (yrec[good] >= ylow))[0] ## get any recoveries with properties in the box (whether or not they were injected there)
+                n_in_box = len(boxall) # number of injections that were made in our box
+                nrec = len(boxrec) # number of recoveries that were made in our box
+                nrec_good = len(boxgood) # number of recoveries in the box that correspond to injections in the box
+                nrec_bad = nrec - nrec_good # number of recoveries in the box that correspond to injections outside the box
                 # print(x, y, xlow, xhigh, ylow, yhigh, len(boxgood), len(boxall))
                 if len(boxall) > 10:
-                    z[j, i] = float(len(boxgood)+len(boxfr))/len(boxall)
-                    last = z[j,i]
-                else:
-                    z[j, i] = np.nan
+                    p_detection = float(nrec)/n_in_box # fraction of true injections that are recovered
+                    if nrec > 10:
+                        p_false = 1 - (nrec_good/(nrec_good + nrec_bad)) # fraction of recovered injections that are false --- note nrec_good + nrec_bad is not equal to n_in_box
+                    else:
+                        p_false = 0. ### too hard to estimate
+                    # print(x, y, xlow, xhigh, ylow, yhigh, len(boxgood), len(boxall))
+                    if p_detection > 0:
+                        z[j, i] = p_detection # 1/(1/p_detection - p_false) ### based on formula from Andrew Howard's slides on occurrence, with LMW modifications
+                    else:
+                        z[j, i] = p_detection ### approximately zero
+
+
 
         self.grid = (xgrid, ygrid, z)
 
