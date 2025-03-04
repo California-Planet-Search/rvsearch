@@ -1,3 +1,4 @@
+import pandas as pd
 import numpy as np
 import pylab as pl
 import warnings
@@ -524,6 +525,19 @@ class CompletenessPlots(object):
         CS = pl.contourf(self.xgrid, self.ygrid, self.comp_array, 10, cmap=pl.cm.Reds_r, vmax=0.9)
         # Plot 50th percentile.
         fifty = pl.contour(self.xgrid, self.ygrid, self.comp_array, [0.5], c='black')
+
+        # Extract the 50th percentile contour and save it to disk:                        
+        vertices = fifty.collections[0].get_paths()[0].vertices
+        x, y = vertices[:,0], vertices[:,1]
+        t50_ylabel = ''+ylabel
+        if t50_ylabel=='': t50_ylabel = 'msini'
+        t50_xlabel = ''+xlabel
+        if t50_xlabel=='': t50_xlabel = 'smaj'
+        fifty_table = pd.DataFrame(dict(msini=y))
+        fifty_table[t50_xlabel] = x
+        fifty_table[t50_ylabel] = y
+        fifty_table.to_csv('fifty_percent_completeness_contour.csv', index=False)
+                            
         if not hide_points:
             pl.plot(good[self.comp.xcol], good[self.comp.ycol], 'b.', alpha=0.3, label='recovered')
             pl.plot(bad[self.comp.xcol], bad[self.comp.ycol], 'r.', alpha=0.3, label='missed')
