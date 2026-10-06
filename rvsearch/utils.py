@@ -5,6 +5,7 @@ import scipy.special as spec
 from astropy import constants as c
 import pandas as pd
 import radvel
+import radvel.fitting
 try:
     import cpsutils
     from cpsutils import io
@@ -74,6 +75,7 @@ def initialize_default_pars(instnames=['inst'], times=None, linear=True,
     anybasis_params['curv'] = radvel.Parameter(value=0.0)
 
     for inst in instnames:
+        inst = str(inst)  # radvel>=1.4 Vector.vector_names drops np.str_ keys
         if linear:
             anybasis_params['gamma_'+inst] = radvel.Parameter(value=0.0,
                                                               linear=True,
@@ -384,3 +386,27 @@ values. Interpret posterior with caution.".format(num_nan, nan_perc))
     print("Derived parameters:", outcols)
 
     return post
+
+
+def sync(post):
+    """Push edits made via post.params[...].value/.vary into radvel>=1.4's Vector.
+
+    radvel>=1.4 evaluates the model/likelihood from ``post.vector`` and caches
+    the varied-parameter index list, so direct edits to ``post.params`` are
+    ignored until the vector is rebuilt.
+    """
+    if post.params is not post.vector.params:
+        # e.g. radvel's MultipanelPlot rebinds post.params to a synth-basis copy
+        for k in post.vector.params.keys():
+            if k in post.params:
+                post.vector.params[k] = post.params[k]
+        post.params = post.vector.params
+    post.vector.dict_to_vector()
+    post.list_vary_params()
+    return post
+
+
+def maxlike(post, **kwargs):
+    """radvel.fitting.maxlike_fitting that honours direct post.params edits."""
+    sync(post)
+    return radvel.fitting.maxlike_fitting(post, **kwargs)

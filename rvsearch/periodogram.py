@@ -173,7 +173,7 @@ class Periodogram(object):
                 self.post.params['secosw'+plstr].vary = False
                 self.post.params['sesinw'+plstr].vary = False
                 # Vary ONLY gamma, jitter, dvdt, curv. All else fixed, and k=0
-                baseline_fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
+                baseline_fit = utils.maxlike(self.post, verbose=False)
                 baseline_bic = baseline_fit.likelihood.bic()
             # Handle the case where there is at least one known planet.
             else:
@@ -182,11 +182,11 @@ class Periodogram(object):
                 self.post.params['k{}'.format(self.num_known_planets+1)].vary = False
                 self.post.params['secosw{}'.format(self.num_known_planets+1)].vary = False
                 self.post.params['sesinw{}'.format(self.num_known_planets+1)].vary = False
-                baseline_bic = self.post.likelihood.bic()
+                baseline_bic = utils.sync(self.post).likelihood.bic()
         else:
             baseline_bic = self.basebic
 
-        rms = np.std(self.post.likelihood.residuals())
+        rms = np.std(utils.sync(self.post).likelihood.residuals())
         self.default_pdict['k{}'.format(self.post.params.num_planets)] = rms
 
         # Allow amplitude and time offset to vary, fix period (and ecc. if asked.)
@@ -219,7 +219,7 @@ class Periodogram(object):
                     post.params[k].value = self.default_pdict[k]
                 perkey = 'per{}'.format(self.num_known_planets+1)
                 post.params[perkey].value = per
-                post = radvel.fitting.maxlike_fitting(post, verbose=False)
+                post = utils.maxlike(post, verbose=False)
                 bic[i] = baseline_bic - post.likelihood.bic()
 
                 if bic[i] < self.floor - 1:
@@ -228,7 +228,7 @@ class Periodogram(object):
                         post.params[k].value = self.default_pdict[k]
                     post.params[perkey].value = per
                     post.params['k{}'.format(post.params.num_planets)].value = 0
-                    post = radvel.fitting.maxlike_fitting(post, verbose=False)
+                    post = utils.maxlike(post, verbose=False)
                     bic[i] = baseline_bic - post.likelihood.bic()
 
                 if bic[i] < self.floor - 1:
@@ -238,7 +238,7 @@ class Periodogram(object):
                     veldiff = np.absolute(post.likelihood.y - np.median(post.likelihood.y))
                     tc_new = self.times[np.argmin(veldiff)]
                     post.params['tc{}'.format(post.params.num_planets)].value = tc_new
-                    post = radvel.fitting.maxlike_fitting(post, verbose=False)
+                    post = utils.maxlike(post, verbose=False)
                     bic[i] = baseline_bic - post.likelihood.bic()
 
                 # Append the best-fit parameters to the period-iterated list.
