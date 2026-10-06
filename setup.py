@@ -17,6 +17,10 @@ setup(
     packages=find_packages(),
     entry_points={'console_scripts': ['rvsearch=rvsearch.cli:main']},
     install_requires=reqs,
+    extras_require={
+        # HTTP service: RadVel's API (radvel[api]) plus search endpoints.
+        'api': ['radvel[api]>=1.6.6'],
+    },
     data_files=[
         (
             'rvsearch_example_data',
