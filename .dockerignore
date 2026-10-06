@@ -1,0 +1,6 @@
+.git
+.venv
+.runs
+**/__pycache__
+notebooks
+tutorials

@@ -17,6 +17,19 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip install -e . pytest
-      - run: pytest -v
+      - run: pytest -v --ignore=tests/test_api.py
+        env:
+          MPLBACKEND: Agg
+
+  api:
+    # The HTTP service needs radvel[api]>=1.6.6 (radvel.api.extensions).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e '.[api]' pytest httpx
+      - run: pytest -v tests/test_api.py
         env:
           MPLBACKEND: Agg

@@ -152,10 +152,30 @@ def main():
 
     psr_plot.set_defaults(func=rvsearch.driver.plots)
 
+    # serve: the HTTP service (RadVel's API plus search jobs).
+    psr_serve = subpsr.add_parser(
+        'serve',
+        description="Launch the RVsearch HTTP service (RadVel's API plus search "
+                    "endpoints). Requires the [api] extra: pip install 'rvsearch[api] @ git+https://github.com/California-Planet-Search/rvsearch'"
+    )
+    psr_serve.add_argument('--host', default='127.0.0.1', help='Bind address [127.0.0.1]')
+    psr_serve.add_argument('--port', default=8000, type=int, help='Listen port [8000]')
+    psr_serve.set_defaults(func=_serve)
+
 
     args = psr.parse_args()
 
     args.func(args)
+
+def _serve(args):
+    """Run rvsearch.api:app under uvicorn (one process; jobs use a process pool)."""
+    try:
+        import uvicorn
+    except ImportError:
+        raise SystemExit("rvsearch serve requires the [api] extra:\n"
+                         "    pip install 'rvsearch[api] @ git+https://github.com/California-Planet-Search/rvsearch'")
+    uvicorn.run('rvsearch.api:app', host=args.host, port=args.port)
+
 
 if __name__ == '__main__':
     main()

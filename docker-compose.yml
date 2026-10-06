@@ -1,0 +1,20 @@
+# Local-dev compose for the RVsearch HTTP service (RadVel API + search).
+#
+#   docker compose up --build
+#
+# Mounts ./.runs as /data so the job database and run outputs survive restarts.
+
+services:
+  rvsearch-api:
+    build: .
+    image: rvsearch-api:dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./.runs:/data
+    environment:
+      RADVEL_API_ALLOW_PY_UPLOAD: "false"
+      RADVEL_API_ENABLE_UI: "true"
+      # Concurrent jobs. Each search also forks `workers` processes (default 4).
+      RADVEL_API_WORKERS: "1"
+    restart: unless-stopped
