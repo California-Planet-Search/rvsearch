@@ -47,11 +47,11 @@ class Search(object):
 
         if {'time', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
-            self.tels = np.unique(self.data['tel'].values)
+            self.tels = [str(t) for t in np.unique(self.data['tel'].values)]
         elif {'jd', 'mnvel', 'errvel', 'tel'}.issubset(data.columns):
             self.data = data
-            self.data.time = self.data.jd
-            self.tels = np.unique(self.data['tel'].values)
+            self.data['time'] = self.data['jd']
+            self.tels = [str(t) for t in np.unique(self.data['tel'].values)]
         else:
             raise ValueError('Incorrect data input.')
 
@@ -138,7 +138,7 @@ class Search(object):
         post1.params['sesinw1'].vary = False
         post1.params['dvdt'].vary    = True
         post1.params['curv'].vary    = True
-        post1 = radvel.fitting.maxlike_fitting(post1, verbose=False)
+        post1 = utils.maxlike(post1, verbose=False)
 
         trend_curve_bic = post1.likelihood.bic()
 
@@ -146,7 +146,7 @@ class Search(object):
         post2 = copy.deepcopy(post1)
         post2.params['curv'].value = 0.0
         post2.params['curv'].vary  = False
-        post2 = radvel.fitting.maxlike_fitting(post2, verbose=False)
+        post2 = utils.maxlike(post2, verbose=False)
 
         trend_bic = post2.likelihood.bic()
 
@@ -157,7 +157,7 @@ class Search(object):
         post3.params['curv'].value = 0.0
         post3.params['curv'].vary  = False
 
-        flat_bic = post3.likelihood.bic()
+        flat_bic = utils.sync(post3).likelihood.bic()
 
         if (trend_bic < flat_bic - 5) or (trend_curve_bic < flat_bic - 5):
             if trend_curve_bic < trend_bic - 5:
@@ -201,7 +201,7 @@ class Search(object):
                 new_params[parkey] = self.post.params[parkey]
 
         for par in self.post.likelihood.extra_params:
-            new_params[par] = self.post.params[par]  # For gamma and jitter
+            new_params[str(par)] = self.post.params[par]  # For gamma and jitter
 
         # Set default parameters for n+1th planet
         default_params = utils.initialize_default_pars(self.tels,
@@ -258,7 +258,7 @@ class Search(object):
 
         # Add gamma and jitter params to the dictionary.
         for par in self.post.likelihood.extra_params:
-            new_params[par] = self.post.params[par]
+            new_params[str(par)] = self.post.params[par]
 
         new_params['dvdt'] = self.post.params['dvdt']
         new_params['curv'] = self.post.params['curv']
@@ -321,7 +321,7 @@ class Search(object):
                 perkey = 'per{}'.format(self.num_planets)
                 self.post.params[perkey].value = per
 
-                fit = radvel.fitting.maxlike_fitting(self.post, verbose=False)
+                fit = utils.maxlike(self.post, verbose=False)
                 power.append(-fit.likelihood.bic())
 
                 best_params = {}
@@ -335,7 +335,7 @@ class Search(object):
                 self.post.params[k].value = bestfit_params[k]
             self.post.params['per{}'.format(self.num_planets)].vary = True
 
-        self.post = radvel.fitting.maxlike_fitting(self.post, verbose=False)
+        self.post = utils.maxlike(self.post, verbose=False)
 
         if self.fix:
             for n in np.arange(1, self.num_planets+1):
@@ -376,16 +376,17 @@ class Search(object):
         # Instantiate a list to populate with running periodograms.
         runners = []
         # Iterate over the planets/signals.
+        synth = self.post.params.basis.to_synth(self.post.params)
         for n in np.arange(1, self.num_planets+1):
             runner = []
             planets = np.arange(1, self.num_planets+1)
             yres = copy.deepcopy(y)
             for p in planets[planets != n]:
-                orbel = [self.post.params['per{}'.format(p)].value,
-                         self.post.params['tp{}'.format(p)].value,
-                         self.post.params['e{}'.format(p)].value,
-                         self.post.params['w{}'.format(p)].value,
-                         self.post.params['k{}'.format(p)].value]
+                orbel = [synth['per{}'.format(p)].value,
+                         synth['tp{}'.format(p)].value,
+                         synth['e{}'.format(p)].value,
+                         synth['w{}'.format(p)].value,
+                         synth['k{}'.format(p)].value]
                 yres -= radvel.kepler.rv_drive(x, orbel)
             # Make small period grid. Figure out proper spacing.
             per = self.post.params['per{}'.format(n)].value
@@ -470,7 +471,7 @@ class Search(object):
                         if n != self.num_planets:
                             self.post.params['tc{}'.format(n)].vary = False
 
-                    self.post = radvel.fitting.maxlike_fitting(self.post,
+                    self.post = utils.maxlike(self.post,
                                                                verbose=False)
 
                     for n in np.arange(1, self.num_planets+1):
@@ -499,7 +500,7 @@ class Search(object):
 
             # Generate an orbit plot.
             if self.save_outputs:
-                rvplot = orbit_plots.MultipanelPlot(self.post, saveplot=outdir +
+                rvplot = orbit_plots.MultipanelPlot(copy.deepcopy(self.post), saveplot=outdir +
                                                     '/orbit_plot{}.pdf'.format(
                                                     self.num_planets))
                 if self.num_planets == 0:
@@ -539,7 +540,8 @@ class Search(object):
                                  maxGR=1.0075, minTz=2000, minAfactor=15,
                                  maxArchange=0.07, burnAfactor=15,
                                  minsteps=12500, minpercent=50, thin=5,
-                                 save=False, ensembles=nensembles)
+                                 save=False, ensembles=nensembles,
+                                 headless=True)
 
             # Convert chains to per, e, w basis.
             synthchains = logpost.params.basis.to_synth(chains)
@@ -550,6 +552,8 @@ class Search(object):
             csvfn = outdir + '/chains.csv.tar.bz2'
             synthchains.to_csv(csvfn, compression='bz2')
 
+            # radvel>=1.4 plots no longer inject synth keys (e, w, tp) into post.params
+            maxsynth = self.post.params.basis.to_synth(self.post.params)
             # Retrieve e and w medians & uncertainties from synthetic chains.
             for n in np.arange(1, self.num_planets+1):
                 e_key = 'e{}'.format(n)
@@ -565,7 +569,7 @@ class Search(object):
                 err_e  = radvel.utils.round_sig(err_e)
                 med_e, err_e, errhigh_e = radvel.utils.sigfig(med_e, err_e)
                 max_e, err_e, errhigh_e = radvel.utils.sigfig(
-                                          self.post.params[e_key].value, err_e)
+                                          maxsynth[e_key].value, err_e)
 
                 med_w  = synthquants[w_key][0.5]
                 high_w = synthquants[w_key][0.841] - med_w
@@ -574,7 +578,7 @@ class Search(object):
                 err_w  = radvel.utils.round_sig(err_w)
                 med_w, err_w, errhigh_w = radvel.utils.sigfig(med_w, err_w)
                 max_w, err_w, errhigh_w = radvel.utils.sigfig(
-                                          self.post.params[w_key].value, err_w)
+                                          maxsynth[w_key].value, err_w)
 
                 self.post.uparams[e_key]   = err_e
                 self.post.uparams[w_key]   = err_w
@@ -629,13 +633,14 @@ class Search(object):
                 pl.savefig(outdir+'/{}_corner_plot.pdf'.format(self.starname))
 
                 # Generate an orbit plot wth median parameters and uncertainties.
-                rvplot = orbit_plots.MultipanelPlot(self.post,saveplot=
+                rvplot = orbit_plots.MultipanelPlot(copy.deepcopy(self.post),saveplot=
                                 outdir+'/orbit_plot_mc_{}.pdf'.format(
                                 self.starname), uparams=self.post.uparams)
                 multiplot_fig, ax_list = rvplot.plot_multipanel()
                 multiplot_fig.savefig(outdir+'/orbit_plot_mc_{}.pdf'.format(
                                       self.starname))
 
+        utils.sync(self.post)
         if self.save_outputs:
             self.save(filename=outdir+'/post_final.pkl')
             pickle_out = open(outdir+'/search.pkl','wb')

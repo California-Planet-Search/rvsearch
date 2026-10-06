@@ -1,3 +1,4 @@
+import copy
 import pandas as pd
 import numpy as np
 import pylab as pl
@@ -80,7 +81,7 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
 
         self.search = search
         self.starname = self.search.starname
-        self.post = self.search.post
+        self.post = copy.deepcopy(self.search.post)
         self.num_known_planets = self.search.num_planets
         self.pers = self.search.pers
         self.periodograms = self.search.periodograms
@@ -128,7 +129,8 @@ class PeriodModelPlot(radvel.plot.orbit_plots.MultipanelPlot):
 
         # convert params to synth basis
         synthparams = self.post.params.basis.to_synth(self.post.params)
-        self.post.params.update(synthparams)
+        self.post.params = synthparams
+        self.post.vector.dict_to_vector()
 
         self.model = self.post.likelihood.model
         self.rvtimes = self.post.likelihood.x
@@ -524,10 +526,10 @@ class CompletenessPlots(object):
 
         CS = pl.contourf(self.xgrid, self.ygrid, self.comp_array, 10, cmap=pl.cm.Reds_r, vmax=0.9)
         # Plot 50th percentile.
-        fifty = pl.contour(self.xgrid, self.ygrid, self.comp_array, [0.5], c='black')
+        fifty = pl.contour(self.xgrid, self.ygrid, self.comp_array, [0.5], colors='black')
 
         # Extract the 50th percentile contour and save it to disk:                        
-        vertices = fifty.collections[0].get_paths()[0].vertices
+        vertices = fifty.allsegs[0][0]  # .collections removed in mpl 3.10
         x, y = vertices[:,0], vertices[:,1]
         t50_ylabel = ''+ylabel
         if t50_ylabel=='': t50_ylabel = 'msini'
