@@ -2,7 +2,7 @@
 
 Requires the ``[api]`` extra::
 
-    pip install 'rvsearch[api]'
+    pip install 'rvsearch[api] @ git+https://github.com/California-Planet-Search/rvsearch'
     rvsearch serve --host 0.0.0.0 --port 8000
 
 The app is RadVel's (``radvel.api.main.create_app``) with two more job

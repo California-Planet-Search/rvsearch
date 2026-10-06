@@ -9,7 +9,8 @@ Use RadVel setup files to load:
 - fix/vary within search (not implemented)
 - fitting (search) basis (not implemented)
 
-See the [documentation](https://california-planet-search.github.io/rvsearch/) for installation instructions. Installing into a fresh anaconda environment is highly recommended.
+Install from GitHub (the `rvsearch` name on PyPI belongs to an unrelated project):
+`pip install git+https://github.com/California-Planet-Search/rvsearch`. See the [documentation](https://california-planet-search.github.io/rvsearch/) for more. Installing into a fresh anaconda environment is highly recommended.
 
 Example calling syntax:
 
@@ -30,7 +31,8 @@ See `rvsearch --help` or `rvsearch plot --help` to see all available options.
 search jobs, so one container serves both:
 
 ```
-pip install 'rvsearch[api]'          # needs radvel[api] >= 1.6.6
+pip install 'rvsearch[api] @ git+https://github.com/California-Planet-Search/rvsearch'
+                                     # pulls radvel[api] >= 1.6.6 from PyPI
 rvsearch serve --host 0.0.0.0 --port 8000
 # or: docker compose up --build
 ```
