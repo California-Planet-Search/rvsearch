@@ -4,12 +4,14 @@ radvel>=1.4 evaluates the model from ``post.vector``; rvsearch edits
 ``post.params`` directly, so a missed ``utils.sync`` makes the search run
 without error but return the wrong planets. These tests pin the answer.
 """
+import copy
 import os
 
 import matplotlib
 matplotlib.use('Agg')
 
 import numpy as np
+import pandas as pd
 import pytest
 import radvel
 
@@ -67,3 +69,72 @@ def test_hd128311_finds_two_planets(tmp_path):
     assert pers[0] == pytest.approx(453.7, abs=5)
     assert pers[1] == pytest.approx(918.4, abs=10)
     assert (tmp_path / 'out' / 'post_final.pkl').exists()
+
+
+def _seeded_two_planets(per1=4.6455, vary_per1=True):
+    """Synthetic HD 156668-like data, seeded as jump2 seeds it.
+
+    Planet b is at 4.6426 d over an 8500 d baseline. The seed puts it at
+    4.6455 d, one resolution element (P**2/T) off, where one free fit loses
+    it: on this data the plain fit runs b off to about 5.02 d.
+    """
+    rng = np.random.default_rng(0)
+    t = np.sort(rng.uniform(2452800, 2461300, 400))
+    truth = radvel.Parameters(2, basis='per tc e w k')
+    for key, val in dict(per1=4.6426, tc1=2455201.7, e1=0.0, w1=0.0, k1=2.4,
+                         per2=794.4, tc2=2455890.0, e2=0.13, w2=1.0,
+                         k2=2.7).items():
+        truth[key] = radvel.Parameter(value=val)
+    rv = radvel.RVModel(truth)(t) + rng.normal(0, 3.0, t.size)
+    data = pd.DataFrame(dict(time=t, mnvel=rv, errvel=np.full(t.size, 1.5),
+                             tel='j'))
+
+    params = radvel.Parameters(2, basis='per tc secosw sesinw k')
+    defaults = utils.initialize_default_pars(instnames=['j'], times=t)
+    for key in ['gamma_j', 'jit_j', 'dvdt', 'curv']:
+        params[key] = defaults[key]
+    for key, val in dict(per1=per1, tc1=2455201.6, secosw1=0.0, sesinw1=0.0,
+                         k1=1.9, per2=811.3, tc2=2455890.0, secosw2=0.29,
+                         sesinw2=-0.06, k2=2.56).items():
+        params[key] = radvel.Parameter(value=val)
+    params['dvdt'].vary = False
+    params['curv'].vary = False
+    params['per1'].vary = vary_per1
+    priors = [radvel.prior.EccentricityPrior(2), radvel.prior.PositiveKPrior(2)]
+    return utils.initialize_post(data, params=params, priors=priors)
+
+
+@pytest.fixture(scope='module')
+def seeded_fit():
+    post = _seeded_two_planets()
+    before = {key: post.params[key].value for key in post.params.keys()}
+    return post, before, utils.fit_known(post)
+
+
+def test_fit_known_recovers_an_offset_seed(seeded_fit):
+    _, _, fit = seeded_fit
+    # A quarter of a resolution element: 4.6426**2 / 8500 / 4 = 0.0006 d.
+    assert fit.params['per1'].value == pytest.approx(4.6426, abs=6e-4)
+    assert fit.params['k1'].value == pytest.approx(2.4, abs=0.5)
+    assert fit.params['per2'].value == pytest.approx(794.4, abs=15)
+
+
+def test_fit_known_is_never_worse_than_one_fit(seeded_fit):
+    post, _, fit = seeded_fit
+    plain = utils.maxlike(copy.deepcopy(post), verbose=False)
+    assert fit.logprob() >= plain.logprob()
+
+
+def test_fit_known_leaves_its_input_alone(seeded_fit):
+    post, before, fit = seeded_fit
+    assert fit is not post
+    assert {key: post.params[key].value for key in post.params.keys()} == before
+    assert post.params['per1'].vary
+
+
+def test_fit_known_keeps_a_fixed_period_and_the_vary_flags():
+    post = _seeded_two_planets(vary_per1=False)
+    fit = utils.fit_known(post)
+    assert fit.params['per1'].value == 4.6455
+    assert not fit.params['per1'].vary
+    assert fit.params['per2'].vary and fit.params['secosw1'].vary
