@@ -71,7 +71,8 @@ def test_hd128311_finds_two_planets(tmp_path):
     assert (tmp_path / 'out' / 'post_final.pkl').exists()
 
 
-def _seeded_two_planets(per1=4.6455, vary_per1=True):
+def _seeded_two_planets(per1=4.6455, vary_per1=True,
+                        basis='per tc secosw sesinw k'):
     """Synthetic HD 156668-like data, seeded as jump2 seeds it.
 
     Planet b is at 4.6426 d over an 8500 d baseline. The seed puts it at
@@ -100,6 +101,8 @@ def _seeded_two_planets(per1=4.6455, vary_per1=True):
     params['dvdt'].vary = False
     params['curv'].vary = False
     params['per1'].vary = vary_per1
+    if basis != params.basis.name:
+        params = params.basis.to_any_basis(params, basis)
     priors = [radvel.prior.EccentricityPrior(2), radvel.prior.PositiveKPrior(2)]
     return utils.initialize_post(data, params=params, priors=priors)
 
@@ -138,3 +141,9 @@ def test_fit_known_keeps_a_fixed_period_and_the_vary_flags():
     assert fit.params['per1'].value == 4.6455
     assert not fit.params['per1'].vary
     assert fit.params['per2'].vary and fit.params['secosw1'].vary
+
+
+def test_fit_known_handles_a_log_period_basis():
+    post = _seeded_two_planets(basis='logper tc secosw sesinw k')
+    fit = utils.fit_known(post)
+    assert np.exp(fit.params['logper1'].value) == pytest.approx(4.6426, abs=6e-4)

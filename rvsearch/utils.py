@@ -446,7 +446,11 @@ def fit_known(post, width=2., oversample=10):
 
     fit = sync(copy.deepcopy(post))
     names = fit.params.basis.name.split()
-    if 'per' not in names:
+    if 'per' in names:
+        pername, period, value = 'per', float, float
+    elif 'logper' in names:
+        pername, period, value = 'logper', np.exp, np.log
+    else:
         return plain
     vary = {key: fit.params[key].vary for key in fit.params.keys()}
     held = [name for name in names if name not in ('tc', 'tp', 'k', 'logk')]
@@ -459,18 +463,18 @@ def fit_known(post, width=2., oversample=10):
     tspan = np.ptp(np.asarray(fit.likelihood.x))
     offsets = np.arange(-width*oversample, width*oversample + 1) / (oversample*tspan)
     for n in planets:
-        perkey = 'per{}'.format(n)
+        perkey = '{}{}'.format(pername, n)
         if not vary[perkey]:
             continue
         start = {key: fit.params[key].value for key in fit.params.keys()}
         best, best_lp = start, sync(fit).logprob()
         for offset in offsets:
-            freq = 1. / start[perkey] + offset
+            freq = 1. / period(start[perkey]) + offset
             if freq <= 0:
                 continue
             for key in start:
                 fit.params[key].value = start[key]
-            fit.params[perkey].value = 1. / freq
+            fit.params[perkey].value = value(1. / freq)
             fit = maxlike(fit, verbose=False)
             lp = fit.logprob()
             if lp > best_lp:
