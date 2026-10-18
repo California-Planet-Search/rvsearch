@@ -3,6 +3,8 @@
 import contextlib
 import signal
 
+import copy
+
 import numpy as np
 import scipy.special as spec
 from astropy import constants as c
@@ -480,3 +482,78 @@ def maxlike(post, **kwargs):
     """radvel.fitting.maxlike_fitting that honours direct post.params edits."""
     sync(post)
     return radvel.fitting.maxlike_fitting(post, **kwargs)
+
+
+def fit_known(post, width=2., oversample=10):
+    """Max-likelihood fit of a posterior seeded with known planets.
+
+    One free fit from catalogue values can lose a planet. A seed period one
+    resolution element (P**2/T) from the data's peak puts the orbit out of
+    phase over much of the baseline, and Powell walks the planet off to an
+    unrelated period: HD 156668 b, seeded at 4.6455 d where the data want
+    4.6426 d, ended at 2.907 d with a quarter of its K. A search then scores
+    every trial planet against that broken baseline, and trials near the lost
+    planet's period win by hundreds in BIC.
+
+    So each seeded period is found again first. With every period and
+    eccentricity held, the orbits are fit at a grid of periods within
+    ``width`` / T of the seed in frequency, ``oversample`` points per 1/T, one
+    planet at a time, and the best period is kept. Then everything the setup
+    varies is freed and fit. A period the setup holds fixed is not moved. The
+    plain free fit is returned instead if it scores better, so this is never
+    worse than one fit.
+
+    Args:
+        post (radvel.Posterior): posterior seeded with the known planets.
+            Not modified.
+        width (float): half-width of each period grid, in units of 1/T.
+        oversample (int): grid points per 1/T.
+
+    Returns:
+        radvel.Posterior: the fitted posterior.
+    """
+    plain = maxlike(copy.deepcopy(post), verbose=False)
+
+    fit = sync(copy.deepcopy(post))
+    names = fit.params.basis.name.split()
+    if 'per' in names:
+        pername, period, value = 'per', float, float
+    elif 'logper' in names:
+        pername, period, value = 'logper', np.exp, np.log
+    else:
+        return plain
+    vary = {key: fit.params[key].vary for key in fit.params.keys()}
+    held = [name for name in names if name not in ('tc', 'tp', 'k', 'logk')]
+    planets = range(1, fit.params.num_planets + 1)
+    for n in planets:
+        for name in held:
+            fit.params['{}{}'.format(name, n)].vary = False
+    fit = maxlike(fit, verbose=False)
+
+    tspan = np.ptp(np.asarray(fit.likelihood.x))
+    offsets = np.arange(-width*oversample, width*oversample + 1) / (oversample*tspan)
+    for n in planets:
+        perkey = '{}{}'.format(pername, n)
+        if not vary[perkey]:
+            continue
+        start = {key: fit.params[key].value for key in fit.params.keys()}
+        best, best_lp = start, sync(fit).logprob()
+        for offset in offsets:
+            freq = 1. / period(start[perkey]) + offset
+            if freq <= 0:
+                continue
+            for key in start:
+                fit.params[key].value = start[key]
+            fit.params[perkey].value = value(1. / freq)
+            fit = maxlike(fit, verbose=False)
+            lp = fit.logprob()
+            if lp > best_lp:
+                best = {key: fit.params[key].value for key in fit.params.keys()}
+                best_lp = lp
+        for key in best:
+            fit.params[key].value = best[key]
+
+    for key in vary:
+        fit.params[key].vary = vary[key]
+    fit = maxlike(fit, verbose=False)
+    return fit if fit.logprob() >= plain.logprob() else plain

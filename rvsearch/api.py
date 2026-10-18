@@ -170,7 +170,7 @@ def _search_worker(run_id: str, params_json: str) -> Dict[str, Any]:
 
         known_post = None
         if params['known'] and P.nplanets > 0:
-            known_post = rvsearch.utils.maxlike(post, verbose=False)
+            known_post = rvsearch.utils.fit_known(post)
 
         progress.write({'stage': 'searching', 'pcomplete': 5.0})
         searcher = rvsearch.search.Search(
