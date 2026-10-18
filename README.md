@@ -32,7 +32,7 @@ search jobs, so one container serves both:
 
 ```
 pip install 'rvsearch[api] @ git+https://github.com/California-Planet-Search/rvsearch'
-                                     # pulls radvel[api] >= 1.6.6 from PyPI
+                                     # pulls radvel[api] >= 1.6.7 from PyPI
 rvsearch serve --host 0.0.0.0 --port 8000
 # or: docker compose up --build
 ```
