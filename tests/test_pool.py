@@ -13,6 +13,8 @@ search on 2026-10-17.
 import contextlib
 import os
 import signal
+import subprocess
+import sys
 import threading
 import time
 import types
@@ -268,6 +270,85 @@ def test_the_callers_sigterm_mask_is_restored_if_the_pool_cannot_start(monkeypat
         assert signal.SIGTERM not in signal.pthread_sigmask(signal.SIG_BLOCK, set())
     finally:
         signal.pthread_sigmask(signal.SIG_SETMASK, before)
+
+
+@pytest.mark.parametrize('where', ['block', 'restore'])
+def test_a_signal_while_the_mask_changes_still_restores_it(monkeypatch, deadline, fork_workers,
+                                                           where):
+    # A host handler that raises can run as soon as the mask changes (or
+    # just before a call that would change it). Model both worst cases:
+    # SystemExit right after SIGTERM is blocked, and right before the old
+    # mask is put back.
+    real = signal.pthread_sigmask
+    fired = []
+
+    def sigmask(how, mask):
+        if not fired:
+            if where == 'block' and how == signal.SIG_BLOCK and signal.SIGTERM in mask:
+                fired.append(how)
+                real(how, mask)
+                raise SystemExit(143)
+            if where == 'restore' and how == signal.SIG_SETMASK:
+                fired.append(how)
+                raise SystemExit(143)
+        return real(how, mask)
+
+    before = real(signal.SIG_UNBLOCK, {signal.SIGTERM})
+    try:
+        monkeypatch.setattr(signal, 'pthread_sigmask', sigmask)
+        with pytest.raises(SystemExit):
+            with utils.worker_pool(2):
+                pytest.fail('the signal ends worker_pool before the block runs')
+        monkeypatch.undo()
+        assert fired
+        assert signal.SIGTERM not in real(signal.SIG_BLOCK, set())
+    finally:
+        real(signal.SIG_SETMASK, before)
+
+
+_FORKSERVER_HOST = '''
+import signal, sys, time
+import multiprocess
+import rvsearch.utils as utils
+
+def nap():
+    time.sleep(30)
+
+if __name__ == '__main__':
+    multiprocess.set_start_method('forkserver')
+    with utils.worker_pool(1) as pool:
+        pool.map(abs, [-1])
+    later = multiprocess.Process(target=nap)
+    later.start()
+    later.terminate()
+    later.join(5)
+    print('exitcode', later.exitcode)
+    if later.exitcode is None:
+        later.kill()
+        later.join()
+'''
+
+
+def test_a_forkserver_started_by_the_pool_can_still_be_sent_sigterm(tmp_path):
+    # Under forkserver, the first Pool() starts the forkserver, and every
+    # later process is forked from it. A SIGTERM block in force while the
+    # forkserver started would stay with it, and with all those processes.
+    if 'forkserver' not in multiprocess.get_all_start_methods():
+        pytest.skip('needs the forkserver start method')
+    script = tmp_path / 'host.py'
+    script.write_text(_FORKSERVER_HOST)
+    out = subprocess.run([sys.executable, str(script)], capture_output=True, text=True,
+                         timeout=120)
+    assert out.returncode == 0, out.stderr
+    assert out.stdout.split() == ['exitcode', str(-signal.SIGTERM)]
+
+
+def test_nothing_is_left_for_the_pools_finalizer(deadline):
+    # The finalizer runs at garbage collection, where a cancel's SystemExit
+    # is printed and dropped.
+    with utils.worker_pool(2) as pool:
+        pool.map(_pid, range(2))
+    assert not pool._terminate.still_active()
 
 
 def test_workers_are_terminated_if_interrupted_while_the_pool_is_joined(monkeypatch, deadline,

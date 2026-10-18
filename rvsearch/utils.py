@@ -3,6 +3,7 @@
 import contextlib
 import signal
 
+import multiprocess
 import numpy as np
 import scipy.special as spec
 from astropy import constants as c
@@ -29,6 +30,8 @@ def _default_sigterm():
     sends SIGTERM) could not otherwise stop them. ``worker_pool`` forks the
     workers with SIGTERM blocked, so a SIGTERM that arrives before this has
     run waits and takes the default action once it is unblocked here.
+    Workers that were not forked start with default handlers, and this
+    changes nothing for them.
     """
     signal.signal(signal.SIGTERM, signal.SIG_DFL)
     if _CAN_MASK_SIGNALS:
@@ -55,31 +58,46 @@ def worker_pool(processes):
     """
     # Fork the workers, and the pool's thread that replaces any that die,
     # with SIGTERM blocked. It stays blocked in each until _default_sigterm
-    # has replaced the inherited handler.
+    # has replaced the inherited handler. Only fork needs this: spawn and
+    # forkserver workers start with default handlers. And a forkserver
+    # started inside the window would keep SIGTERM blocked for good, in
+    # itself and in every process it forks later.
+    mask = _CAN_MASK_SIGNALS and multiprocess.get_start_method() == "fork"
     parent_mask = None
-    if _CAN_MASK_SIGNALS:
-        parent_mask = signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGTERM})
+    if mask:
+        # Read the mask without changing it, and block inside the try, so
+        # the mask is restored even if a handler raises as it changes.
+        parent_mask = signal.pthread_sigmask(signal.SIG_BLOCK, ())
 
     def restore_mask():
-        if _CAN_MASK_SIGNALS:
+        if mask:
             signal.pthread_sigmask(signal.SIG_SETMASK, parent_mask)
 
     try:
+        if mask:
+            signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGTERM})
         pool = mp.Pool(processes=processes, initializer=_default_sigterm)
     except BaseException:
         restore_mask()
         raise
     try:
-        # A SIGTERM that came in meanwhile is handled here, inside the try.
+        # In a single-threaded caller, a SIGTERM that came in meanwhile is
+        # handled here, inside the try. With other threads, one of them may
+        # have taken it, and its handler may already have run.
         restore_mask()
         yield pool
         pool.close()
         pool.join()
+        # Run the finalizer now, inside the try, not at garbage collection.
+        pool.terminate()
     except BaseException:
         # terminate() joins the workers itself. Do not join again after it:
         # if it was cut short by another signal, the join would wait for
         # workers that were never stopped.
-        pool.terminate()
+        try:
+            pool.terminate()
+        finally:
+            restore_mask()  # if the signal came before it was restored
         raise
 
 
