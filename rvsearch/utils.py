@@ -1,16 +1,105 @@
 """Utilities for loading data, checking for known planets, etc."""
 
+import contextlib
+import copy
+import signal
+
+import multiprocess
 import numpy as np
 import scipy.special as spec
 from astropy import constants as c
 import pandas as pd
 import radvel
 import radvel.fitting
+import pathos.multiprocessing as mp
 try:
     import cpsutils
     from cpsutils import io
 except:
     RuntimeError()
+
+
+# Missing on Windows, where pools are not forked and inherit no handlers.
+_CAN_MASK_SIGNALS = hasattr(signal, "pthread_sigmask")
+
+
+def _default_sigterm():
+    """Pool initializer: let SIGTERM end the worker.
+
+    Forked workers inherit the parent's signal handlers. If the program
+    calling rvsearch handles SIGTERM itself, ``Pool.terminate()`` (which
+    sends SIGTERM) could not otherwise stop them. ``worker_pool`` forks the
+    workers with SIGTERM blocked, so a SIGTERM that arrives before this has
+    run waits and takes the default action once it is unblocked here.
+    Workers that were not forked start with default handlers, and this
+    changes nothing for them.
+    """
+    signal.signal(signal.SIGTERM, signal.SIG_DFL)
+    if _CAN_MASK_SIGNALS:
+        signal.pthread_sigmask(signal.SIG_UNBLOCK, {signal.SIGTERM})
+
+
+@contextlib.contextmanager
+def worker_pool(processes):
+    """A process pool whose workers are all gone when the block ends.
+
+    On a normal exit the pool is closed and joined. If the block raises,
+    SystemExit from a signal handler included, the workers are terminated
+    and the exception carries on. Either way nothing is left for the pool's
+    finalizer, which would otherwise run at garbage collection, where an
+    exception (a cancel's SystemExit, say) is printed and dropped.
+
+    The workers do not honour a graceful SIGTERM handler of the calling
+    program (one that sets a flag and lets the work finish): they take the
+    default action, so a SIGTERM that reaches them ends them and the task
+    they were running.
+
+    Args:
+        processes (int): number of worker processes
+    """
+    # Fork the workers, and the pool's thread that replaces any that die,
+    # with SIGTERM blocked. It stays blocked in each until _default_sigterm
+    # has replaced the inherited handler. Only fork needs this: spawn and
+    # forkserver workers start with default handlers. And a forkserver
+    # started inside the window would keep SIGTERM blocked for good, in
+    # itself and in every process it forks later.
+    mask = _CAN_MASK_SIGNALS and multiprocess.get_start_method() == "fork"
+    parent_mask = None
+    if mask:
+        # Read the mask without changing it, and block inside the try, so
+        # the mask is restored even if a handler raises as it changes.
+        parent_mask = signal.pthread_sigmask(signal.SIG_BLOCK, ())
+
+    def restore_mask():
+        if mask:
+            signal.pthread_sigmask(signal.SIG_SETMASK, parent_mask)
+
+    try:
+        if mask:
+            signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGTERM})
+        pool = mp.Pool(processes=processes, initializer=_default_sigterm)
+    except BaseException:
+        restore_mask()
+        raise
+    try:
+        # In a single-threaded caller, a SIGTERM that came in meanwhile is
+        # handled here, inside the try. With other threads, one of them may
+        # have taken it, and its handler may already have run.
+        restore_mask()
+        yield pool
+        pool.close()
+        pool.join()
+        # Run the finalizer now, inside the try, not at garbage collection.
+        pool.terminate()
+    except BaseException:
+        # terminate() joins the workers itself. Do not join again after it:
+        # if it was cut short by another signal, the join would wait for
+        # workers that were never stopped.
+        try:
+            pool.terminate()
+        finally:
+            restore_mask()  # if the signal came before it was restored
+        raise
 
 
 """Functions for posterior modification (resetting, intializing, etc.)
@@ -410,3 +499,78 @@ def maxlike(post, **kwargs):
     """radvel.fitting.maxlike_fitting that honours direct post.params edits."""
     sync(post)
     return radvel.fitting.maxlike_fitting(post, **kwargs)
+
+
+def fit_known(post, width=2., oversample=10):
+    """Max-likelihood fit of a posterior seeded with known planets.
+
+    One free fit from catalogue values can lose a planet. A seed period one
+    resolution element (P**2/T) from the data's peak puts the orbit out of
+    phase over much of the baseline, and Powell walks the planet off to an
+    unrelated period: HD 156668 b, seeded at 4.6455 d where the data want
+    4.6426 d, ended at 2.907 d with a quarter of its K. A search then scores
+    every trial planet against that broken baseline, and trials near the lost
+    planet's period win by hundreds in BIC.
+
+    So each seeded period is found again first. With every period and
+    eccentricity held, the orbits are fit at a grid of periods within
+    ``width`` / T of the seed in frequency, ``oversample`` points per 1/T, one
+    planet at a time, and the best period is kept. Then everything the setup
+    varies is freed and fit. A period the setup holds fixed is not moved. The
+    plain free fit is returned instead if it scores better, so this is never
+    worse than one fit.
+
+    Args:
+        post (radvel.Posterior): posterior seeded with the known planets.
+            Not modified.
+        width (float): half-width of each period grid, in units of 1/T.
+        oversample (int): grid points per 1/T.
+
+    Returns:
+        radvel.Posterior: the fitted posterior.
+    """
+    plain = maxlike(copy.deepcopy(post), verbose=False)
+
+    fit = sync(copy.deepcopy(post))
+    names = fit.params.basis.name.split()
+    if 'per' in names:
+        pername, period, value = 'per', float, float
+    elif 'logper' in names:
+        pername, period, value = 'logper', np.exp, np.log
+    else:
+        return plain
+    vary = {key: fit.params[key].vary for key in fit.params.keys()}
+    held = [name for name in names if name not in ('tc', 'tp', 'k', 'logk')]
+    planets = range(1, fit.params.num_planets + 1)
+    for n in planets:
+        for name in held:
+            fit.params['{}{}'.format(name, n)].vary = False
+    fit = maxlike(fit, verbose=False)
+
+    tspan = np.ptp(np.asarray(fit.likelihood.x))
+    offsets = np.arange(-width*oversample, width*oversample + 1) / (oversample*tspan)
+    for n in planets:
+        perkey = '{}{}'.format(pername, n)
+        if not vary[perkey]:
+            continue
+        start = {key: fit.params[key].value for key in fit.params.keys()}
+        best, best_lp = start, sync(fit).logprob()
+        for offset in offsets:
+            freq = 1. / period(start[perkey]) + offset
+            if freq <= 0:
+                continue
+            for key in start:
+                fit.params[key].value = start[key]
+            fit.params[perkey].value = value(1. / freq)
+            fit = maxlike(fit, verbose=False)
+            lp = fit.logprob()
+            if lp > best_lp:
+                best = {key: fit.params[key].value for key in fit.params.keys()}
+                best_lp = lp
+        for key in best:
+            fit.params[key].value = best[key]
+
+    for key in vary:
+        fit.params[key].vary = vary[key]
+    fit = maxlike(fit, verbose=False)
+    return fit if fit.logprob() >= plain.logprob() else plain

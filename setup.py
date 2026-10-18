@@ -19,7 +19,7 @@ setup(
     install_requires=reqs,
     extras_require={
         # HTTP service: RadVel's API (radvel[api]) plus search endpoints.
-        'api': ['radvel[api]>=1.6.6'],
+        'api': ['radvel[api]>=1.6.7'],
     },
     data_files=[
         (

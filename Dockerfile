@@ -12,7 +12,7 @@
 # Run:
 #   docker run --rm -p 8000:8000 -v $PWD/.runs:/data rvsearch-api:dev
 
-ARG RADVEL_IMAGE=ghcr.io/california-planet-search/radvel-api:1.6.6
+ARG RADVEL_IMAGE=ghcr.io/california-planet-search/radvel-api:1.6.7
 FROM ${RADVEL_IMAGE}
 
 USER root

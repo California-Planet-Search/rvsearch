@@ -11,7 +11,6 @@ import radvel
 import radvel.fitting
 from radvel.plot import orbit_plots
 from tqdm import tqdm
-import pathos.multiprocessing as mp
 from multiprocessing import Value
 from itertools import repeat
 from functools import partial
@@ -265,8 +264,8 @@ class Periodogram(object):
             self.bic, self.fit_params = _fit_period(0)
         else:
             # Parallelize the loop over sections of the period grid.
-            p = mp.Pool(processes=self.workers)
-            output = p.map(_fit_period, (np.arange(self.workers)))
+            with utils.worker_pool(self.workers) as p:
+                output = p.map(_fit_period, (np.arange(self.workers)))
 
             # Sort output.
             all_bics = []
@@ -276,9 +275,6 @@ class Periodogram(object):
                 all_params.append(chunk[1])
             self.bic = [y for x in all_bics for y in x]
             self.fit_params = [y for x in all_params for y in x]
-
-            # Close the pool object.
-            p.close()
 
         fit_index = np.argmax(self.bic)
         self.bestfit_params = self.fit_params[fit_index]

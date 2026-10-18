@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from scipy.interpolate import RegularGridInterpolator
 import pickle
-import pathos.multiprocessing as mp
 from multiprocessing import Value
 import radvel
 from .periodogram import TqdmUpTo
@@ -147,8 +146,8 @@ class Injections(object):
             counter = Value('i', 0, lock=True)
             pbar = TqdmUpTo(total=len(in_orbels), position=0)
 
-        pool = mp.Pool(processes=num_cpus)
-        outputs = pool.map(_run_one, in_orbels)
+        with rvsearch.utils.worker_pool(num_cpus) as pool:
+            outputs = pool.map(_run_one, in_orbels)
 
         for out in outputs:
             recovered, recovered_orbel, bic, thresh = out
