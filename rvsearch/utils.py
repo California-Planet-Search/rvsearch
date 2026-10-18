@@ -1,16 +1,55 @@
 """Utilities for loading data, checking for known planets, etc."""
 
+import contextlib
+import signal
+
 import numpy as np
 import scipy.special as spec
 from astropy import constants as c
 import pandas as pd
 import radvel
 import radvel.fitting
+import pathos.multiprocessing as mp
 try:
     import cpsutils
     from cpsutils import io
 except:
     RuntimeError()
+
+
+def _default_sigterm():
+    """Pool initializer: let SIGTERM end the worker.
+
+    Forked workers inherit the parent's signal handlers. If the program
+    calling rvsearch handles SIGTERM itself, ``Pool.terminate()`` (which
+    sends SIGTERM) could not otherwise stop them.
+    """
+    signal.signal(signal.SIGTERM, signal.SIG_DFL)
+
+
+@contextlib.contextmanager
+def worker_pool(processes):
+    """A process pool whose workers are all gone when the block ends.
+
+    On a normal exit the pool is closed and joined. If the block raises,
+    SystemExit from a signal handler included, the workers are terminated
+    and joined and the exception carries on. Either way nothing is left for
+    the pool's finalizer, which would otherwise run at garbage collection,
+    where an exception (a cancel's SystemExit, say) is printed and dropped.
+
+    Args:
+        processes (int): number of worker processes
+    """
+    pool = mp.Pool(processes=processes, initializer=_default_sigterm)
+    try:
+        yield pool
+    except BaseException:
+        pool.terminate()
+        raise
+    else:
+        pool.close()
+    finally:
+        pool.join()
 
 
 """Functions for posterior modification (resetting, intializing, etc.)
