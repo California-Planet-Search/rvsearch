@@ -17,14 +17,22 @@ except:
     RuntimeError()
 
 
+# Missing on Windows, where pools are not forked and inherit no handlers.
+_CAN_MASK_SIGNALS = hasattr(signal, "pthread_sigmask")
+
+
 def _default_sigterm():
     """Pool initializer: let SIGTERM end the worker.
 
     Forked workers inherit the parent's signal handlers. If the program
     calling rvsearch handles SIGTERM itself, ``Pool.terminate()`` (which
-    sends SIGTERM) could not otherwise stop them.
+    sends SIGTERM) could not otherwise stop them. ``worker_pool`` forks the
+    workers with SIGTERM blocked, so a SIGTERM that arrives before this has
+    run waits and takes the default action once it is unblocked here.
     """
     signal.signal(signal.SIGTERM, signal.SIG_DFL)
+    if _CAN_MASK_SIGNALS:
+        signal.pthread_sigmask(signal.SIG_UNBLOCK, {signal.SIGTERM})
 
 
 @contextlib.contextmanager
@@ -33,23 +41,46 @@ def worker_pool(processes):
 
     On a normal exit the pool is closed and joined. If the block raises,
     SystemExit from a signal handler included, the workers are terminated
-    and joined and the exception carries on. Either way nothing is left for
-    the pool's finalizer, which would otherwise run at garbage collection,
-    where an exception (a cancel's SystemExit, say) is printed and dropped.
+    and the exception carries on. Either way nothing is left for the pool's
+    finalizer, which would otherwise run at garbage collection, where an
+    exception (a cancel's SystemExit, say) is printed and dropped.
+
+    The workers do not honour a graceful SIGTERM handler of the calling
+    program (one that sets a flag and lets the work finish): they take the
+    default action, so a SIGTERM that reaches them ends them and the task
+    they were running.
 
     Args:
         processes (int): number of worker processes
     """
-    pool = mp.Pool(processes=processes, initializer=_default_sigterm)
+    # Fork the workers, and the pool's thread that replaces any that die,
+    # with SIGTERM blocked. It stays blocked in each until _default_sigterm
+    # has replaced the inherited handler.
+    parent_mask = None
+    if _CAN_MASK_SIGNALS:
+        parent_mask = signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGTERM})
+
+    def restore_mask():
+        if _CAN_MASK_SIGNALS:
+            signal.pthread_sigmask(signal.SIG_SETMASK, parent_mask)
+
     try:
-        yield pool
+        pool = mp.Pool(processes=processes, initializer=_default_sigterm)
     except BaseException:
+        restore_mask()
+        raise
+    try:
+        # A SIGTERM that came in meanwhile is handled here, inside the try.
+        restore_mask()
+        yield pool
+        pool.close()
+        pool.join()
+    except BaseException:
+        # terminate() joins the workers itself. Do not join again after it:
+        # if it was cut short by another signal, the join would wait for
+        # workers that were never stopped.
         pool.terminate()
         raise
-    else:
-        pool.close()
-    finally:
-        pool.join()
 
 
 """Functions for posterior modification (resetting, intializing, etc.)
